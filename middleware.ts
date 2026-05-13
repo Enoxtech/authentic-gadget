@@ -22,9 +22,7 @@ export function middleware(request: NextRequest) {
     const adminSession = request.cookies.get("admin_session");
 
     if (!adminSession || adminSession.value !== ADMIN_TOKEN) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("redirect", pathname);
-      loginUrl.searchParams.set("reason", "admin");
+      const loginUrl = new URL("/admin/login", request.url);
       return NextResponse.redirect(loginUrl);
     }
     return NextResponse.next();
