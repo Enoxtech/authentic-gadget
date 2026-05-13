@@ -1,0 +1,158 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
+import { Star, Trash2, Search } from "lucide-react";
+
+interface Review {
+  id: string;
+  customer_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  products?: { name: string };
+}
+
+function StarRating({ rating }: { rating: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star
+          key={n}
+          className={`w-4 h-4 ${n <= rating ? "text-gold fill-gold" : "text-charcoal/20"}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+export default function ReviewsPage() {
+  const router = useRouter();
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  useEffect(() => {
+    const adminSession = document.cookie.includes("admin_session");
+    if (!adminSession) {
+      router.push("/admin/login");
+      return;
+    }
+    loadReviews();
+  }, [router]);
+
+  async function loadReviews() {
+    try {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("reviews")
+        .select("*, products(name)")
+        .order("created_at", { ascending: false });
+
+      if (data) setReviews(data);
+    } catch {
+      // error
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function deleteReview(id: string) {
+    if (!confirm("Delete this review?")) return;
+    setDeleting(id);
+    try {
+      const supabase = createClient();
+      await supabase.from("reviews").delete().eq("id", id);
+      setReviews((prev) => prev.filter((r) => r.id !== id));
+    } finally {
+      setDeleting(null);
+    }
+  }
+
+  function formatDate(dateStr: string) {
+    return new Date(dateStr).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
+  const filtered = reviews.filter((r) =>
+    !search ||
+    r.products?.name?.toLowerCase().includes(search.toLowerCase()) ||
+    r.customer_name?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="p-8">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-charcoal">Reviews</h2>
+          <p className="text-sm text-charcoal/50">{reviews.length} reviews</p>
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className="bg-white rounded-2xl p-4 shadow-card mb-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/30" />
+          <input
+            type="text"
+            placeholder="Search by product or customer name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-fog rounded-xl text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-electric/30"
+          />
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-2xl shadow-card overflow-hidden">
+        {loading ? (
+          <div className="p-8 text-center text-charcoal/40">Loading reviews...</div>
+        ) : filtered.length === 0 ? (
+          <div className="p-8 text-center text-charcoal/40">No reviews found</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-charcoal/50 text-left border-b border-fog">
+                  <th className="pb-3 px-6 font-medium">Product</th>
+                  <th className="pb-3 px-6 font-medium">Customer</th>
+                  <th className="pb-3 px-6 font-medium">Rating</th>
+                  <th className="pb-3 px-6 font-medium">Comment</th>
+                  <th className="pb-3 px-6 font-medium">Date</th>
+                  <th className="pb-3 px-6 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((r) => (
+                  <tr key={r.id} className="border-b border-fog last:border-0 hover:bg-fog/50">
+                    <td className="py-3.5 px-6 font-medium text-charcoal">{r.products?.name || "—"}</td>
+                    <td className="py-3.5 px-6 text-charcoal/70">{r.customer_name || "—"}</td>
+                    <td className="py-3.5 px-6">
+                      <StarRating rating={r.rating || 0} />
+                    </td>
+                    <td className="py-3.5 px-6 text-charcoal/70 max-w-xs truncate">{r.comment || "—"}</td>
+                    <td className="py-3.5 px-6 text-charcoal/50">{formatDate(r.created_at)}</td>
+                    <td className="py-3.5 px-6">
+                      <button
+                        onClick={() => deleteReview(r.id)}
+                        disabled={deleting === r.id}
+                        className="p-1.5 hover:bg-red-50 rounded-lg text-charcoal/40 hover:text-red-500 transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
