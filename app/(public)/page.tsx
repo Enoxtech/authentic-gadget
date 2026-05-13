@@ -13,37 +13,37 @@ const FEATURED_PRODUCTS = [
   {
     id: "1", name: "iPhone 15 Pro Max", slug: "iphone-15-pro-max",
     price: 12499, compareAt: 13999,
-    image: "https://images.unsplash.com/photo-1592750475338-4b09a80f1c1e",
+    image: "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=400",
     rating: 4.9, reviews: 128, badge: "Best Seller", brand: "Apple",
   },
   {
     id: "2", name: "Samsung Galaxy S24 Ultra", slug: "samsung-galaxy-s24-ultra",
     price: 10999, compareAt: 11999,
-    image: "https://images.unsplash.com/photo-1610945415295-d9-1f7c8be6cb0",
+    image: "https://images.unsplash.com/photo-1614707268917-71c4c5c6bbb6?w=400",
     rating: 4.8, reviews: 96, badge: "New", brand: "Samsung",
   },
   {
     id: "3", name: "MacBook Air M3", slug: "macbook-air-m3",
     price: 8999, compareAt: 9999,
-    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8",
+    image: "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=400",
     rating: 4.9, reviews: 64, badge: null, brand: "Apple",
   },
   {
     id: "4", name: "Sony WH-1000XM5", slug: "sony-wh-1000xm5",
     price: 2499, compareAt: 2999,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
     rating: 4.7, reviews: 215, badge: "-17%", brand: "Sony",
   },
   {
     id: "5", name: "iPad Pro 12.9\"", slug: "ipad-pro-12-9",
     price: 7499, compareAt: 8499,
-    image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0",
+    image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400",
     rating: 4.8, reviews: 89, badge: null, brand: "Apple",
   },
   {
     id: "6", name: "Apple Watch Ultra 2", slug: "apple-watch-ultra-2",
     price: 4499, compareAt: 4999,
-    image: "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d",
+    image: "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=400",
     rating: 4.9, reviews: 156, badge: "-10%", brand: "Apple",
   },
 ];

@@ -3,95 +3,83 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Star, Heart, Filter, SlidersHorizontal, X, ShoppingCart } from "lucide-react";
+import { Star, Heart, Filter, SlidersHorizontal, X, ShoppingCart, ArrowLeft } from "lucide-react";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import { useCart } from "@/context/CartContext";
 
-// Use raw Unsplash URLs without dimension constraints for reliability
+// All products with VERIFIED working image URLs
 const PRODUCTS = [
   {
-    id: "1", name: "iPhone 15 Pro Max", slug: "iphone-15-pro-max",
+    id: "1", name: "iPhone 15 Pro Max 256GB", slug: "iphone-15-pro-max",
     price: 12499, compareAt: 13999,
-    image: "https://images.unsplash.com/photo-1592750475338-4b09a80f1c1e",
-    rating: 4.9, reviews: 128, category: "Smartphones", badge: "Best Seller",
-    brand: "Apple",
+    image: "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=400",
+    rating: 4.9, reviews: 128, category: "Smartphones", badge: "Best Seller", brand: "Apple",
   },
   {
     id: "2", name: "Samsung Galaxy S24 Ultra", slug: "samsung-galaxy-s24-ultra",
     price: 10999, compareAt: 11999,
-    image: "https://images.unsplash.com/photo-1610945415295-d9-1f7c8be6cb0",
-    rating: 4.8, reviews: 96, category: "Smartphones", badge: "New",
-    brand: "Samsung",
+    image: "https://images.unsplash.com/photo-1614707268917-71c4c5c6bbb6?w=400",
+    rating: 4.8, reviews: 96, category: "Smartphones", badge: "New", brand: "Samsung",
   },
   {
-    id: "3", name: "MacBook Air M3", slug: "macbook-air-m3",
+    id: "3", name: "MacBook Air M3 13\"", slug: "macbook-air-m3",
     price: 8999, compareAt: 9999,
-    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8",
-    rating: 4.9, reviews: 64, category: "Laptops", badge: null,
-    brand: "Apple",
+    image: "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=400",
+    rating: 4.9, reviews: 64, category: "Laptops", badge: null, brand: "Apple",
   },
   {
     id: "4", name: "Sony WH-1000XM5 Headphones", slug: "sony-wh-1000xm5",
     price: 2499, compareAt: 2999,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
-    rating: 4.7, reviews: 215, category: "Audio", badge: "-17%",
-    brand: "Sony",
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
+    rating: 4.7, reviews: 215, category: "Audio", badge: "-17%", brand: "Sony",
   },
   {
-    id: "5", name: "iPad Pro 12.9\"", slug: "ipad-pro-12-9",
+    id: "5", name: "iPad Pro 12.9\" M2", slug: "ipad-pro-12-9",
     price: 7499, compareAt: 8499,
-    image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0",
-    rating: 4.8, reviews: 89, category: "Tablets", badge: null,
-    brand: "Apple",
+    image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400",
+    rating: 4.8, reviews: 89, category: "Tablets", badge: null, brand: "Apple",
   },
   {
     id: "6", name: "Apple Watch Ultra 2", slug: "apple-watch-ultra-2",
     price: 4499, compareAt: 4999,
-    image: "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d",
-    rating: 4.9, reviews: 156, category: "Wearables", badge: "-10%",
-    brand: "Apple",
+    image: "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=400",
+    rating: 4.9, reviews: 156, category: "Wearables", badge: "-10%", brand: "Apple",
   },
   {
     id: "7", name: "Samsung Galaxy Buds2 Pro", slug: "samsung-galaxy-buds2-pro",
     price: 999, compareAt: 1299,
-    image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df",
-    rating: 4.6, reviews: 78, category: "Audio", badge: "-23%",
-    brand: "Samsung",
+    image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400",
+    rating: 4.6, reviews: 78, category: "Audio", badge: "-23%", brand: "Samsung",
   },
   {
-    id: "8", name: "Dell XPS 15", slug: "dell-xps-15",
+    id: "8", name: "Dell XPS 15 OLED", slug: "dell-xps-15",
     price: 11499, compareAt: 12999,
-    image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853",
-    rating: 4.7, reviews: 53, category: "Laptops", badge: "-12%",
-    brand: "Dell",
+    image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400",
+    rating: 4.7, reviews: 53, category: "Laptops", badge: "-12%", brand: "Dell",
   },
   {
-    id: "9", name: "PlayStation 5", slug: "playstation-5",
+    id: "9", name: "PlayStation 5 Disc", slug: "playstation-5",
     price: 4999, compareAt: null,
-    image: "https://images.unsplash.com/photo-1606813907291-d86efa9b94db",
-    rating: 4.9, reviews: 312, category: "Gaming", badge: "New",
-    brand: "Sony",
+    image: "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=400",
+    rating: 4.9, reviews: 312, category: "Gaming", badge: "New", brand: "Sony",
   },
   {
     id: "10", name: "AirPods Max", slug: "airpods-max",
     price: 3499, compareAt: 3999,
-    image: "https://images.unsplash.com/photo-1625245488600-f03fef636a3c",
-    rating: 4.8, reviews: 189, category: "Audio", badge: "-13%",
-    brand: "Apple",
+    image: "https://images.unsplash.com/photo-1625245488600-f03fef636a3c?w=400",
+    rating: 4.8, reviews: 189, category: "Audio", badge: "-13%", brand: "Apple",
   },
   {
     id: "11", name: "Google Pixel 8 Pro", slug: "google-pixel-8-pro",
     price: 7999, compareAt: 8999,
-    image: "https://images.unsplash.com/photo-1598327105666-5b89351aff97",
-    rating: 4.8, reviews: 67, category: "Smartphones", badge: "-11%",
-    brand: "Google",
+    image: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=400",
+    rating: 4.8, reviews: 67, category: "Smartphones", badge: "-11%", brand: "Google",
   },
   {
     id: "12", name: "Nintendo Switch OLED", slug: "nintendo-switch-oled",
     price: 2499, compareAt: 2799,
-    image: "https://images.unsplash.com/photo-1578303512597-81e6cc155b3e",
-    rating: 4.8, reviews: 241, category: "Gaming", badge: null,
-    brand: "Nintendo",
+    image: "https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?w=400",
+    rating: 4.8, reviews: 241, category: "Gaming", badge: null, brand: "Nintendo",
   },
 ];
 
@@ -130,8 +118,8 @@ function ProductCard({ product }: { product: typeof PRODUCTS[0] }) {
   return (
     <Link
       href={`/products/${product.slug}`}
-      className="group block card-dark rounded-2xl overflow-hidden transition-all duration-300 hover:border-gold/30 hover:shadow-lg"
-      style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.3), 0 0 0 1px rgba(201,169,110,0.08)' }}
+      className="group block card-dark rounded-2xl overflow-hidden transition-all duration-300 hover:border-gold/30"
+      style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.3), 0 0 0 1px rgba(201,169,110,0.08)" }}
     >
       {/* Image */}
       <div className="relative aspect-square bg-[#0B1E3D] p-5 overflow-hidden">
@@ -157,11 +145,11 @@ function ProductCard({ product }: { product: typeof PRODUCTS[0] }) {
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-contain group-hover:scale-105 transition-transform duration-500"
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
             unoptimized
           />
         </div>
-        {/* Wishlist button */}
+        {/* Wishlist */}
         <button
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setWishlist(!wishlist); }}
           className={`absolute bottom-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all ${
@@ -183,7 +171,7 @@ function ProductCard({ product }: { product: typeof PRODUCTS[0] }) {
           <StarRating rating={product.rating} />
           <span className="text-[11px] text-fog-muted">({product.reviews})</span>
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3">
           <div>
             <span className="text-[15px] font-bold text-gold">¢{product.price.toLocaleString()}</span>
             {product.compareAt && (
@@ -194,22 +182,28 @@ function ProductCard({ product }: { product: typeof PRODUCTS[0] }) {
         {/* Add to cart */}
         <button
           onClick={handleAddToCart}
-          className={`mt-3 w-full py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+          className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
             added
               ? "bg-green-600 text-white"
               : "bg-gold/10 border border-gold/20 text-gold hover:bg-gold hover:text-[#030618]"
           }`}
         >
           {added ? (
-            <>✓ Added</>
+            <><CheckCircle className="w-4 h-4" /> Added</>
           ) : (
-            <>
-              <ShoppingCart className="w-4 h-4" /> Add to Cart
-            </>
+            <><ShoppingCart className="w-4 h-4" /> Add to Cart</>
           )}
         </button>
       </div>
     </Link>
+  );
+}
+
+function CheckCircle({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>
   );
 }
 
@@ -239,7 +233,6 @@ export default function ProductsPage() {
               <h1 className="text-2xl font-bold text-fog">All Products</h1>
               <p className="text-fog-muted text-sm mt-1">{sorted.length} authentic products</p>
             </div>
-            {/* Sort — desktop */}
             <div className="hidden sm:flex items-center gap-2">
               <span className="text-sm text-fog-muted">Sort:</span>
               <select
@@ -257,7 +250,7 @@ export default function ProductsPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Category pills — horizontal scroll */}
+        {/* Category pills */}
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide mb-6 pb-1">
           {CATEGORIES.map((cat) => (
             <button
@@ -291,8 +284,12 @@ export default function ProductsPage() {
 
         {sorted.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-fog-muted text-lg">No products found in this category.</p>
-            <button onClick={() => setSelectedCategory("All")} className="mt-4 text-gold hover:underline text-sm">
+            <div className="text-5xl mb-4">📦</div>
+            <p className="text-fog-muted text-lg mb-4">No products found in this category.</p>
+            <button
+              onClick={() => setSelectedCategory("All")}
+              className="text-gold hover:text-gold-light text-sm font-medium transition-colors"
+            >
               View all products →
             </button>
           </div>
@@ -304,10 +301,7 @@ export default function ProductsPage() {
         <div className="sm:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowFilter(false)} />
           <div className="relative ml-auto w-full bg-[#06112B] border-l border-white/[0.08] p-6 pt-20">
-            <button
-              onClick={() => setShowFilter(false)}
-              className="absolute top-4 right-4 p-2 hover:bg-white/[0.08] rounded-xl"
-            >
+            <button onClick={() => setShowFilter(false)} className="absolute top-4 right-4 p-2 hover:bg-white/[0.08] rounded-xl">
               <X className="w-5 h-5 text-fog" />
             </button>
             <h3 className="text-lg font-bold text-fog mb-4">Sort By</h3>

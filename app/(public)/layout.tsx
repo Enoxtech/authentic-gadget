@@ -4,6 +4,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ToastProvider from "@/context/ToastContext";
 import CartDrawer from "@/components/ui/CartDrawer";
+import BackToTop from "@/components/ui/BackToTop";
 
 export const metadata: Metadata = {
   title: {
@@ -33,6 +34,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         <main>{children}</main>
         <Footer />
         <CartDrawer />
+        <BackToTop />
       </ToastProvider>
     </>
   );
