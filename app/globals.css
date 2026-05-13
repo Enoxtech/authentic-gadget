@@ -25,6 +25,10 @@
   --color-surface-light: #0B1E3D;
   --color-card-dark: #081630;
 
+  /* Text colors - dark charcoal for auth pages */
+  --color-charcoal: #1A1A1A;
+  --color-charcoal-light: #333333;
+
   /* Borders */
   --color-border: rgba(201, 169, 110, 0.12);
   --color-border-strong: rgba(201, 169, 110, 0.25);
