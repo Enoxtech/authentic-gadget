@@ -122,7 +122,7 @@ export default function HomePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-dark-space">
+      <div className="min-h-screen bg-dark-space overflow-x-hidden">
       {/* Hero */}
       <section className="relative bg-midnight overflow-hidden">
         {/* Ambient background effects */}
