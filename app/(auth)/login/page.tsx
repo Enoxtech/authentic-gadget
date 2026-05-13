@@ -39,7 +39,9 @@ function LoginPageInner() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push("/");
+      // Redirect to the page they came from, or home
+      const redirectTo = searchParams.get("redirect") || "/";
+      router.push(redirectTo);
       router.refresh();
     }
   };

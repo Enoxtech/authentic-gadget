@@ -1,89 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Star, Heart, Filter, SlidersHorizontal, X, ShoppingCart, ArrowLeft } from "lucide-react";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import { useCart } from "@/context/CartContext";
 
-// All products with VERIFIED working image URLs
-const PRODUCTS = [
-  {
-    id: "1", name: "iPhone 15 Pro Max 256GB", slug: "iphone-15-pro-max",
-    price: 12499, compareAt: 13999,
-    image: "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=400",
-    rating: 4.9, reviews: 128, category: "Smartphones", badge: "Best Seller", brand: "Apple",
-  },
-  {
-    id: "2", name: "Samsung Galaxy S24 Ultra", slug: "samsung-galaxy-s24-ultra",
-    price: 10999, compareAt: 11999,
-    image: "https://images.unsplash.com/photo-1614707268917-71c4c5c6bbb6?w=400",
-    rating: 4.8, reviews: 96, category: "Smartphones", badge: "New", brand: "Samsung",
-  },
-  {
-    id: "3", name: "MacBook Air M3 13\"", slug: "macbook-air-m3",
-    price: 8999, compareAt: 9999,
-    image: "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=400",
-    rating: 4.9, reviews: 64, category: "Laptops", badge: null, brand: "Apple",
-  },
-  {
-    id: "4", name: "Sony WH-1000XM5 Headphones", slug: "sony-wh-1000xm5",
-    price: 2499, compareAt: 2999,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
-    rating: 4.7, reviews: 215, category: "Audio", badge: "-17%", brand: "Sony",
-  },
-  {
-    id: "5", name: "iPad Pro 12.9\" M2", slug: "ipad-pro-12-9",
-    price: 7499, compareAt: 8499,
-    image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400",
-    rating: 4.8, reviews: 89, category: "Tablets", badge: null, brand: "Apple",
-  },
-  {
-    id: "6", name: "Apple Watch Ultra 2", slug: "apple-watch-ultra-2",
-    price: 4499, compareAt: 4999,
-    image: "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=400",
-    rating: 4.9, reviews: 156, category: "Wearables", badge: "-10%", brand: "Apple",
-  },
-  {
-    id: "7", name: "Samsung Galaxy Buds2 Pro", slug: "samsung-galaxy-buds2-pro",
-    price: 999, compareAt: 1299,
-    image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400",
-    rating: 4.6, reviews: 78, category: "Audio", badge: "-23%", brand: "Samsung",
-  },
-  {
-    id: "8", name: "Dell XPS 15 OLED", slug: "dell-xps-15",
-    price: 11499, compareAt: 12999,
-    image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400",
-    rating: 4.7, reviews: 53, category: "Laptops", badge: "-12%", brand: "Dell",
-  },
-  {
-    id: "9", name: "PlayStation 5 Disc", slug: "playstation-5",
-    price: 4999, compareAt: null,
-    image: "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=400",
-    rating: 4.9, reviews: 312, category: "Gaming", badge: "New", brand: "Sony",
-  },
-  {
-    id: "10", name: "AirPods Max", slug: "airpods-max",
-    price: 3499, compareAt: 3999,
-    image: "https://images.unsplash.com/photo-1625245488600-f03fef636a3c?w=400",
-    rating: 4.8, reviews: 189, category: "Audio", badge: "-13%", brand: "Apple",
-  },
-  {
-    id: "11", name: "Google Pixel 8 Pro", slug: "google-pixel-8-pro",
-    price: 7999, compareAt: 8999,
-    image: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=400",
-    rating: 4.8, reviews: 67, category: "Smartphones", badge: "-11%", brand: "Google",
-  },
-  {
-    id: "12", name: "Nintendo Switch OLED", slug: "nintendo-switch-oled",
-    price: 2499, compareAt: 2799,
-    image: "https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?w=400",
-    rating: 4.8, reviews: 241, category: "Gaming", badge: null, brand: "Nintendo",
-  },
-];
+interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  compare_at_price: number | null;
+  images: string[] | null;
+  rating: number;
+  reviews_count: number;
+  category: string | null;
+  badge: string | null;
+  brand: string | null;
+}
 
-const CATEGORIES = ["All", "Smartphones", "Laptops", "Audio", "Wearables", "Gaming", "Tablets"];
 const SORT_OPTIONS = [
   { value: "featured", label: "Featured" },
   { value: "price-asc", label: "Price: Low to High" },
@@ -101,16 +38,33 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-function ProductCard({ product }: { product: typeof PRODUCTS[0] }) {
+function CheckCircle({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>
+  );
+}
+
+function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
   const [wishlist, setWishlist] = useState(false);
   const [added, setAdded] = useState(false);
-  const discount = product.compareAt ? Math.round((1 - product.price / product.compareAt) * 100) : 0;
+  const discount = product.compare_at_price
+    ? Math.round((1 - product.price / product.compare_at_price) * 100)
+    : 0;
+  const primaryImage = product.images?.[0] || "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400";
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem({ id: product.id, name: product.name, price: product.price, image: product.image, slug: product.slug });
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: primaryImage,
+      slug: product.slug,
+    });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };
@@ -141,7 +95,7 @@ function ProductCard({ product }: { product: typeof PRODUCTS[0] }) {
         )}
         <div className="relative w-full h-full">
           <Image
-            src={product.image}
+            src={primaryImage}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -163,19 +117,19 @@ function ProductCard({ product }: { product: typeof PRODUCTS[0] }) {
 
       {/* Info */}
       <div className="p-4">
-        <p className="text-[11px] text-gold/60 font-medium uppercase tracking-wider mb-1">{product.brand}</p>
+        <p className="text-[11px] text-gold/60 font-medium uppercase tracking-wider mb-1">{product.brand || ""}</p>
         <h3 className="font-semibold text-[14px] text-fog leading-tight line-clamp-2 mb-2 min-h-[40px]">
           {product.name}
         </h3>
         <div className="flex items-center gap-1.5 mb-3">
           <StarRating rating={product.rating} />
-          <span className="text-[11px] text-fog-muted">({product.reviews})</span>
+          <span className="text-[11px] text-fog-muted">({product.reviews_count})</span>
         </div>
         <div className="flex items-center justify-between mb-3">
           <div>
             <span className="text-[15px] font-bold text-gold">¢{product.price.toLocaleString()}</span>
-            {product.compareAt && (
-              <span className="ml-2 text-[12px] text-fog-muted line-through">¢{product.compareAt.toLocaleString()}</span>
+            {product.compare_at_price && (
+              <span className="ml-2 text-[12px] text-fog-muted line-through">¢{product.compare_at_price.toLocaleString()}</span>
             )}
           </div>
         </div>
@@ -199,20 +153,58 @@ function ProductCard({ product }: { product: typeof PRODUCTS[0] }) {
   );
 }
 
-function CheckCircle({ className }: { className?: string }) {
+function ProductSkeleton() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-    </svg>
+    <div className="card-dark rounded-2xl overflow-hidden">
+      <div className="aspect-square bg-[#0B1E3D] animate-pulse" />
+      <div className="p-4 space-y-3">
+        <div className="h-3 bg-white/5 rounded w-1/3 animate-pulse" />
+        <div className="h-4 bg-white/5 rounded w-2/3 animate-pulse" />
+        <div className="h-3 bg-white/5 rounded w-1/2 animate-pulse" />
+        <div className="h-8 bg-white/5 rounded-xl animate-pulse" />
+      </div>
+    </div>
   );
 }
 
 export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sort, setSort] = useState("featured");
   const [showFilter, setShowFilter] = useState(false);
 
-  const filtered = PRODUCTS.filter(
+  // Extract unique categories from products
+  const categories = ["All", ...Array.from(new Set(products.map((p) => p.category).filter(Boolean)))] as string[];
+
+  useEffect(() => {
+    async function fetchProducts() {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/products?select=*&is_active=eq.true&order=created_at.desc`,
+          {
+            headers: {
+              apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+              Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+            },
+          }
+        );
+        if (!res.ok) throw new Error("Failed to fetch products");
+        const data = await res.json();
+        setProducts(data as Product[]);
+      } catch (err: any) {
+        setError(err.message || "Failed to load products");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
+  }, []);
+
+  const filtered = products.filter(
     (p) => selectedCategory === "All" || p.category === selectedCategory
   );
   const sorted = [...filtered].sort((a, b) => {
@@ -231,7 +223,7 @@ export default function ProductsPage() {
           <div className="flex items-end justify-between mt-4">
             <div>
               <h1 className="text-2xl font-bold text-fog">All Products</h1>
-              <p className="text-fog-muted text-sm mt-1">{sorted.length} authentic products</p>
+              <p className="text-fog-muted text-sm mt-1">{loading ? "Loading..." : `${sorted.length} authentic products`}</p>
             </div>
             <div className="hidden sm:flex items-center gap-2">
               <span className="text-sm text-fog-muted">Sort:</span>
@@ -250,22 +242,37 @@ export default function ProductsPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Category pills */}
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide mb-6 pb-1">
-          {CATEGORIES.map((cat) => (
+        {/* Error state */}
+        {error && (
+          <div className="text-center py-12">
+            <p className="text-red-400 mb-4">{error}</p>
             <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                selectedCategory === cat
-                  ? "bg-gold text-[#030618] font-bold"
-                  : "bg-[#06112B] text-fog-muted border border-white/[0.08] hover:border-gold/30 hover:text-gold"
-              }`}
+              onClick={() => window.location.reload()}
+              className="text-gold hover:text-gold-light text-sm font-medium transition-colors"
             >
-              {cat}
+              Try again
             </button>
-          ))}
-        </div>
+          </div>
+        )}
+
+        {/* Category pills */}
+        {!loading && !error && categories.length > 1 && (
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide mb-6 pb-1">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedCategory === cat
+                    ? "bg-gold text-[#030618] font-bold"
+                    : "bg-[#06112B] text-fog-muted border border-white/[0.08] hover:border-gold/30 hover:text-gold"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Mobile filter button */}
         <button
@@ -276,13 +283,21 @@ export default function ProductsPage() {
         </button>
 
         {/* Products grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {sorted.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <ProductSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {sorted.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
 
-        {sorted.length === 0 && (
+        {sorted.length === 0 && !loading && !error && (
           <div className="text-center py-20">
             <div className="text-5xl mb-4">📦</div>
             <p className="text-fog-muted text-lg mb-4">No products found in this category.</p>
@@ -320,7 +335,7 @@ export default function ProductsPage() {
             </div>
             <h3 className="text-lg font-bold text-fog mb-4">Categories</h3>
             <div className="space-y-2">
-              {CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => { setSelectedCategory(cat); setShowFilter(false); }}

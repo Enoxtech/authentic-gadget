@@ -50,6 +50,38 @@ export default function CheckoutPage() {
 
     const orderId = "AG-" + Math.random().toString(36).substr(2, 9).toUpperCase();
 
+    // Save order to Supabase before payment
+    try {
+      await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: orderId,
+          customer_name: form.name,
+          customer_email: form.phone + "@example.com",
+          customer_phone: form.phone,
+          shipping_address: form.address,
+          shipping_city: form.city,
+          shipping_region: form.region,
+          order_note: form.note,
+          subtotal,
+          shipping,
+          total,
+          payment_method: paymentMethod === "momo" ? "momo" : "cod",
+          items: items.map((item: any) => ({
+            product_id: item.id,
+            product_name: item.name,
+            product_slug: item.slug,
+            product_image: item.image,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to save order to database:", err);
+    }
+
     if (paymentMethod === "momo") {
       try {
         const res = await fetch("/api/flutterwave/momo", {

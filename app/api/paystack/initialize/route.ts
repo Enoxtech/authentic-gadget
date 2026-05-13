@@ -3,10 +3,43 @@ import { createClient } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
-    const { amount, email, orderId, products } = await request.json();
+    const { amount, email, orderId, products, customer_name, customer_phone, shipping_address, shipping_city, shipping_region, subtotal, shipping, total, payment_method } = await request.json();
 
     if (!amount || !email || !orderId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    const supabase = createClient();
+
+    // Save order to Supabase before initializing payment
+    await supabase.from("orders").insert({
+      id: orderId,
+      customer_name: customer_name || email,
+      customer_email: email,
+      customer_phone: customer_phone || null,
+      shipping_address: shipping_address || null,
+      shipping_city: shipping_city || null,
+      shipping_region: shipping_region || null,
+      subtotal: subtotal || amount,
+      shipping: shipping || 0,
+      total: total || amount,
+      payment_method: payment_method || "paystack",
+      payment_status: "pending",
+      order_status: "pending",
+    });
+
+    // Save order items
+    if (products?.length) {
+      const orderItems = products.map((p: any) => ({
+        order_id: orderId,
+        product_id: p.id || null,
+        product_name: p.name,
+        product_slug: p.slug || null,
+        product_image: p.image || null,
+        price: p.price,
+        quantity: p.quantity || 1,
+      }));
+      await supabase.from("order_items").insert(orderItems);
     }
 
     const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY;

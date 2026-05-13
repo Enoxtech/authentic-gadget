@@ -51,7 +51,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     // Sign up with email (creates unverified user)
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -64,6 +64,16 @@ export default function RegisterPage() {
       setError(signUpError.message);
       setLoading(false);
       return;
+    }
+
+    // Create customer record in Supabase after successful signup
+    if (signUpData.user) {
+      await supabase.from("customers").upsert({
+        id: signUpData.user.id,
+        full_name: name,
+        email: email,
+        phone: phone || null,
+      });
     }
 
     // Send OTP for phone verification if provided

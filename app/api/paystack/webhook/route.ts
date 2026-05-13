@@ -28,14 +28,14 @@ export async function POST(request: Request) {
         .update({
           payment_status: "paid",
           payment_method: event.data.channel,
-          paystack_reference: reference,
+          payment_reference: reference,
         })
         .eq("id", reference);
 
       // Update order status to processing
       await supabase
         .from("orders")
-        .update({ status: "processing" })
+        .update({ order_status: "processing" })
         .eq("id", reference);
     }
 
