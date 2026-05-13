@@ -17,18 +17,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Protect /admin routes with hardcoded admin cookie
-  if (pathname.startsWith("/admin") || pathname.startsWith("/(admin)")) {
+  // Protect /admin routes — but allow /admin/login itself through
+  if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
     const adminSession = request.cookies.get("admin_session");
-
     if (!adminSession || adminSession.value !== ADMIN_TOKEN) {
-      const loginUrl = new URL("/admin/login", request.url);
-      return NextResponse.redirect(loginUrl);
+      return NextResponse.redirect(new URL("/admin/login", request.url));
     }
-    return NextResponse.next();
   }
 
-  // For all other routes, let the page handle its own auth
   return NextResponse.next();
 }
 
