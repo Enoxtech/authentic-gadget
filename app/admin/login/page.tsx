@@ -27,8 +27,8 @@ export default function AdminLoginPage() {
 
       if (!res.ok) throw new Error(data.error || "Authentication failed");
 
-      router.push("/admin/dashboard");
-      router.refresh();
+      // Use window.location for hard redirect — more reliable for auth cookie propagation
+      window.location.href = "/admin/dashboard";
     } catch (err: any) {
       setError(err.message || "Invalid password. Please try again.");
     } finally {
