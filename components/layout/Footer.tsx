@@ -1,49 +1,30 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import Image from "next/image";
-import {
-  Phone,
-  Mail,
-  MapPin,
-  ShieldCheck,
-  Truck,
-  RotateCcw,
-  AtSign,
-  Globe,
-  Video,
-  MessageCircle,
-} from "lucide-react";
+import { Phone, Mail, MapPin, ShieldCheck, Truck, RotateCcw, Globe, AtSign, Video, MessageCircle } from "lucide-react";
 
 const SHOP_LINKS = [
   { label: "All Products", href: "/products" },
-  { label: "Smartphones", href: "/categories/smartphones" },
-  { label: "Laptops", href: "/categories/laptops" },
-  { label: "Audio", href: "/categories/audio" },
-  { label: "Wearables", href: "/categories/wearables" },
-  { label: "Gaming", href: "/categories/gaming" },
-  { label: "Accessories", href: "/categories/accessories" },
-  { label: "Tablets & iPads", href: "/categories/tablets" },
+  { label: "Smartphones", href: "/products?category=smartphones" },
+  { label: "Laptops", href: "/products?category=laptops" },
+  { label: "Audio", href: "/products?category=audio" },
+  { label: "Wearables", href: "/products?category=wearables" },
+  { label: "Gaming", href: "/products?category=gaming" },
+  { label: "Accessories", href: "/products?category=accessories" },
 ];
 
 const COMPANY_LINKS = [
   { label: "About Us", href: "/about" },
-  { label: "Contact Us", href: "/contact" },
+  { label: "Contact Us", href: "/about" },
   { label: "Track Order", href: "/track-order" },
-  { label: "Blog", href: "/blog" },
-  { label: "Careers", href: "/careers" },
-];
-
-const LEGAL_LINKS = [
-  { label: "Privacy Policy", href: "/privacy-policy" },
-  { label: "Terms of Service", href: "/terms-of-service" },
-  { label: "Return Policy", href: "/return-policy" },
-  { label: "Cookie Policy", href: "/cookie-policy" },
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms of Service", href: "/terms" },
 ];
 
 export default function Footer() {
   return (
-    <footer className="bg-midnight text-white">
+    <footer className="bg-[#030618] text-white border-t border-white/[0.06]">
       {/* Trust strip */}
-      <div className="border-b border-gold/10">
+      <div className="border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
             { icon: ShieldCheck, title: "100% Authentic", desc: "Every product verified" },
@@ -56,8 +37,8 @@ export default function Footer() {
                 <Icon className="w-5 h-5 text-gold" />
               </div>
               <div>
-                <p className="font-semibold text-sm text-white">{title}</p>
-                <p className="text-xs text-white/40">{desc}</p>
+                <p className="font-semibold text-sm text-fog">{title}</p>
+                <p className="text-xs text-fog-muted">{desc}</p>
               </div>
             </div>
           ))}
@@ -65,20 +46,20 @@ export default function Footer() {
       </div>
 
       {/* Main footer */}
-      <div className="max-w-7xl mx-auto px-4 py-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+      <div className="max-w-7xl mx-auto px-4 py-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
         {/* Brand */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-1">
           <Link href="/" className="flex items-center gap-3 mb-5">
             <Image
-              src="/logo-dark.png"
+              src="/logo-white.png"
               alt="Authentic Gadget"
               width={120}
               height={36}
               className="h-8 w-auto object-contain"
             />
           </Link>
-          <p className="text-white/45 text-sm leading-relaxed mb-6 max-w-xs">
-            Ghana&apos;s most trusted destination for premium gadgets. 100% authentic products with fast delivery across the country.
+          <p className="text-fog-muted text-sm leading-relaxed mb-6 max-w-xs">
+            Ghana&apos;s most trusted destination for premium gadgets. 100% authentic products with fast delivery.
           </p>
           <div className="flex items-center gap-3">
             {[
@@ -91,7 +72,7 @@ export default function Footer() {
                 key={label}
                 href="#"
                 aria-label={label}
-                className="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-white/40 hover:text-gold hover:border-gold/30 transition-all"
+                className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-fog-muted hover:text-gold hover:border-gold/20 transition-all"
               >
                 <Icon className="w-4 h-4" />
               </a>
@@ -104,8 +85,8 @@ export default function Footer() {
           <h3 className="text-gold text-xs font-bold uppercase tracking-widest mb-4">Shop</h3>
           <ul className="space-y-2.5">
             {SHOP_LINKS.map(({ label, href }) => (
-              <li key={href}>
-                <Link href={href} className="text-sm text-white/45 hover:text-gold transition-colors">{label}</Link>
+              <li key={label}>
+                <Link href={href} className="text-sm text-fog-muted hover:text-gold transition-colors">{label}</Link>
               </li>
             ))}
           </ul>
@@ -116,41 +97,38 @@ export default function Footer() {
           <h3 className="text-gold text-xs font-bold uppercase tracking-widest mb-4">Company</h3>
           <ul className="space-y-2.5">
             {COMPANY_LINKS.map(({ label, href }) => (
-              <li key={href}>
-                <Link href={href} className="text-sm text-white/45 hover:text-gold transition-colors">{label}</Link>
+              <li key={label}>
+                <Link href={href} className="text-sm text-fog-muted hover:text-gold transition-colors">{label}</Link>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Legal */}
+        {/* Contact */}
         <div>
-          <h3 className="text-gold text-xs font-bold uppercase tracking-widest mb-4">Legal</h3>
-          <ul className="space-y-2.5">
-            {LEGAL_LINKS.map(({ label, href }) => (
-              <li key={href}>
-                <Link href={href} className="text-sm text-white/45 hover:text-gold transition-colors">{label}</Link>
-              </li>
-            ))}
+          <h3 className="text-gold text-xs font-bold uppercase tracking-widest mb-4">Contact</h3>
+          <ul className="space-y-3 text-sm text-fog-muted">
+            <li className="flex items-start gap-2">
+              <Phone className="w-4 h-4 text-gold mt-0.5 shrink-0" />
+              +233 24 123 4567
+            </li>
+            <li className="flex items-start gap-2">
+              <Mail className="w-4 h-4 text-gold mt-0.5 shrink-0" />
+              hello@authenticgadget.com
+            </li>
+            <li className="flex items-start gap-2">
+              <MapPin className="w-4 h-4 text-gold mt-0.5 shrink-0" />
+              Accra, Ghana
+            </li>
           </ul>
         </div>
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-white/5">
+      <div className="border-t border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-white/30">© 2026 Authentic Gadget. All rights reserved.</p>
-          <div className="flex items-center gap-4 text-xs text-white/30">
-            <span>Built by</span>
-            <a
-              href="https://www.linkedin.com/in/abubakar-abbas/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-electric hover:underline font-medium"
-            >
-              Phinxtech
-            </a>
-          </div>
+          <p className="text-xs text-fog-muted">© 2025 Authentic Gadget. All rights reserved.</p>
+          <p className="text-xs text-fog-muted">Built with ❤️ in Ghana 🇬🇭</p>
         </div>
       </div>
     </footer>

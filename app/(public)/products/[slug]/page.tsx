@@ -3,11 +3,10 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Star, Heart, ShieldCheck, Truck, RotateCcw, Minus, Plus, Check } from "lucide-react";
+import { Star, Heart, ShieldCheck, Truck, RotateCcw, Minus, Plus, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
-import Lightbox from "@/components/ui/Lightbox";
 import DeliveryBadges from "@/components/ui/DeliveryBadges";
-import StickyAddToCart from "@/components/ui/StickyAddToCart";
+import { useCart } from "@/context/CartContext";
 
 const MOCK_PRODUCT = {
   id: "1",
@@ -16,9 +15,9 @@ const MOCK_PRODUCT = {
   price: 12499,
   compareAt: 13999,
   images: [
-    "https://images.unsplash.com/photo-1592750475338-4b09a80f1c1e?w=800&h=800&fit=crop",
-    "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=800&h=800&fit=crop",
-    "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=800&h=800&fit=crop",
+    "https://images.unsplash.com/photo-1592750475338-4b09a80f1c1e",
+    "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd",
+    "https://images.unsplash.com/photo-1565849904461-04a58ad377e0",
   ],
   description: "The most powerful iPhone ever. A17 Pro chip, 48MP camera system, Titanium design, and the longest battery life ever in an iPhone.",
   features: [
@@ -35,7 +34,6 @@ const MOCK_PRODUCT = {
   sku: "IPH15PM-256-NT",
   brand: "Apple",
   category: "Smartphones",
-  tags: ["iPhone", "Apple", "Smartphone", "Flagship"],
 };
 
 const REVIEWS = [
@@ -49,7 +47,7 @@ function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "md
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((n) => (
-        <Star key={n} className={`${s} ${n <= Math.round(rating) ? "fill-electric text-electric" : "text-fog-200"}`} />
+        <Star key={n} className={`${s} ${n <= Math.round(rating) ? "fill-gold text-gold" : "text-white/20"}`} />
       ))}
     </div>
   );
@@ -58,56 +56,76 @@ function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "md
 export default function ProductDetailPage() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [qty, setQty] = useState(1);
-  const [selectedColor, setSelectedColor] = useState(0);
   const [wishlist, setWishlist] = useState(false);
   const [added, setAdded] = useState(false);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
-  const ctaRef = useRef<HTMLDivElement>(null);
+  const { addItem } = useCart();
 
   const product = MOCK_PRODUCT;
   const discount = product.compareAt ? Math.round((1 - product.price / product.compareAt) * 100) : 0;
 
-  const addToCart = () => {
+  const handleAddToCart = () => {
+    addItem({ id: product.id, name: product.name, price: product.price, image: product.images[0], slug: product.slug, quantity: qty });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
 
   return (
-    <div className="min-h-screen bg-fog">
+    <div className="min-h-screen bg-[#040820]">
       {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <Breadcrumbs crumbs={[{ label: "Products", href: "/products" }, { label: product.name }]} />
+      <div className="max-w-7xl mx-auto px-4 pt-4 pb-2">
+        <Breadcrumbs crumbs={[{ label: "Home", href: "/" }, { label: "Products", href: "/products" }, { label: product.name }]} />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 pb-16">
-        <div className="grid md:grid-cols-2 gap-10">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-14">
           {/* Images */}
           <div className="space-y-4">
-            <div className="relative aspect-square bg-white rounded-3xl overflow-hidden shadow-card cursor-pointer" onClick={() => { setLightboxIndex(selectedImage); setLightboxOpen(true); }}>
+            {/* Main image */}
+            <div className="relative aspect-square bg-[#06112B] rounded-3xl overflow-hidden border border-white/[0.08]">
               <Image
                 src={product.images[selectedImage]}
                 alt={product.name}
                 fill
                 className="object-cover"
                 priority
+                unoptimized
               />
               {discount > 0 && (
                 <span className="absolute top-4 left-4 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full">
                   -{discount}%
                 </span>
               )}
+              {/* Nav arrows */}
+              {product.images.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setSelectedImage((i) => (i - 1 + product.images.length) % product.images.length)}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 transition-colors"
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setSelectedImage((i) => (i + 1) % product.images.length)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 transition-colors"
+                    aria-label="Next image"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
             </div>
+            {/* Thumbnails */}
             <div className="flex gap-3">
               {product.images.map((img, i) => (
                 <button
                   key={i}
-                  onClick={() => { setSelectedImage(i); setLightboxIndex(i); }}
-                  className={`relative w-20 h-20 bg-white rounded-xl overflow-hidden border-2 transition-all ${
-                    selectedImage === i ? "border-electric" : "border-transparent"
+                  onClick={() => setSelectedImage(i)}
+                  className={`relative w-20 h-20 bg-[#06112B] rounded-xl overflow-hidden border-2 transition-all ${
+                    selectedImage === i ? "border-gold" : "border-white/[0.08] hover:border-white/[0.2]"
                   }`}
                 >
-                  <Image src={img} alt="" fill className="object-cover" />
+                  <Image src={img} alt="" fill className="object-cover" unoptimized />
                 </button>
               ))}
             </div>
@@ -116,28 +134,28 @@ export default function ProductDetailPage() {
           {/* Info */}
           <div className="space-y-6">
             <div>
-              <p className="text-sm text-electric font-medium mb-1">{product.brand}</p>
-              <h1 className="text-2xl md:text-3xl font-bold text-charcoal leading-tight mb-3">
+              <p className="text-sm text-gold font-semibold mb-1 uppercase tracking-wider">{product.brand}</p>
+              <h1 className="text-2xl lg:text-3xl font-bold text-fog leading-tight mb-3">
                 {product.name}
               </h1>
               <div className="flex items-center gap-3">
                 <StarRating rating={product.rating} size="md" />
-                <span className="text-sm text-charcoal/60">{product.rating} ({product.reviews} reviews)</span>
+                <span className="text-sm text-fog-muted">{product.rating} ({product.reviews} reviews)</span>
               </div>
             </div>
 
             {/* Price */}
-            <div className="bg-white rounded-2xl p-5 shadow-card">
+            <div className="card-dark rounded-2xl p-5 border border-white/[0.08]">
               <div className="flex items-end gap-3 mb-2">
-                <span className="text-4xl font-bold text-charcoal">¢{product.price.toLocaleString()}</span>
+                <span className="text-4xl font-bold text-gold">¢{product.price.toLocaleString()}</span>
                 {product.compareAt && (
                   <>
-                    <span className="text-xl text-charcoal/40 line-through">¢{product.compareAt.toLocaleString()}</span>
-                    <span className="text-green-600 font-semibold text-sm">Save ¢{(product.compareAt - product.price).toLocaleString()}</span>
+                    <span className="text-xl text-fog-muted line-through">¢{product.compareAt.toLocaleString()}</span>
+                    <span className="text-green-400 font-semibold text-sm">Save ¢{(product.compareAt - product.price).toLocaleString()}</span>
                   </>
                 )}
               </div>
-              <p className="text-sm text-charcoal/50">Price includes VAT</p>
+              <p className="text-sm text-fog-muted">Price includes VAT</p>
             </div>
 
             {/* Trust badges */}
@@ -147,56 +165,53 @@ export default function ProductDetailPage() {
                 { icon: Truck, label: "Fast Delivery" },
                 { icon: RotateCcw, label: "14-Day Returns" },
               ].map(({ icon: Icon, label }) => (
-                <div key={label} className="bg-white rounded-xl p-3 text-center shadow-card">
-                  <Icon className="w-6 h-6 text-electric mx-auto mb-1.5" />
-                  <p className="text-xs text-charcoal/70 font-medium">{label}</p>
+                <div key={label} className="card-dark rounded-xl p-3 text-center border border-white/[0.08]">
+                  <Icon className="w-6 h-6 text-gold mx-auto mb-1.5" />
+                  <p className="text-xs text-fog-muted font-medium">{label}</p>
                 </div>
               ))}
             </div>
 
-            {/* Delivery Badges */}
             <DeliveryBadges />
 
-            {/* Stock */}
-            <div className="flex items-center gap-2">
-              {product.stock <= 5 && (
-                <span className="text-sm text-orange-500 font-medium">
-                  ⚠ Only {product.stock} left in stock
-                </span>
-              )}
-            </div>
+            {/* Stock warning */}
+            {product.stock <= 5 && (
+              <p className="text-sm text-orange-400 font-medium">
+                ⚠ Only {product.stock} left in stock
+              </p>
+            )}
 
             {/* Quantity */}
             <div>
-              <p className="text-sm font-medium text-charcoal mb-2">Quantity</p>
+              <p className="text-sm font-medium text-fog mb-2">Quantity</p>
               <div className="flex items-center gap-4">
-                <div className="flex items-center bg-white rounded-2xl shadow-card">
+                <div className="flex items-center card-dark rounded-2xl border border-white/[0.08]">
                   <button
                     onClick={() => setQty(Math.max(1, qty - 1))}
-                    className="p-3 hover:bg-fog rounded-l-2xl transition-colors"
+                    className="p-3 hover:bg-white/[0.05] rounded-l-2xl transition-colors"
                   >
-                    <Minus className="w-5 h-5 text-charcoal" />
+                    <Minus className="w-5 h-5 text-fog" />
                   </button>
-                  <span className="w-12 text-center font-bold text-charcoal">{qty}</span>
+                  <span className="w-12 text-center font-bold text-fog">{qty}</span>
                   <button
                     onClick={() => setQty(Math.min(product.stock, qty + 1))}
-                    className="p-3 hover:bg-fog rounded-r-2xl transition-colors"
+                    className="p-3 hover:bg-white/[0.05] rounded-r-2xl transition-colors"
                   >
-                    <Plus className="w-5 h-5 text-charcoal" />
+                    <Plus className="w-5 h-5 text-fog" />
                   </button>
                 </div>
-                <span className="text-sm text-charcoal/50">{product.stock} available</span>
+                <span className="text-sm text-fog-muted">{product.stock} available</span>
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3" ref={ctaRef}>
+            {/* CTA */}
+            <div className="flex gap-3">
               <button
-                onClick={addToCart}
-                className={`flex-1 py-4 font-semibold rounded-2xl transition-all flex items-center justify-center gap-2 ${
+                onClick={handleAddToCart}
+                className={`flex-1 py-4 font-bold rounded-2xl transition-all flex items-center justify-center gap-2 text-base ${
                   added
-                    ? "bg-green-500 text-white"
-                    : "bg-electric text-white hover:bg-electric/90"
+                    ? "bg-green-600 text-white"
+                    : "bg-gold hover:bg-gold-dark text-[#030618]"
                 }`}
               >
                 {added ? (
@@ -208,21 +223,23 @@ export default function ProductDetailPage() {
               <button
                 onClick={() => setWishlist(!wishlist)}
                 className={`p-4 rounded-2xl border transition-all ${
-                  wishlist ? "bg-red-50 border-red-200 text-red-500" : "bg-white border-fog-200 text-charcoal/40 hover:text-red-500"
+                  wishlist
+                    ? "bg-red-500/10 border-red-500/30 text-red-400"
+                    : "bg-white/[0.04] border-white/[0.08] text-fog-muted hover:text-red-400"
                 }`}
               >
-                <Heart className={`w-6 h-6 ${wishlist ? "fill-red-500" : ""}`} />
+                <Heart className={`w-6 h-6 ${wishlist ? "fill-red-400" : ""}`} />
               </button>
             </div>
 
             {/* Description */}
-            <div className="bg-white rounded-2xl p-6 shadow-card">
-              <h3 className="font-bold text-charcoal mb-3">Description</h3>
-              <p className="text-sm text-charcoal/70 leading-relaxed">{product.description}</p>
+            <div className="card-dark rounded-2xl p-6 border border-white/[0.08]">
+              <h3 className="font-bold text-fog mb-3">Description</h3>
+              <p className="text-sm text-fog-muted leading-relaxed">{product.description}</p>
               <ul className="mt-4 space-y-2">
                 {product.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm text-charcoal/70">
-                    <Check className="w-4 h-4 text-electric mt-0.5 shrink-0" />
+                  <li key={f} className="flex items-start gap-2 text-sm text-fog-muted">
+                    <Check className="w-4 h-4 text-gold mt-0.5 shrink-0" />
                     {f}
                   </li>
                 ))}
@@ -230,17 +247,17 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Reviews */}
-            <div className="bg-white rounded-2xl p-6 shadow-card">
-              <h3 className="font-bold text-charcoal mb-4">Customer Reviews</h3>
+            <div className="card-dark rounded-2xl p-6 border border-white/[0.08]">
+              <h3 className="font-bold text-fog mb-4">Customer Reviews</h3>
               <div className="space-y-4">
                 {REVIEWS.map((r) => (
-                  <div key={r.id} className="border-b border-fog last:border-0 pb-4 last:pb-0">
+                  <div key={r.id} className="border-b border-white/[0.06] pb-4 last:pb-0">
                     <div className="flex items-center justify-between mb-1">
-                      <p className="font-semibold text-sm text-charcoal">{r.name}</p>
-                      <span className="text-xs text-charcoal/40">{r.date}</span>
+                      <p className="font-semibold text-sm text-fog">{r.name}</p>
+                      <span className="text-xs text-fog-muted">{r.date}</span>
                     </div>
                     <StarRating rating={r.rating} />
-                    <p className="text-sm text-charcoal/60 mt-1">{r.comment}</p>
+                    <p className="text-sm text-fog-muted mt-1">{r.comment}</p>
                   </div>
                 ))}
               </div>
@@ -248,16 +265,6 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
-
-      <Lightbox
-        images={product.images}
-        currentIndex={lightboxIndex}
-        onClose={() => setLightboxOpen(false)}
-        onPrev={() => setLightboxIndex((i) => (i - 1 + product.images.length) % product.images.length)}
-        onNext={() => setLightboxIndex((i) => (i + 1) % product.images.length)}
-      />
-
-      <StickyAddToCart product={product} ctaRef={ctaRef as React.RefObject<HTMLElement>} />
     </div>
   );
 }

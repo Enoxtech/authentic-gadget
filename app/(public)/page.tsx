@@ -2,111 +2,66 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect, useMemo } from "react";
-import { ArrowRight, Zap, Star, ShieldCheck, Truck, RotateCcw } from "lucide-react";
-import { motion } from 'framer-motion';
+import { useState, useEffect } from "react";
+import { ArrowRight, Star, Truck, RotateCcw, ShieldCheck } from "lucide-react";
+import { motion } from "framer-motion";
 import TrustBadges from "@/components/ui/TrustBadges";
 import DeliveryBadges from "@/components/ui/DeliveryBadges";
 import { useCart } from "@/context/CartContext";
 
 const FEATURED_PRODUCTS = [
   {
-    id: "1",
-    name: "iPhone 15 Pro Max",
-    price: 12499,
-    compareAt: 13999,
-    image: "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=400&h=400&fit=crop",
-    rating: 4.9,
-    reviews: 128,
-    badge: "Best Seller",
+    id: "1", name: "iPhone 15 Pro Max", slug: "iphone-15-pro-max",
+    price: 12499, compareAt: 13999,
+    image: "https://images.unsplash.com/photo-1592750475338-4b09a80f1c1e",
+    rating: 4.9, reviews: 128, badge: "Best Seller", brand: "Apple",
   },
   {
-    id: "2",
-    name: "Samsung Galaxy S24 Ultra",
-    price: 10999,
-    compareAt: 11999,
-    image: "https://images.unsplash.com/photo-1603891128711-11b4b03bb138?w=400&h=400&fit=crop",
-    rating: 4.8,
-    reviews: 96,
-    badge: "New",
+    id: "2", name: "Samsung Galaxy S24 Ultra", slug: "samsung-galaxy-s24-ultra",
+    price: 10999, compareAt: 11999,
+    image: "https://images.unsplash.com/photo-1610945415295-d9-1f7c8be6cb0",
+    rating: 4.8, reviews: 96, badge: "New", brand: "Samsung",
   },
   {
-    id: "3",
-    name: "MacBook Air M3",
-    price: 8999,
-    compareAt: 9999,
-    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop",
-    rating: 4.9,
-    reviews: 64,
-    badge: null,
+    id: "3", name: "MacBook Air M3", slug: "macbook-air-m3",
+    price: 8999, compareAt: 9999,
+    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8",
+    rating: 4.9, reviews: 64, badge: null, brand: "Apple",
   },
   {
-    id: "4",
-    name: "Sony WH-1000XM5",
-    price: 2499,
-    compareAt: 2999,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
-    rating: 4.7,
-    reviews: 215,
-    badge: "-17%",
+    id: "4", name: "Sony WH-1000XM5", slug: "sony-wh-1000xm5",
+    price: 2499, compareAt: 2999,
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
+    rating: 4.7, reviews: 215, badge: "-17%", brand: "Sony",
   },
   {
-    id: "5",
-    name: "iPad Pro 12.9\"",
-    price: 7499,
-    compareAt: 8499,
-    image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&h=400&fit=crop",
-    rating: 4.8,
-    reviews: 89,
-    badge: null,
+    id: "5", name: "iPad Pro 12.9\"", slug: "ipad-pro-12-9",
+    price: 7499, compareAt: 8499,
+    image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0",
+    rating: 4.8, reviews: 89, badge: null, brand: "Apple",
   },
   {
-    id: "6",
-    name: "Apple Watch Ultra 2",
-    price: 4499,
-    compareAt: 4999,
-    image: "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=400&h=400&fit=crop",
-    rating: 4.9,
-    reviews: 156,
-    badge: "-10%",
+    id: "6", name: "Apple Watch Ultra 2", slug: "apple-watch-ultra-2",
+    price: 4499, compareAt: 4999,
+    image: "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d",
+    rating: 4.9, reviews: 156, badge: "-10%", brand: "Apple",
   },
 ];
 
 const CATEGORIES = [
-  {
-    name: "Smartphones",
-    slug: "smartphones",
-    image: "https://images.unsplash.com/photo-1592750475338-4b09a80f1c1e?w=300&h=200&fit=crop",
-    count: 42,
-  },
-  {
-    name: "Laptops",
-    slug: "laptops",
-    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=300&h=200&fit=crop",
-    count: 28,
-  },
-  {
-    name: "Audio",
-    slug: "audio",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=200&fit=crop",
-    count: 63,
-  },
-  {
-    name: "Wearables",
-    slug: "wearables",
-    image: "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=300&h=200&fit=crop",
-    count: 35,
-  },
+  { name: "Smartphones", slug: "smartphones", icon: "📱", count: 42 },
+  { name: "Laptops", slug: "laptops", icon: "💻", count: 28 },
+  { name: "Audio", slug: "audio", icon: "🎧", count: 63 },
+  { name: "Wearables", slug: "wearables", icon: "⌚", count: 35 },
+  { name: "Gaming", slug: "gaming", icon: "🎮", count: 51 },
+  { name: "Accessories", slug: "accessories", icon: "🔌", count: 97 },
 ];
 
 function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((n) => (
-        <Star
-          key={n}
-          className={`w-3.5 h-3.5 ${n <= Math.round(rating) ? "fill-electric text-electric" : "text-fog-200"}`}
-        />
+        <Star key={n} className={`w-4 h-4 ${n <= Math.round(rating) ? "fill-gold text-gold" : "text-white/20"}`} />
       ))}
     </div>
   );
@@ -114,73 +69,70 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function HomePage() {
   const { addItem } = useCart();
-  const [visible, setVisible] = useState(false);
+  const [added, setAdded] = useState<string | null>(null);
 
-  useEffect(() => {
-    setVisible(true);
-  }, []);
+  const handleAddToCart = (product: typeof FEATURED_PRODUCTS[0]) => {
+    addItem({ id: product.id, name: product.name, price: product.price, image: product.image, slug: product.slug });
+    setAdded(product.id);
+    setTimeout(() => setAdded(null), 1500);
+  };
 
   return (
-    <>
-      <div className="min-h-screen bg-dark-space overflow-x-hidden">
+    <div className="min-h-screen bg-[#040820] overflow-x-hidden">
       {/* Hero */}
-      <section className="relative bg-midnight overflow-hidden">
-        {/* Ambient background effects */}
-        <div className="orb orb-gold w-[500px] h-[500px] -top-20 -left-20 opacity-20" />
-        <div className="orb orb-electric w-[400px] h-[400px] -bottom-20 -right-20 opacity-20" />
+      <section className="relative overflow-hidden">
+        {/* Ambient background — gold orb */}
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(212,168,67,0.12)_0%,transparent_70%)] blur-3xl pointer-events-none" />
+        {/* Blue orb bottom right */}
+        <div className="absolute -bottom-40 -right-20 w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.08)_0%,transparent_70%)] blur-3xl pointer-events-none" />
 
-        <div className="relative max-w-7xl mx-auto px-4 py-24 lg:py-36">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left: Copy */}
+        <div className="relative max-w-7xl mx-auto px-4 py-20 lg:py-32">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Copy */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+              transition={{ duration: 0.8 }}
               className="space-y-8"
             >
-              <div className="inline-flex items-center gap-2 bg-electric/10 border border-electric/20 rounded-full px-4 py-1.5">
+              <div className="inline-flex items-center gap-2 bg-gold/10 border border-gold/20 rounded-full px-4 py-1.5">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-electric opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-electric"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-gold" />
                 </span>
-                <span className="text-electric text-sm font-medium">Gaming Consoles Now Available</span>
+                <span className="text-gold text-sm font-semibold">Gaming Consoles Now Available</span>
               </div>
 
-              <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.05]">
+              <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold text-fog leading-[1.05]">
                 Level Up Your{" "}
-                <span className="text-electric">Tech Game</span>
+                <span className="text-gold">Tech Game</span>
               </h1>
 
-              <p className="text-white/60 text-lg md:text-xl max-w-lg leading-relaxed">
+              <p className="text-fog-muted text-lg md:text-xl max-w-lg leading-relaxed">
                 Authentic gadgets, unbeatable deals. From PS5s to MacBooks — all verified, all warrantied.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   href="/products"
-                  className="inline-flex items-center justify-center gap-2 bg-electric hover:bg-electric/90 text-white font-bold px-8 py-4 rounded-xl transition-all hover:shadow-[0_0_30px_rgba(0,210,255,0.4)] active:scale-95"
+                  className="inline-flex items-center justify-center gap-2 bg-gold hover:bg-gold-dark text-[#030618] font-bold px-8 py-4 rounded-xl transition-all hover:shadow-[0_0_30px_rgba(212,168,67,0.4)] active:scale-95 text-base"
                 >
-                  Shop Now
-                  <ArrowRight className="w-5 h-5" />
+                  Shop Now <ArrowRight className="w-5 h-5" />
                 </Link>
                 <Link
                   href="/track-order"
-                  className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold px-8 py-4 rounded-xl transition-all active:scale-95"
+                  className="inline-flex items-center justify-center gap-2 bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.10] text-fog font-semibold px-8 py-4 rounded-xl transition-all active:scale-95 text-base"
                 >
                   Track Order
                 </Link>
               </div>
 
-              {/* Social proof */}
-              <div className="flex items-center gap-6 pt-4">
+              {/* Trust stats */}
+              <div className="flex items-center gap-6 pt-2">
                 <div className="flex -space-x-3">
-                  {[
-                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%231a1a2e'/%3E%3Ctext x='50%25' y='50%25' font-size='14' fill='%23fff' text-anchor='middle' dy='.3em'%3E%E2%9C%A8%3C/text%3E%3C/svg%3E",
-                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%230B1F3A'/%3E%3Ctext x='50%25' y='50%25' font-size='14' fill='%23D4AF37' text-anchor='middle' dy='.3em'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E",
-                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%230B1F3A'/%3E%3Ctext x='50%25' y='50%25' font-size='14' fill='%2300D2FF' text-anchor='middle' dy='.3em'%3E%F0%9F%A5%B0%3C/text%3E%3C/svg%3E",
-                  ].map((src, i) => (
-                    <div key={i} className="w-10 h-10 rounded-full border-2 border-midnight overflow-hidden bg-midnight">
-                      <Image src={src} alt="" width={40} height={40} className="object-cover" unoptimized />
+                  {["👨🏿", "👩🏾", "👨🏿‍🦱", "👩🏿"].map((emoji, i) => (
+                    <div key={i} className="w-10 h-10 rounded-full border-2 border-[#06112B] bg-[#0B1E3D] flex items-center justify-center text-lg">
+                      {emoji}
                     </div>
                   ))}
                 </div>
@@ -190,250 +142,182 @@ export default function HomePage() {
                       <Star key={i} className="w-4 h-4 fill-gold text-gold" />
                     ))}
                   </div>
-                  <p className="text-white/40 text-xs mt-0.5">Loved by 2,400+ customers</p>
+                  <p className="text-fog-muted text-xs mt-0.5">Loved by 2,400+ customers</p>
                 </div>
               </div>
             </motion.div>
 
-            {/* Right: Floating product showcase */}
+            {/* Floating product showcase */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="relative h-[420px] lg:h-[520px]"
+              transition={{ duration: 1, delay: 0.3 }}
+              className="relative h-[420px] lg:h-[520px] hidden md:block"
             >
-              {/* Glow base */}
-              <div className="absolute inset-0 bg-gradient-to-b from-electric/10 to-transparent rounded-3xl blur-2xl" />
-
-              {/* Main product card - float animation */}
+              <div className="absolute inset-0 bg-gradient-to-b from-gold/5 to-transparent rounded-3xl" />
               <motion.div
                 animate={{ y: [0, -12, 0] }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
               >
-                <div className="w-[280px] h-[280px] md:w-[340px] md:h-[340px] rounded-3xl bg-gradient-to-br from-[#0B1F3A] to-[#0a1628] border border-white/10 p-6 shadow-[0_25px_60px_rgba(0,0,0,0.5)]">
-                  <div className="relative w-full h-full">
-                    <img
-                      src="https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=500&auto=format&fit=crop&q=60"
-                      alt="PS5 Console"
-                      className="w-full h-full object-contain drop-shadow-2xl"
-                      loading="eager"
-                    />
-                  </div>
-                  <div className="absolute -bottom-3 -right-3 bg-electric text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg">
+                <div className="w-[280px] h-[280px] lg:w-[340px] lg:h-[340px] rounded-3xl bg-[#06112B] border border-gold/10 p-6 shadow-2xl">
+                  <img
+                    src="https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=500&auto=format&fit=crop&q=60"
+                    alt="PS5 Console"
+                    className="w-full h-full object-contain"
+                    loading="eager"
+                  />
+                  <div className="absolute -bottom-3 -right-3 bg-gold text-[#030618] text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg">
                     -15% OFF
                   </div>
                 </div>
               </motion.div>
-
-              {/* Secondary card 1 - top left */}
               <motion.div
-                animate={{ y: [0, 8, 0], rotate: [355, 360, 355] }}
+                animate={{ y: [0, 8, 0] }}
                 transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                className="absolute top-4 left-0 z-20"
+                className="absolute top-4 left-0"
               >
-                <div className="w-[110px] h-[110px] md:w-[130px] md:h-[130px] rounded-2xl bg-gradient-to-br from-[#0B1F3A] to-[#0a1628] border border-white/10 p-3 shadow-xl">
-                  <div className="relative w-full h-full">
-                    <img
-                      src="https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=200&auto=format&fit=crop&q=60"
-                      alt="MacBook Pro"
-                      className="w-full h-full object-contain"
-                      loading="eager"
-                    />
-                  </div>
+                <div className="w-[110px] h-[110px] lg:w-[130px] lg:h-[130px] rounded-2xl bg-[#06112B] border border-white/[0.08] p-3 shadow-xl">
+                  <img src="https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=200&auto=format&fit=crop&q=60" alt="MacBook" className="w-full h-full object-contain" loading="eager" />
                 </div>
               </motion.div>
-
-              {/* Secondary card 2 - right side */}
               <motion.div
-                animate={{ y: [0, -10, 0], rotate: [5, 0, 5] }}
+                animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                className="absolute top-12 right-0 md:right-8 z-20"
+                className="absolute top-12 right-0"
               >
-                <div className="w-[90px] h-[90px] md:w-[110px] md:h-[110px] rounded-2xl bg-gradient-to-br from-[#0B1F3A] to-[#0a1628] border border-white/10 p-2.5 shadow-xl">
-                  <div className="relative w-full h-full">
-                    <img
-                      src="https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=200&auto=format&fit=crop&q=60"
-                      alt="Gaming Headset"
-                      className="w-full h-full object-contain"
-                      loading="eager"
-                    />
-                  </div>
+                <div className="w-[90px] h-[90px] lg:w-[110px] lg:h-[110px] rounded-2xl bg-[#06112B] border border-white/[0.08] p-2.5 shadow-xl">
+                  <img src="https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=200&auto=format&fit=crop&q=60" alt="Headphones" className="w-full h-full object-contain" loading="eager" />
                 </div>
               </motion.div>
-
-              {/* Tertiary card - bottom left */}
               <motion.div
                 animate={{ y: [0, 6, 0] }}
                 transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 3 }}
-                className="absolute bottom-8 left-4 md:left-12 z-20"
+                className="absolute bottom-8 left-4 lg:left-12"
               >
-                <div className="w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-2xl bg-gradient-to-br from-[#0B1F3A] to-[#0a1628] border border-white/10 p-2 shadow-xl">
-                  <div className="relative w-full h-full">
-                    <img
-                      src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=200&auto=format&fit=crop&q=60"
-                      alt="Apple Watch"
-                      className="w-full h-full object-contain"
-                      loading="eager"
-                    />
-                  </div>
+                <div className="w-[80px] h-[80px] lg:w-[100px] lg:h-[100px] rounded-2xl bg-[#06112B] border border-white/[0.08] p-2 shadow-xl">
+                  <img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=200&auto=format&fit=crop&q=60" alt="Watch" className="w-full h-full object-contain" loading="eager" />
                 </div>
               </motion.div>
-
-              {/* Pulse rings */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
-                <motion.div
-                  animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0, 0.15] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeOut" }}
-                  className="w-[340px] h-[340px] md:w-[420px] md:h-[420px] rounded-full border border-electric/30"
-                />
-                <motion.div
-                  animate={{ scale: [1, 1.5, 1], opacity: [0.08, 0, 0.08] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeOut", delay: 1.5 }}
-                  className="absolute inset-0 rounded-full border border-electric/20"
-                />
-              </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Trust strip */}
-      <section className="bg-white border-b border-fog-200">
-        <div className="max-w-7xl mx-auto px-4 py-5 grid grid-cols-2 md:grid-cols-4 gap-6">
-          {[
-            { icon: ShieldCheck, label: "100% Authentic", sub: "Verified products" },
-            { icon: Truck, label: "Fast Delivery", sub: "Across Ghana" },
-            { icon: Zap, label: "Best Prices", sub: "Affordable luxury" },
-            { icon: RotateCcw, label: "Easy Returns", sub: "14-day policy" },
-          ].map(({ icon: Icon, label, sub }) => (
-            <div key={label} className="flex items-center justify-center gap-3">
-              <Icon className="w-6 h-6 text-electric hidden sm:block" />
-              <div>
-                <p className="font-semibold text-sm text-charcoal">{label}</p>
-                <p className="text-xs text-charcoal/50">{sub}</p>
+      {/* Trust badges */}
+      <section className="border-y border-white/[0.06] bg-[#06112B]">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { icon: ShieldCheck, title: "100% Authentic", desc: "Every product verified" },
+              { icon: Truck, title: "Fast Delivery", desc: "Same-day in Accra" },
+              { icon: RotateCcw, title: "Easy Returns", desc: "14-day return policy" },
+              { icon: Star, title: "Top Rated", desc: "4.9/5 customer rating" },
+            ].map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
+                  <Icon className="w-5 h-5 text-gold" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm text-fog">{title}</p>
+                  <p className="text-xs text-fog-muted">{desc}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Categories */}
-      <section className="py-16 bg-fog">
+      <section className="py-16">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-charcoal">
-                Shop by Category
-              </h2>
-              <p className="text-charcoal/50 mt-1">
-                Find what you need, fast
-              </p>
-            </div>
-            <Link
-              href="/products"
-              className="text-sm text-electric font-semibold hover:underline"
-            >
-              View All →
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-fog">Shop by Category</h2>
+            <Link href="/products" className="text-sm text-gold hover:text-gold-light transition-colors font-medium">
+              View all →
             </Link>
           </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 stagger-children">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             {CATEGORIES.map((cat) => (
               <Link
                 key={cat.slug}
-                href={`/categories/${cat.slug}`}
-                className="group relative rounded-2xl overflow-hidden bg-midnight aspect-[4/3] card-3d shadow-layers"
+                href={`/products?category=${cat.slug}`}
+                className="card-dark rounded-2xl p-5 text-center transition-all duration-300 hover:border-gold/30 hover:shadow-lg group"
+                style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}
               >
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-midnight/80 to-transparent" />
-                <div className="absolute bottom-4 left-4">
-                  <p className="font-semibold text-white text-sm">{cat.name}</p>
-                  <p className="text-white/60 text-xs">{cat.count} products</p>
-                </div>
-                </Link>
+                <div className="text-3xl mb-3">{cat.icon}</div>
+                <p className="font-semibold text-sm text-fog group-hover:text-gold transition-colors">{cat.name}</p>
+                <p className="text-xs text-fog-muted mt-1">{cat.count} items</p>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
       {/* Featured Products */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-[#06112B]">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-charcoal">
-                Featured Products
-              </h2>
-              <p className="text-charcoal/50 mt-1">
-                Handpicked for you
-              </p>
-            </div>
-            <Link
-              href="/products"
-              className="text-sm text-electric font-semibold hover:underline"
-            >
-              View All →
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-fog">
+              Featured Products
+            </h2>
+            <Link href="/products" className="text-sm text-gold hover:text-gold-light transition-colors font-medium">
+              See all →
             </Link>
           </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 stagger-children">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {FEATURED_PRODUCTS.map((product) => (
               <div
                 key={product.id}
-                className="group bg-fog rounded-2xl overflow-hidden hover:shadow-card-hover transition-all duration-300 card-3d shadow-layers"
+                className="card-dark rounded-2xl overflow-hidden transition-all duration-300 hover:border-gold/20 hover:shadow-lg"
+                style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}
               >
-                <Link
-                  href={`/products/${product.id}`}
-                  className="block"
-                >
-                  <div className="relative aspect-square bg-white p-4">
-                  {product.badge && (
-                    <span
-                      className={`absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-full z-10 ${
-                        product.badge === "Best Seller"
-                          ? "bg-electric text-white"
-                          : product.badge === "New"
-                          ? "bg-midnight text-white"
-                          : "bg-red-500 text-white"
-                      }`}
-                    >
-                      {product.badge}
-                    </span>
-                  )}
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <StarRating rating={product.rating} />
-                    <span className="text-xs text-charcoal/50">
-                      {product.reviews}
-                    </span>
-                  </div>
-                  <h3 className="font-semibold text-sm text-charcoal leading-tight mb-2 line-clamp-2">
-                    {product.name}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-charcoal">
-                      ¢{product.price.toLocaleString()}
-                    </span>
-                    {product.compareAt && (
-                      <span className="text-xs text-charcoal/40 line-through">
-                        ¢{product.compareAt.toLocaleString()}
+                <Link href={`/products/${product.slug}`} className="block">
+                  <div className="relative aspect-square bg-[#0B1E3D] p-5 overflow-hidden">
+                    {product.badge && (
+                      <span className={`absolute top-3 left-3 text-[11px] font-bold px-2.5 py-1 rounded-full z-10 ${
+                        product.badge === "Best Seller" ? "bg-gold text-[#030618]" : "bg-electric text-white"
+                      }`}>
+                        {product.badge}
                       </span>
                     )}
+                    <div className="relative w-full h-full">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
+                        loading="lazy"
+                      />
+                    </div>
                   </div>
-                </div>
+                  <div className="p-4">
+                    <p className="text-[11px] text-gold/60 font-medium uppercase tracking-wider mb-1">{product.brand}</p>
+                    <h3 className="font-semibold text-[14px] text-fog leading-tight line-clamp-2 mb-2 min-h-[40px]">
+                      {product.name}
+                    </h3>
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <StarRating rating={product.rating} />
+                      <span className="text-[11px] text-fog-muted">({product.reviews})</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-[15px] font-bold text-gold">¢{product.price.toLocaleString()}</span>
+                        {product.compareAt && (
+                          <span className="ml-2 text-[12px] text-fog-muted line-through">¢{product.compareAt.toLocaleString()}</span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => { e.preventDefault(); handleAddToCart(product); }}
+                      className={`mt-3 w-full py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+                        added === product.id
+                          ? "bg-green-600 text-white"
+                          : "bg-gold/10 border border-gold/20 text-gold hover:bg-gold hover:text-[#030618]"
+                      }`}
+                    >
+                      {added === product.id ? "✓ Added to Cart" : "+ Add to Cart"}
+                    </button>
+                  </div>
                 </Link>
               </div>
             ))}
@@ -442,31 +326,25 @@ export default function HomePage() {
       </section>
 
       {/* Newsletter */}
-      <section className="py-20 bg-midnight relative overflow-hidden">
-        {/* Background orbs for newsletter */}
-        <div className="orb orb-blue w-96 h-96 -bottom-40 -left-40" style={{ animationDelay: '1s' }} />
-        <div className="orb orb-gold w-64 h-64 -top-20 right-20" style={{ animationDelay: '3s' }} />
-        
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-[radial-gradient(circle,rgba(212,168,67,0.08)_0%,transparent_70%)] blur-3xl" />
+        <div className="absolute -top-20 right-20 w-64 h-64 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.06)_0%,transparent_70%)] blur-3xl" />
         <div className="relative max-w-2xl mx-auto px-4 text-center">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-3">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-fog mb-3">
             Stay in the Loop
           </h2>
-          <p className="text-white/50 mb-8">
-            Get exclusive deals, new arrivals, and gadget tips delivered to your
-            inbox.
+          <p className="text-fog-muted mb-8">
+            Get exclusive deals, new arrivals, and gadget tips delivered to your inbox.
           </p>
-          <form
-            className="flex flex-col sm:flex-row gap-3"
-            onSubmit={(e) => e.preventDefault()}
-          >
+          <form className="flex flex-col sm:flex-row gap-3" onSubmit={(e) => e.preventDefault()}>
             <input
               type="email"
               placeholder="Enter your email"
-              className="flex-1 px-5 py-4 rounded-2xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-electric"
+              className="flex-1 px-5 py-4 rounded-2xl bg-white/[0.06] border border-white/[0.10] text-fog placeholder:text-fog-muted text-sm focus:outline-none focus:border-gold/30 transition-all"
             />
             <button
               type="submit"
-              className="btn-glossy px-8 py-4 bg-electric text-white font-semibold rounded-2xl hover:bg-electric/90 transition-all whitespace-nowrap spring-press"
+              className="px-8 py-4 bg-gold hover:bg-gold-dark text-[#030618] font-bold rounded-2xl transition-all whitespace-nowrap"
             >
               Subscribe
             </button>
@@ -474,9 +352,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      </div>
       <DeliveryBadges />
       <TrustBadges />
-    </>
+    </div>
   );
 }
