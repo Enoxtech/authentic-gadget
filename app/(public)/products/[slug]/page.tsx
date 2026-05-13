@@ -64,7 +64,7 @@ export default function ProductDetailPage() {
   const discount = product.compareAt ? Math.round((1 - product.price / product.compareAt) * 100) : 0;
 
   const handleAddToCart = () => {
-    addItem({ id: product.id, name: product.name, price: product.price, image: product.images[0], slug: product.slug, quantity: qty });
+    addItem({ id: product.id, name: product.name, price: product.price, image: product.images[0], slug: product.slug });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
