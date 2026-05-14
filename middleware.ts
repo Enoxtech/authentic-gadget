@@ -1,25 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Must match the token in /api/admin/login
-const FALLBACK_TOKEN = "ag-admin-token-2026";
-const ADMIN_TOKEN    = process.env.ADMIN_TOKEN || FALLBACK_TOKEN;
+const ADMIN_TOKEN = "ag-admin-token-2026";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public auth routes and API routes through
+  // Allow public routes through
   if (
+    pathname === "/" ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/register") ||
     pathname.startsWith("/(auth)") ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/auth") ||
-    pathname === "/"
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon")
   ) {
     return NextResponse.next();
   }
 
-  // Protect /admin routes — but allow /admin/login itself through
+  // Protect /admin routes — but allow /admin/login through
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
     const adminSession = request.cookies.get("admin_session");
     if (!adminSession || adminSession.value !== ADMIN_TOKEN) {
