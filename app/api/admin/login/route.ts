@@ -7,7 +7,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { password } = body;
 
-    // HARDCODED — update here and push to change
     const VALID_PASSWORD = "Admin2026!";
 
     if (!password || password !== VALID_PASSWORD) {
