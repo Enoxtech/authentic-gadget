@@ -1,8 +1,8 @@
 "use client";
 
-import { Package, ShoppingCart, Users, BarChart3, Settings, LogOut, LayoutDashboard, Megaphone, Star } from "lucide-react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { Package, ShoppingCart, Users, BarChart3, Settings, LogOut, LayoutDashboard, Megaphone, Star } from "lucide-react";
 
 const NAV_ITEMS = [
   { id: "overview", label: "Overview", icon: LayoutDashboard, href: "/admin/dashboard" },
@@ -18,8 +18,14 @@ const NAV_ITEMS = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
+  // Login page renders full-screen with NO sidebar
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
+
   return (
     <div className="min-h-screen bg-fog flex">
+      {/* Sidebar */}
       <aside className="w-64 bg-midnight text-white flex flex-col shrink-0 min-h-screen">
         <div className="p-6 border-b border-white/10">
           <h1 className="text-lg font-bold">🏪 Authentic Gadget</h1>
@@ -55,6 +61,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
+      {/* Main content */}
       <div className="flex-1 overflow-auto">
         {children}
       </div>
