@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ADMIN_TOKEN = "ag-admin-token-2026";
+// Use ADMIN_PASSWORD env var as the password AND the cookie value
+// Fallback default: Admin2026!  (change this immediately after first login)
+
+const FALLBACK_PASSWORD = "Admin2026!";
+const FALLBACK_TOKEN   = "ag-admin-token-2026";
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,26 +12,19 @@ export async function POST(request: NextRequest) {
     const { password } = body;
 
     const adminPassword = process.env.ADMIN_PASSWORD;
+    const adminToken    = process.env.ADMIN_TOKEN || FALLBACK_TOKEN;
 
-    if (!adminPassword) {
-      return NextResponse.json(
-        { error: "Admin authentication not configured" },
-        { status: 500 }
-      );
-    }
+    // Use env var if set, otherwise fall back to default
+    const validPassword = adminPassword || FALLBACK_PASSWORD;
 
-    if (password !== adminPassword) {
-      return NextResponse.json(
-        { error: "Invalid admin password" },
-        { status: 401 }
-      );
+    if (!password || password !== validPassword) {
+      return NextResponse.json({ error: "Invalid admin password" }, { status: 401 });
     }
 
     const response = NextResponse.json({ success: true });
-
-    response.cookies.set("admin_session", ADMIN_TOKEN, {
+    response.cookies.set("admin_session", adminToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "lax",
       maxAge: 60 * 60 * 24, // 24 hours
       path: "/",
@@ -35,9 +32,6 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch {
-    return NextResponse.json(
-      { error: "Invalid request" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

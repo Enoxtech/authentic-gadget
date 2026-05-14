@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ADMIN_TOKEN = "ag-admin-token-2026";
+// Must match the token in /api/admin/login
+const FALLBACK_TOKEN = "ag-admin-token-2026";
+const ADMIN_TOKEN    = process.env.ADMIN_TOKEN || FALLBACK_TOKEN;
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
