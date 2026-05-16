@@ -50,9 +50,10 @@ export default function RegisterPage() {
 
     setLoading(true);
 
-    // Send OTP to email — Supabase sends a 6-digit code to the user's inbox
+    // Send 6-digit OTP to email (not a magic link)
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
+      options: { email: { singleLink: false } },
     });
 
     if (otpError) {
