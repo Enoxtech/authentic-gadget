@@ -51,11 +51,9 @@ function LoginPageInner() {
     setLoading(true);
     setError("");
 
+    // Send 6-digit OTP to email (not an email link)
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
     });
 
     if (error) {

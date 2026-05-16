@@ -50,39 +50,21 @@ export default function RegisterPage() {
 
     setLoading(true);
 
-    // Sign up with email (creates unverified user)
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    // Send OTP to email — Supabase sends a 6-digit code to the user's inbox
+    const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
-      password,
-      options: {
-        data: { name, phone },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
     });
 
-    if (signUpError) {
-      setError(signUpError.message);
+    if (otpError) {
+      setError(otpError.message);
       setLoading(false);
       return;
     }
 
-    // Create customer record in Supabase after successful signup
-    if (signUpData.user) {
-      await supabase.from("customers").upsert({
-        id: signUpData.user.id,
-        full_name: name,
-        email: email,
-        phone: phone || null,
-      });
-    }
-
-    // Send OTP for phone verification if provided
-    if (phone) {
-      await supabase.auth.signInWithOtp({
-        phone,
-        options: { channel: "sms" },
-      });
-    }
+    // Store name and phone temporarily for creating customer record after verify
+    sessionStorage.setItem("pending_name", name);
+    sessionStorage.setItem("pending_email", email);
+    sessionStorage.setItem("pending_phone", phone || "");
 
     setOtpSent(true);
     setLoading(false);
@@ -99,7 +81,7 @@ export default function RegisterPage() {
       return;
     }
 
-    const { error: verifyError } = await supabase.auth.verifyOtp({
+    const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
       email,
       token: otp,
       type: "email",
@@ -107,10 +89,29 @@ export default function RegisterPage() {
 
     if (verifyError) {
       setError(verifyError.message);
-    } else {
-      router.push("/");
-      router.refresh();
+      setLoading(false);
+      return;
     }
+
+    // Create customer record in Supabase after successful OTP verification
+    if (verifyData.user) {
+      const name = sessionStorage.getItem("pending_name") || "";
+      const phone = sessionStorage.getItem("pending_phone") || "";
+      await supabase.from("customers").upsert({
+        id: verifyData.user.id,
+        full_name: name,
+        email: email,
+        phone: phone || null,
+      });
+    }
+
+    // Clean up session storage
+    sessionStorage.removeItem("pending_name");
+    sessionStorage.removeItem("pending_email");
+    sessionStorage.removeItem("pending_phone");
+
+    router.push("/");
+    router.refresh();
     setLoading(false);
   };
 
@@ -265,7 +266,7 @@ export default function RegisterPage() {
               disabled={loading}
               className="w-full py-4 bg-electric text-white font-semibold rounded-2xl hover:bg-electric/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {loading ? "Creating account..." : "Create Account"}
+              {loading ? "Sending OTP..." : "Create Account"}
             </button>
 
             <div className="relative my-6">
