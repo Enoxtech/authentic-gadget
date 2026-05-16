@@ -11,23 +11,38 @@ export default function ProfilePage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     async function checkAuth() {
       try {
         const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
+        // Use getSession (reads cookie directly, no HTTP call) instead of getUser
+        const { data: { session } } = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (!session) {
           window.location.href = "/login?redirect=/account/profile";
           return;
         }
-        setUser(user);
+        setUser(session.user);
       } catch (err) {
         console.error("Auth check error:", err);
-        window.location.href = "/login?redirect=/account/profile";
+        if (!cancelled) {
+          window.location.href = "/login?redirect=/account/profile";
+        }
       } finally {
-        setCheckingAuth(false);
+        if (!cancelled) setCheckingAuth(false);
       }
     }
+    // Timeout fallback — prevent infinite loading
+    const timer = setTimeout(() => {
+      if (!cancelled) {
+        window.location.href = "/login?redirect=/account/profile";
+      }
+    }, 8000);
     checkAuth();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, []);
 
   if (checkingAuth || loading) {
