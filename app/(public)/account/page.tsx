@@ -33,7 +33,7 @@ export default function AccountPage() {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          router.push("/(auth)/login?redirect=/account/profile");
+          router.push("/login?redirect=/account/profile");
           return;
         }
         setUser(user);
@@ -51,7 +51,7 @@ export default function AccountPage() {
         }
       } catch (err) {
         console.error("Auth check error:", err);
-        router.push("/(auth)/login?redirect=/account/profile");
+        router.push("/login?redirect=/account/profile");
       } finally {
         setCheckingAuth(false);
       }

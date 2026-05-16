@@ -223,7 +223,7 @@ function LoginPageInner() {
 
                 <div className="flex items-center justify-end mb-6">
                   <Link
-                    href="/(auth)/forgot-password"
+                    href="/forgot-password"
                     className="text-sm text-electric font-medium hover:underline"
                   >
                     Forgot password?
@@ -326,7 +326,7 @@ function LoginPageInner() {
         <p className="text-center text-sm text-charcoal/50 mt-6">
           Don't have an account?{" "}
           <Link
-            href="/(auth)/register"
+            href="/register"
             className="text-electric font-semibold hover:underline"
           >
             Sign up
