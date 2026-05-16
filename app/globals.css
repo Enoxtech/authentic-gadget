@@ -39,28 +39,81 @@
 }
 
 :root {
-  /* CSS vars for use in inline styles and components */
-  --midnight: #040820;
-  --midnight-dark: #030618;
-  --navy: #06112B;
-  --navy-dark: #030618;
-  --gold: #D4A843;
-  --gold-light: #F5ECD7;
-  --gold-dark: #C9A96E;
-  --electric: #3B82F6;
-  --electric-light: #60A5FA;
-  --fog: #F0EDE6;
-  --fog-muted: #C0B8A9;
-  --surface: #06112B;
-  --surface-light: #0B1E3D;
-  --card-dark: #081630;
-  --border: rgba(201, 169, 110, 0.12);
-  --border-strong: rgba(201, 169, 110, 0.25);
-
-  /* Glows */
-  --gold-glow: rgba(212, 168, 67, 0.2);
-  --gold-glow-strong: rgba(212, 168, 67, 0.35);
-  --electric-glow: rgba(59, 130, 246, 0.2);
+  /* OKLCH Brand Colors - perceptual uniformity, premium gradients */
+  /* Primary: Rich violet */
+  --primary: oklch(55% 0.18 285);
+  --primary-light: oklch(70% 0.15 285);
+  --primary-dark: oklch(40% 0.15 285);
+  
+  /* Accent: Cyan */
+  --accent: oklch(75% 0.14 200);
+  --accent-light: oklch(85% 0.10 200);
+  
+  /* Gold (kept from original) */
+  --gold: oklch(75% 0.16 85);
+  --gold-light: oklch(88% 0.12 85);
+  
+  /* Electric blue */
+  --electric: oklch(65% 0.20 250);
+  
+  /* Neutrals - warm off-white */
+  --fog: oklch(95% 0.01 60);
+  --fog-muted: oklch(75% 0.02 60);
+  
+  /* Backgrounds */
+  --midnight: oklch(15% 0.05 280);
+  --navy: oklch(20% 0.06 280);
+  --surface: oklch(18% 0.04 280);
+  
+  /* Text */
+  --charcoal: oklch(20% 0.02 60);
+  
+  /* Semantic tokens */
+  --background: oklch(8% 0.02 280);
+  --foreground: oklch(97% 0.01 60);
+  --card: oklch(20% 0.02 280);
+  --card-foreground: oklch(97% 0.01 60);
+  --muted: oklch(25% 0.02 280);
+  --muted-foreground: oklch(65% 0.02 60);
+  --border: oklch(30% 0.02 280);
+  
+  /* Generate hover colors using color-mix() */
+  --primary-hover: color-mix(in oklch, var(--primary) 80%, black);
+  --primary-active: color-mix(in oklch, var(--primary) 70%, black);
+  --accent-hover: color-mix(in oklch, var(--accent) 80%, black);
+  
+  /* Surface tints using color-mix */
+  --surface-1: color-mix(in oklch, var(--midnight) 100%, white 8%);
+  --surface-2: color-mix(in oklch, var(--midnight) 100%, white 12%);
+  --surface-3: color-mix(in oklch, var(--midnight) 100%, white 16%);
+  
+  /* Glass effects using color-mix */
+  --glass-white: color-mix(in oklch, white 5%, transparent);
+  --glass-white-10: color-mix(in oklch, white 10%, transparent);
+  --glass-white-15: color-mix(in oklch, white 15%, transparent);
+  --glass-primary: color-mix(in oklch, var(--primary) 8%, transparent);
+  
+  /* Gradients using OKLCH - more vibrant, consistent */
+  --gradient-hero: linear-gradient(135deg, 
+    oklch(60% 0.15 285) 0%, 
+    oklch(75% 0.14 200) 100%
+  );
+  
+  --gradient-glow: radial-gradient(circle, 
+    color-mix(in oklch, var(--primary) 30%, transparent) 0%, 
+    transparent 70%
+  );
+  
+  /* Spacing token */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  
+  /* Shadows using oklch for colored shadows */
+  --shadow-primary: 0 8px 32px oklch(55% 0.18 285 / 0.3);
+  --shadow-glow: 0 0 24px oklch(75% 0.14 200 / 0.3);
 }
 
 * { box-sizing: border-box; }
@@ -82,11 +135,519 @@ body {
   color: var(--midnight);
 }
 
-/* ===== SCROLLBAR ===== */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--midnight); }
-::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+/* === DARK LUXURY MODE === */
+/* Subtle texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* OKLCH Color utilities */
+.bg-primary { background-color: var(--primary); }
+.bg-accent { background-color: var(--accent); }
+.bg-gold { background-color: var(--gold); }
+.bg-electric { background-color: var(--electric); }
+.bg-surface { background-color: var(--surface); }
+
+.text-primary { color: var(--primary); }
+.text-accent { color: var(--accent); }
+.text-gold { color: var(--gold); }
+.text-fog { color: var(--fog); }
+
+.border-primary { border-color: var(--primary); }
+.border-gold { border-color: var(--gold); }
+.border-electric { border-color: var(--electric); }
+
+/* Glass morphism utilities */
+.glass {
+  background: var(--glass-white);
+  backdrop-filter: blur(20px);
+  -webkit-backdropFilter: blur(20px);
+  border: 1px solid oklch(100% 0 0 / 10%);
+}
+
+.glass-card {
+  background: rgba(10, 16, 30, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdropFilter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hover glow using color-mix */
+.hover-glow {
+  transition: box-shadow 0.3s ease;
+}
+.hover-glow:hover {
+  box-shadow: var(--shadow-glow);
+}
+
+/* Primary button with color-mix hover */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  color: var(--foreground);
+  transition: all 0.3s ease;
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--primary-hover) 0%, var(--accent-hover) 100%);
+  box-shadow: var(--shadow-primary);
+  transform: translateY(-1px);
+}
+
+/* Container queries for product cards */
+@container (min-width: 200px) {
+  .product-card-inner {
+    padding: 12px;
+  }
+  .product-card-title {
+    font-size: 12px;
+  }
+}
+
+@container (min-width: 280px) {
+  .product-card-inner {
+    padding: 16px;
+  }
+  .product-card-title {
+    font-size: 14px;
+  }
+}
+
+@container (min-width: 350px) {
+  .product-card-inner {
+    padding: 20px;
+  }
+  .product-card-title {
+    font-size: 16px;
+  }
+}
+
+/* Grid container query */
+.product-grid {
+  container-type: inline-size;
+}
+
+/* Product grid - responsive, no subgrid (more reliable) */
+.product-grid-subgrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .product-grid-subgrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-grid-subgrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+}
+
+/* For products page - simple responsive grid */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .products-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Featured products bento grid - simple grid */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .bento-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .bento-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+}
+
+.bento-featured {
+  grid-column: span 2;
+}
+
+@media (min-width: 640px) {
+  .bento-featured {
+    grid-column: span 2;
+  }
+}
+
+.bento-wide {
+  grid-column: span 2;
+}
+
+/* Refined glass using OKLCH */
+.glass-dark {
+  background: oklch(15% 0.04 280 / 80%);
+  backdrop-filter: blur(24px);
+  -webkit-backdropFilter: blur(24px);
+  border: 1px solid oklch(100% 0 0 / 8%);
+}
+
+.glass-nav {
+  background: oklch(12% 0.03 280 / 70%);
+  backdrop-filter: blur(20px);
+  -webkit-backdropFilter: blur(20px);
+  border-bottom: 1px solid oklch(100% 0 0 / 6%);
+}
+
+.glass-drawer {
+  background: oklch(10% 0.02 280 / 85%);
+  backdrop-filter: blur(24px);
+  -webkit-backdropFilter: blur(24px);
+  border-left: 1px solid oklch(100% 0 0 / 8%);
+  box-shadow: -20px 0 60px oklch(0% 0 0 / 40%);
+}
+
+.glass-card-hover {
+  transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.glass-card-hover:hover {
+  background: oklch(20% 0.03 280 / 60%);
+  border-color: oklch(55% 0.15 285 / 30%);
+  box-shadow: 0 16px 48px oklch(0% 0 0 / 30%), var(--shadow-glow);
+  transform: translateY(-4px) scale(1.01);
+}
+
+/* Hero angled section */
+.hero-angled {
+  clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+}
+
+/* Card angled corners - subtle premium feel */
+.card-angled {
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+}
+
+/* Product image reveal with clip-path */
+.img-reveal {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.img-reveal:hover {
+  clip-path: inset(0 0 0 0);
+}
+
+/* Noise texture overlay - refine opacity */
+body::before {
+  opacity: 0.35;
+}
+
+/* === END OKLCH SYSTEM === */
+
+/*
+============================================
+ LEGACY CSS VARS (for backward compat)
+============================================
+*/
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.5); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(124,58,237,0.8); }
+
+/* Selection */
+::selection { background: rgba(124,58,237,0.3); color: #fff; }
+
+/* ============================================
+   GRADIENT MESH HERO
+   ============================================ */
+.hero-section {
+  position: relative;
+  overflow: hidden;
+  padding: 80px 0;
+}
+.mesh-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.6;
+  animation: floatOrb 8s ease-in-out infinite;
+  pointer-events: none;
+}
+.orb-1 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #7c3aed, transparent);
+  top: -100px;
+  left: -100px;
+}
+.orb-2 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, #06b6d4, transparent);
+  bottom: -50px;
+  right: -50px;
+  animation-delay: -4s;
+}
+.orb-3 {
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, #f59e0b, transparent);
+  top: 50%;
+  left: 50%;
+  animation-delay: -2s;
+}
+@keyframes floatOrb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, -30px) scale(1.1); }
+}
+
+/* ============================================
+   HERO SLIDER
+   ============================================ */
+.hero-slider {
+  position: relative;
+  height: min(70vh, 600px);
+  overflow: hidden;
+  background: #040820;
+}
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hero-slide:not(.active) {
+  opacity: 0;
+  pointer-events: none;
+}
+.hero-slide-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+.hero-slide-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(10, 10, 10, 0.85) 0%,
+    rgba(10, 10, 10, 0.4) 50%,
+    rgba(10, 10, 10, 0.2) 100%
+  );
+}
+.hero-slide-content {
+  position: relative;
+  z-index: 10;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+.hero-slider-dots {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 20;
+}
+.hero-slider-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.hero-slider-dot.active {
+  background: linear-gradient(135deg, #7c3aed, #06b6d4);
+  transform: scale(1.2);
+}
+.hero-slider-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+.hero-slider-arrow:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-50%) scale(1.05);
+}
+.hero-slider-arrow.prev { left: 24px; }
+.hero-slider-arrow.next { right: 24px; }
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  background: rgba(124, 58, 237, 0.3);
+  border: 1px solid rgba(124, 58, 237, 0.4);
+  color: #a78bfa;
+}
+.hero-slide-price {
+  font-size: 28px;
+  font-weight: 800;
+  color: white;
+  margin: 16px 0 20px;
+}
+.hero-discount-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #22c55e, #4ade80);
+  color: white;
+  margin-left: 12px;
+}
+
+/* ============================================
+   SHIMMER ANIMATION
+   ============================================ */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ============================================
+   GLASSMORPHISM PRODUCT CARD
+   ============================================ */
+.glass-card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+  transform: translateZ(0);
+}
+.glass-card:hover {
+  transform: scale(1.03) translateZ(0);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(124,58,237,0.15);
+}
+.glass-card-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: rgba(20, 30, 60, 0.9);
+}
+.glass-card-gradient {
+  background: linear-gradient(to top, rgba(10,10,10,0.9) 0%, transparent 60%);
+}
+.glass-card-btn {
+  background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%);
+}
+.glass-card-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 32px rgba(124,58,237,0.4);
+}
+.glass-card-price {
+  font-weight: 700;
+  color: white;
+  font-size: 1.5rem;
+}
+
+/* ============================================
+   FROSTED GLASS CART DRAWER
+   ============================================ */
+.cart-drawer-glass {
+  background: rgba(10,10,10,0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-left: 1px solid rgba(255,255,255,0.1);
+  box-shadow: -20px 0 60px rgba(0,0,0,0.5);
+}
+.cart-item-glass {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  padding: 12px;
+}
+
+/* ============================================
+   BENTO GRID
+   ============================================ */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: minmax(200px, auto);
+  gap: 1rem;
+}
+.bento-featured {
+  position: relative;
+  grid-column: span 2;
+  grid-row: span 2;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  min-height: 400px;
+}
+.bento-wide {
+  position: relative;
+  grid-column: span 2;
+  border-radius: 1rem;
+  overflow: hidden;
+  min-height: 200px;
+}
+
 
 /* ===== FOCUS ===== */
 :focus-visible {
@@ -487,6 +1048,122 @@ body {
 }
 
 /* ============================================
+   MICROINTERACTIONS
+   ============================================ */
+
+/* Cart shake animation */
+@keyframes cartShake {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-8deg); }
+  40% { transform: rotate(8deg); }
+  60% { transform: rotate(-5deg); }
+  80% { transform: rotate(5deg); }
+}
+
+.cart-icon-shake {
+  animation: cartShake 0.5s ease-in-out;
+}
+
+/* Button glow on hover */
+@keyframes btnGlow {
+  0%, 100% { box-shadow: 0 4px 16px rgba(124,58,237,0.3); }
+  50% { box-shadow: 0 8px 32px rgba(124,58,237,0.6), 0 0 20px rgba(124,58,237,0.3); }
+}
+
+.btn-glow:hover {
+  animation: btnGlow 1.5s ease-in-out infinite;
+}
+
+/* Heart pop */
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.4); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+.heart-pop {
+  animation: heartPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Quantity bounce */
+@keyframes qtyBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+
+.qty-bounce {
+  animation: qtyBounce 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Field shake for checkout errors */
+@keyframes fieldShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.field-shake {
+  animation: fieldShake 0.4s ease-in-out;
+}
+
+/* Skeleton shimmer */
+@keyframes skeletonShimmer {
+  0% { background-position: -468px 0; }
+  100% { background-position: 468px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(to right, rgba(255,255,255,0.04) 8%, rgba(255,255,255,0.1) 18%, rgba(255,255,255,0.04) 33%);
+  background-size: 936px 100%;
+  animation: skeletonShimmer 1.6s infinite linear;
+}
+
+/* Product card hover lift */
+@keyframes cardHoverLift {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-6px) scale(1.02); }
+}
+
+/* Slide in from right (cart drawer) */
+@keyframes slideInRight {
+  0% { transform: translateX(100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* Slide out to right */
+@keyframes slideOutRight {
+  0% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
+/* Fade in up (scroll reveal) */
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Stagger children */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.6s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.7s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.8s; }
+
+/* ============================================
    SCROLLBAR HIDE UTILITY
    ============================================ */
 .scrollbar-hide {
@@ -495,4 +1172,15 @@ body {
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* ============================================
+   VOICE SEARCH MIC PULSE ANIMATION
+   ============================================ */
+@keyframes micPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(167,139,250,0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(167,139,250,0); }
+}
+.mic-active {
+  animation: micPulse 1.5s ease-in-out infinite;
 }

@@ -10,6 +10,7 @@ import {
   MapPin, Info, Package, LogOut
 } from "lucide-react";
 import CartBadge from "@/components/ui/CartBadge";
+import SearchBarWrapper from "@/components/ui/SearchBarWrapper";
 import { useCart } from "@/context/CartContext";
 import { createClient } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
@@ -100,7 +101,15 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 glass-nav text-white">
+      <header
+        className="sticky top-0 z-50 transition-all duration-300"
+        style={{
+          background: 'rgba(10, 10, 10, 0.7)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
         {/* Top bar — hidden on mobile */}
         <div className="hidden sm:block border-b border-white/[0.06]">
           <div className="max-w-7xl mx-auto px-4 h-7 flex items-center justify-between">
@@ -132,14 +141,7 @@ export default function Navbar() {
 
             {/* Search — desktop */}
             <div className="hidden lg:flex flex-1 max-w-sm mx-4">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fog-muted" />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  className="w-full pl-10 pr-4 h-9 rounded-xl bg-white/[0.06] border border-white/[0.08] text-fog text-sm placeholder:text-fog-muted focus:outline-none focus:border-gold/30 focus:bg-white/[0.08] transition-all"
-                />
-              </div>
+              <SearchBarWrapper />
             </div>
 
             {/* Actions */}
@@ -147,7 +149,7 @@ export default function Navbar() {
               {/* Search toggle */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="p-2.5 hover:bg-white/[0.08] rounded-xl transition-colors"
+                className="lg:hidden p-2.5 hover:bg-white/[0.08] rounded-xl transition-colors"
                 aria-label="Search"
               >
                 <Search className="w-5 h-5" />
@@ -218,7 +220,10 @@ export default function Navbar() {
             <div className="max-w-7xl mx-auto px-4 h-10 flex items-center gap-1 overflow-x-auto scrollbar-hide">
               <Link
                 href="/products"
-                className="shrink-0 text-sm font-medium text-fog-muted hover:text-gold transition-colors px-3 py-1.5 rounded-lg hover:bg-white/[0.05]"
+                className="shrink-0 text-sm font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5"
+                style={{ color: 'rgba(255,255,255,0.7)' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
               >
                 All Products
               </Link>
@@ -226,14 +231,20 @@ export default function Navbar() {
                 <Link
                   key={cat.label}
                   href={cat.href}
-                  className="shrink-0 text-sm font-medium text-fog-muted hover:text-gold transition-colors px-3 py-1.5 rounded-lg hover:bg-white/[0.05]"
+                  className="shrink-0 text-sm font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5"
+                  style={{ color: 'rgba(255,255,255,0.7)' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
                 >
                   {cat.label}
                 </Link>
               ))}
               <Link
                 href="/offers"
-                className="shrink-0 text-sm font-bold text-gold hover:text-gold-light transition-colors px-3 py-1.5 rounded-lg hover:bg-gold/5"
+                className="shrink-0 text-sm font-bold transition-colors px-3 py-1.5 rounded-lg hover:bg-violet-500/10"
+                style={{ color: '#a78bfa' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#c4b5fd')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#a78bfa')}
               >
                 Offers 🔥
               </Link>

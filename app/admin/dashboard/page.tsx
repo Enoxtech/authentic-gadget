@@ -42,16 +42,21 @@ export default function AdminDashboardPage() {
         supabase.from("customers").select("id", { count: "exact", head: true }),
       ]);
 
-      if (ordersRes.data) {
-        const totalRevenue = ordersRes.data.reduce((sum: number, o: Order) => sum + (o.total || 0), 0);
-        setStats(prev => [
-          { ...prev[0], value: `¢${totalRevenue.toLocaleString()}` },
-          { ...prev[1], value: String(ordersRes.data?.length || 0) },
-        ]);
-        setRecentOrders(ordersRes.data);
+      if (ordersRes.error) {
+        console.error('Orders error:', ordersRes.error.message);
+        throw ordersRes.error;
       }
+      const ordersData = ordersRes.data || [];
+      const totalRevenue = ordersData.reduce((sum: number, o: Order) => sum + (o.total || 0), 0);
+      setStats(prev => [
+        { ...prev[0], value: `¢${totalRevenue.toLocaleString()}` },
+        { ...prev[1], value: String(ordersData.length || 0) },
+      ]);
+      setRecentOrders(ordersData);
 
-      if (productsRes.data) {
+      if (productsRes.error) {
+        console.error('Products error:', productsRes.error.message);
+      } else if (productsRes.data) {
         setTopProducts(productsRes.data);
         setStats(prev => [prev[0], prev[1], { ...prev[2], value: String(productsRes.data?.length || 0) }, prev[3]]);
       }

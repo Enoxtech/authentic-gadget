@@ -18,6 +18,16 @@ interface CartItem extends Product {
   quantity: number;
 }
 
+interface Discount { code: string; amount: number; label?: string; }
+
+interface UpsellProduct {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  slug: string;
+}
+
 interface CartContextType {
   items: CartItem[];
   addItem: (product: Product) => void;
@@ -30,6 +40,12 @@ interface CartContextType {
   openCart: () => void;
   closeCart: () => void;
   bounced: boolean;
+  triggerCartShake: () => void;
+  discount: Discount | null;
+  setDiscount: (d: Discount | null) => void;
+  showExitModal: boolean;
+  setShowExitModal: (v: boolean) => void;
+  upsellProducts: UpsellProduct[];
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -38,6 +54,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [bounced, setBounced] = useState(false);
+  const [discount, setDiscount] = useState<Discount | null>(null);
+  const [showExitModal, setShowExitModal] = useState(false);
+
+  const upsellProducts: UpsellProduct[] = [
+    { id: "upsell-airpods", name: "AirPods Pro 2", price: 1799, image: "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=200", slug: "airpods-pro-2" },
+    { id: "upsell-watch", name: "Apple Watch Series 9", price: 2499, image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=200", slug: "apple-watch-series-9" },
+    { id: "upsell-charger", name: "MagSafe Charger", price: 299, image: "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=200", slug: "magsafe-charger" },
+  ];
 
   useEffect(() => {
     const saved = localStorage.getItem("cart");
@@ -47,6 +71,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(items));
   }, [items]);
+
+  const triggerCartShake = useCallback(() => {
+    const btn = document.getElementById('cart-icon-btn');
+    if (btn) {
+      btn.classList.add('cart-icon-shake');
+      setTimeout(() => btn.classList.remove('cart-icon-shake'), 500);
+    }
+  }, []);
 
   const addItem = useCallback((product: Product) => {
     setItems((prev) => {
@@ -58,6 +90,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { ...product, quantity: 1 }];
     });
+    triggerCartShake();
     try {
       showToast(`${product.name} added to cart`, `${product.category ?? "Product"} – ${product.brand ?? ""}`);
     } catch (_) {
@@ -65,7 +98,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
     setBounced(true);
     setTimeout(() => setBounced(false), 400);
-  }, []);
+  }, [triggerCartShake]);
 
   const removeItem = useCallback((id: string) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
@@ -102,6 +135,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         openCart,
         closeCart,
         bounced,
+        triggerCartShake,
+        discount,
+        setDiscount,
+        showExitModal,
+        setShowExitModal,
+        upsellProducts,
       }}
     >
       {children}

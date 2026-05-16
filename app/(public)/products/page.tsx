@@ -93,15 +93,27 @@ function ProductCard({ product }: { product: Product }) {
             -{discount}%
           </span>
         )}
-        <div className="relative w-full h-full">
+        {/* Quick View overlay */}
+        <div className="relative w-full h-full overflow-hidden">
           <Image
             src={primaryImage}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="object-cover group-hover:scale-110 transition-transform duration-500"
             unoptimized
           />
+          {/* Quick View overlay */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/30">
+            <Link
+              href={`/products/${product.slug}`}
+              className="px-4 py-2 rounded-xl text-white text-xs font-semibold"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #06b6d4)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              Quick View
+            </Link>
+          </div>
         </div>
         {/* Wishlist */}
         <button
@@ -153,27 +165,37 @@ function ProductCard({ product }: { product: Product }) {
   );
 }
 
-function ProductSkeleton() {
-  return (
-    <div className="card-dark rounded-2xl overflow-hidden">
-      <div className="aspect-square bg-[#0B1E3D] animate-pulse" />
-      <div className="p-4 space-y-3">
-        <div className="h-3 bg-white/5 rounded w-1/3 animate-pulse" />
-        <div className="h-4 bg-white/5 rounded w-2/3 animate-pulse" />
-        <div className="h-3 bg-white/5 rounded w-1/2 animate-pulse" />
-        <div className="h-8 bg-white/5 rounded-xl animate-pulse" />
-      </div>
-    </div>
-  );
-}
-
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showSkeletons, setShowSkeletons] = useState(true);
   const [error, setError] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sort, setSort] = useState("featured");
   const [showFilter, setShowFilter] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [activeColor, setActiveColor] = useState<string | null>(null);
+
+  const handleColorFilter = (color: string) => {
+    setActiveColor(prev => prev === color ? null : color);
+  };
+
+  const colorCategoryMap: Record<string, string[]> = {
+    "#000000": ["black", "dark"],
+    "#ffffff": ["white", "silver"],
+    "#7c3aed": ["violet", "purple"],
+    "#06b6d4": ["cyan", "teal"],
+    "#ef4444": ["red"],
+    "#22c55e": ["green"],
+    "#3b82f6": ["blue"],
+    "#ec4899": ["pink"],
+  };
+
+  // Show skeleton loaders for 1.5s on mount
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSkeletons(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Extract unique categories from products
   const categories = ["All", ...Array.from(new Set(products.map((p) => p.category).filter(Boolean)))] as string[];
@@ -204,9 +226,25 @@ export default function ProductsPage() {
     fetchProducts();
   }, []);
 
-  const filtered = products.filter(
-    (p) => selectedCategory === "All" || p.category === selectedCategory
-  );
+  const handleFilter = (category: string) => {
+    setIsFiltering(true);
+    setTimeout(() => {
+      setSelectedCategory(category);
+      setIsFiltering(false);
+    }, 200);
+  };
+
+  const filtered = products.filter((p) => {
+    if (selectedCategory !== "All" && p.category !== selectedCategory) return false;
+    if (activeColor) {
+      // Simple color-to-tag matching for visual search
+      const colorTags = colorCategoryMap[activeColor] || [];
+      const productTags = [p.brand, p.category].filter(Boolean).map(t => t!.toLowerCase());
+      const matches = colorTags.some(t => productTags.some(pt => pt.includes(t)));
+      if (!matches) return false;
+    }
+    return true;
+  });
   const sorted = [...filtered].sort((a, b) => {
     if (sort === "price-asc") return a.price - b.price;
     if (sort === "price-desc") return b.price - a.price;
@@ -261,7 +299,7 @@ export default function ProductsPage() {
             {categories.map((cat) => (
               <button
                 key={cat}
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => handleFilter(cat)}
                 className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   selectedCategory === cat
                     ? "bg-gold text-[#030618] font-bold"
@@ -282,15 +320,68 @@ export default function ProductsPage() {
           <SlidersHorizontal className="w-4 h-4" /> Filter & Sort
         </button>
 
+        {/* Color filter */}
+        <div className="mb-6">
+          <p className="text-xs font-medium mb-3 text-fog-muted">SEARCH BY COLOR</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            {[
+              { color: "#ffffff", label: "White" },
+              { color: "#000000", label: "Black" },
+              { color: "#7c3aed", label: "Violet" },
+              { color: "#06b6d4", label: "Cyan" },
+              { color: "#f59e0b", label: "Amber" },
+              { color: "#ef4444", label: "Red" },
+              { color: "#22c55e", label: "Green" },
+              { color: "#3b82f6", label: "Blue" },
+              { color: "#ec4899", label: "Pink" },
+            ].map(({ color, label }) => (
+              <button
+                key={color}
+                onClick={() => handleColorFilter(color)}
+                className="relative w-8 h-8 rounded-full transition-transform hover:scale-110"
+                style={{
+                  background: color,
+                  border: activeColor === color ? '2px solid #D4A843' : '2px solid transparent',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                }}
+                title={label}
+              >
+                {activeColor === color && (
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="w-2 h-2 rounded-full" style={{ background: color === '#ffffff' ? '#000' : '#fff' }} />
+                  </span>
+                )}
+              </button>
+            ))}
+            {activeColor && (
+              <button
+                onClick={() => setActiveColor(null)}
+                className="text-xs px-3 py-1 rounded-full transition-colors hover:bg-white/10"
+                style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(240,237,230,0.6)' }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Products grid */}
-        {loading ? (
+        {loading || showSkeletons ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <ProductSkeleton key={i} />
+              <div key={i} className="card-dark rounded-2xl overflow-hidden">
+                <div className="skeleton aspect-square" />
+                <div className="p-4 space-y-2">
+                  <div className="skeleton h-3 w-20 rounded" />
+                  <div className="skeleton h-4 w-full rounded" />
+                  <div className="skeleton h-3 w-16 rounded" />
+                  <div className="skeleton h-9 w-full rounded-xl mt-2" />
+                </div>
+              </div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className={`products-grid stagger-children`}>
             {sorted.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

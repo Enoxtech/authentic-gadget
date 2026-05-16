@@ -13,8 +13,15 @@ interface CartBadgeProps {
 export default function CartBadge({ count, justBounced, onClick }: CartBadgeProps) {
   return (
     <button
+      id="cart-icon-btn"
       onClick={onClick}
-      className="p-2 hover:bg-white/10 rounded-xl transition-colors relative"
+      className="p-2.5 rounded-xl transition-colors relative"
+      style={{
+        background: 'rgba(255,255,255,0.1)',
+        border: '1px solid rgba(255,255,255,0.15)',
+      }}
+      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
+      onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
       aria-label={`Cart with ${count} items`}
     >
       <ShoppingCart className="w-5 h-5" />
