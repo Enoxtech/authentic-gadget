@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User, Mail, Phone, MapPin, Camera } from "lucide-react";
+import { User, Mail, Phone, Camera } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import Link from "next/link";
 
@@ -9,22 +9,31 @@ export default function ProfilePage() {
   const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: Record<string, string> } | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [debugInfo, setDebugInfo] = useState<string>("");
 
   useEffect(() => {
     let cancelled = false;
+
     async function checkAuth() {
       try {
         const supabase = createClient();
-        // Use getSession (reads cookie directly, no HTTP call) instead of getUser
-        const { data: { session } } = await supabase.auth.getSession();
+
+        // Get session via getSession (cookie-based)
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+        setDebugInfo(`session=${!!sessionData?.session}, error=${sessionError?.message || "none"}`);
+
         if (cancelled) return;
-        if (!session) {
+
+        if (!sessionData?.session) {
           window.location.href = "/login?redirect=/account/profile";
           return;
         }
-        setUser(session.user);
-      } catch (err) {
+
+        setUser(sessionData.session.user);
+      } catch (err: any) {
         console.error("Auth check error:", err);
+        setDebugInfo(`exception=${err.message}`);
         if (!cancelled) {
           window.location.href = "/login?redirect=/account/profile";
         }
@@ -32,12 +41,14 @@ export default function ProfilePage() {
         if (!cancelled) setCheckingAuth(false);
       }
     }
+
     // Timeout fallback — prevent infinite loading
     const timer = setTimeout(() => {
       if (!cancelled) {
         window.location.href = "/login?redirect=/account/profile";
       }
-    }, 8000);
+    }, 10000);
+
     checkAuth();
     return () => {
       cancelled = true;
@@ -48,7 +59,11 @@ export default function ProfilePage() {
   if (checkingAuth || loading) {
     return (
       <div className="min-h-screen bg-fog flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-electric/20 border-t-electric rounded-full animate-spin" />
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-electric/20 border-t-electric rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-charcoal/40 text-sm mb-2">Loading profile...</p>
+          <p className="text-charcoal/20 text-xs font-mono">{debugInfo}</p>
+        </div>
       </div>
     );
   }
@@ -62,6 +77,12 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-fog py-10">
       <div className="max-w-4xl mx-auto px-4">
+        {/* Debug info */}
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs font-mono text-amber-600">
+          Session active: {user.id}<br />
+          Email: {user.email}
+        </div>
+
         {/* Back nav */}
         <Link href="/account" className="inline-flex items-center gap-2 text-sm text-charcoal/50 hover:text-electric mb-6 transition-colors">
           ← Back to My Account
