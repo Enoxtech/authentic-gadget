@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 
   // Handle OAuth (Google) callback
   if (code) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
   // Handle email link confirmation (from signInWithOtp)
   if (token && type === "email") {
-    const supabase = createClient();
+    const supabase = await createClient();
     // With email link OTP, the token IS the session code — exchange it
     const { error } = await supabase.auth.exchangeCodeForSession(token);
     if (!error) {
