@@ -180,7 +180,7 @@ export default function Navbar() {
                   </Link>
                 ) : (
                   <Link
-                    href="/(auth)/login"
+                    href="/login"
                     className="hidden sm:flex p-2.5 hover:bg-white/[0.08] rounded-xl transition-colors"
                     aria-label="Login"
                   >
@@ -378,7 +378,7 @@ export default function Navbar() {
                 </>
               ) : (
                 <Link
-                  href="/(auth)/login"
+                  href="/login"
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center gap-3.5 px-5 py-3.5 text-fog-muted hover:text-white hover:bg-white/[0.05] transition-colors"
                 >
