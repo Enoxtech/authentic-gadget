@@ -13,10 +13,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid admin password" }, { status: 401 });
     }
 
+    const isProduction = process.env.NODE_ENV === "production";
     const response = NextResponse.json({ success: true });
     response.cookies.set("admin_session", ADMIN_TOKEN, {
       httpOnly: true,
-      secure: true,
+      secure: isProduction,
       sameSite: "lax",
       maxAge: 60 * 60 * 24,
       path: "/",
