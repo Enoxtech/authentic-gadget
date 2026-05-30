@@ -11,8 +11,18 @@ function OrderSuccessContent() {
   const orderId = params.get("order") || "AG-XXXXXXXX";
   const total = params.get("total") || "0";
   const method = params.get("method") || "cod";
-  const isPaid = method === "momo";
-  const methodLabel = method === "momo" ? "MTN MoMo" : "Pay on Delivery";
+  const provider = params.get("provider") || "mtn";
+
+  const isMomo = method === "momo";
+  const isCod = method === "cod" || !method;
+
+  const PROVIDER_LABELS: Record<string, string> = {
+    mtn: "MTN MoMo",
+    vodafone: "Vodafone Cash",
+    airteltigo: "AirtelTigo Money",
+    card: "Card Payment",
+  };
+  const methodLabel = isMomo ? (PROVIDER_LABELS[provider] || "Mobile Money") : "Pay on Delivery";
 
   // Clear the cart after a successful order
   const { clearCart } = useCart();
@@ -28,7 +38,9 @@ function OrderSuccessContent() {
         <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
           <CheckCircle className="w-12 h-12 text-green-500" />
         </div>
-        <h1 className="text-2xl font-bold text-charcoal mb-2">Order Placed!</h1>
+        <h1 className="text-2xl font-bold text-charcoal mb-2">
+          {isCod ? "Order Confirmed!" : "Order Placed!"}
+        </h1>
         <p className="text-charcoal/50 mb-6">
           Thank you for shopping with Authentic Gadget. Your order has been received.
         </p>
@@ -45,7 +57,7 @@ function OrderSuccessContent() {
           </div>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-charcoal/60">Total Paid</span>
+              <span className="text-charcoal/60">Order Total</span>
               <span className="font-bold text-electric">GHS{Number(total).toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
@@ -54,8 +66,8 @@ function OrderSuccessContent() {
             </div>
             <div className="flex justify-between">
               <span className="text-charcoal/60">Payment Status</span>
-              <span className={`font-medium ${isPaid ? "text-green-600" : "text-amber-500"}`}>
-                {isPaid ? "Paid" : "Pending"}
+              <span className={`font-medium ${isCod ? "text-amber-500" : "text-green-600"}`}>
+                {isCod ? "Pay on Delivery" : "Pending Confirmation"}
               </span>
             </div>
             <div className="flex justify-between">
@@ -65,11 +77,17 @@ function OrderSuccessContent() {
           </div>
         </div>
 
-        {!isPaid && (
+        {isMomo && (
           <p className="text-sm text-charcoal/50 mb-4 bg-amber-50 rounded-xl p-3">
-            💡 {methodLabel === "MTN MoMo"
-              ? "A MoMo payment request will be sent to your number shortly."
-              : "Please have your payment ready when our delivery agent arrives."}
+            💡 A <strong>{PROVIDER_LABELS[provider]}</strong> payment request has been sent to your phone.
+            Please approve it to confirm your order. Your order will be processed once payment is confirmed.
+          </p>
+        )}
+
+        {isCod && (
+          <p className="text-sm text-charcoal/50 mb-4 bg-amber-50 rounded-xl p-3">
+            💡 Please have <strong>GHS{Number(total).toLocaleString()}</strong> ready when our delivery agent arrives.
+            Do not make payment before receiving your order.
           </p>
         )}
 

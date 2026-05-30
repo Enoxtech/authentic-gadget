@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { amount, currency, phone, email, name, orderId } = await req.json();
+    const { amount, currency, phone, email, name, orderId, provider } = await req.json();
 
     if (!amount || !phone || !email) {
       return NextResponse.json(
@@ -10,6 +10,15 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Map provider names to Flutterwave network codes
+    const PROVIDER_NETWORK_MAP: Record<string, string> = {
+      mtn: "MTN",
+      vodafone: "VODAFONE",
+      airteltigo: "TIGO", // Flutterwave uses "TIGO" for AirtelTigo
+    };
+
+    const network = provider ? (PROVIDER_NETWORK_MAP[provider] || "MTN") : "MTN";
 
     const flutterwaveSecretKey = process.env.FLUTTERWAVE_SECRET_KEY;
     if (!flutterwaveSecretKey) {
@@ -29,10 +38,11 @@ export async function POST(req: NextRequest) {
       email: email,
       first_name: name?.split(" ")[0] || "Customer",
       last_name: name?.split(" ").slice(1).join(" ") || "",
-      network: "MTN",
-      redirect_url: `${process.env.NEXT_PUBLIC_BASE_URL}/order-success?order=${orderId}&total=${amount}&method=momo`,
+      network,
+      redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/order-success?order=${orderId}&total=${amount}&method=momo&provider=${provider || "mtn"}`,
       meta: {
         order_id: orderId,
+        provider: provider || "mtn",
         source: "authentic_gadget_web",
       },
     };

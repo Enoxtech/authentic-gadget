@@ -205,15 +205,7 @@ export default function ProductsPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/products?select=*&is_active=eq.true&order=created_at.desc`,
-          {
-            headers: {
-              apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-              Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-            },
-          }
-        );
+        const res = await fetch("/api/products");
         if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
         setProducts(data as Product[]);

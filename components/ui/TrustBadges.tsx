@@ -5,10 +5,10 @@ import { useEffect, useRef } from "react";
 const badges = [
   "🔒 100% Authentic Products",
   "✅ CAC Verified Business",
-  "🚚 Free Shipping ₦50k+",
+  "🚚 Free Shipping ¢50k+",
   "↩️ 7-Day Returns",
   "💬 WhatsApp Support",
-  "⚡ Same-Day Lagos Delivery",
+  "⚡ Same-Day Accra Delivery",
   "🏦 Secure Payment",
   "📦 Tracking Available",
   "⭐ 4.9/5 Customer Rating",

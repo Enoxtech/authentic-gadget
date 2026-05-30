@@ -182,9 +182,9 @@ export default function HomePage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="glass-card-price">${product.price.toLocaleString()}</span>
+                        <span className="glass-card-price">¢{product.price.toLocaleString()}</span>
                         {product.compareAt && (
-                          <span className="ml-2 text-[12px] line-through" style={{ color: 'rgba(248,249,251,0.4)' }}>${product.compareAt.toLocaleString()}</span>
+                          <span className="ml-2 text-[12px] line-through" style={{ color: 'rgba(248,249,251,0.4)' }}>¢{product.compareAt.toLocaleString()}</span>
                         )}
                       </div>
                     </div>

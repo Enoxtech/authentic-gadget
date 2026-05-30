@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
-import { Check, ArrowRight, ArrowLeft, CreditCard, Building, Banknote, ShoppingBag } from "lucide-react";
+import { Check, ArrowRight, ArrowLeft, CreditCard, Banknote, ShoppingBag, Loader2, Smartphone, Truck } from "lucide-react";
 
 const STEPS = [
   { id: "info", label: "Information", icon: "📋" },
@@ -12,18 +13,29 @@ const STEPS = [
 ];
 
 const PAYMENT_METHODS = [
-  { id: "card", label: "Credit/Debit Card", icon: CreditCard, desc: "Pay securely with your card" },
-  { id: "transfer", label: "Bank Transfer", icon: Building, desc: "GTBank / FirstBank / UBA" },
-  { id: "cod", label: "Cash on Delivery", icon: Banknote, desc: "Pay when you receive" },
+  { id: "momo", label: "Mobile Money (MoMo)", icon: Smartphone, desc: "MTN · Vodafone · AirtelTigo" },
+  { id: "cod", label: "Pay on Delivery", icon: Truck, desc: "Pay when your order arrives" },
+];
+
+const MOMO_PROVIDERS = [
+  { id: "mtn", label: "MTN MoMo", color: "#FFCC00" },
+  { id: "vodafone", label: "Vodafone Cash", color: "#E60000" },
+  { id: "airteltigo", label: "AirtelTigo Money", color: "#8B5CF6" },
 ];
 
 export default function CheckoutPage() {
-  const { items, total, discount, addItem, removeItem, updateQuantity, clearCart } = useCart();
+  const { items, total, discount, updateQuantity, clearCart } = useCart();
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", address: "", city: "", state: "" });
-  const [paymentMethod, setPaymentMethod] = useState("card");
+  const [paymentMethod, setPaymentMethod] = useState("momo");
+  const [momoProvider, setMomoProvider] = useState("mtn");
+  const [showMomoProviders, setShowMomoProviders] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [orderId, setOrderId] = useState("");
+  const [error, setError] = useState("");
 
   const discountedTotal = discount ? Math.max(0, total - discount.amount) : total;
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
@@ -38,35 +50,163 @@ export default function CheckoutPage() {
     setTimeout(() => { setStep(s => s - 1); setIsAnimating(false); }, 300);
   };
 
-  const handlePlaceOrder = () => {
-    setIsAnimating(true);
-    setTimeout(() => {
-      setOrderPlaced(true);
-      clearCart();
-      setIsAnimating(false);
-    }, 1500);
+  const generateOrderId = () => `AG_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
+
+  const handlePlaceOrder = async () => {
+    setError("");
+    setIsProcessing(true);
+    const newOrderId = generateOrderId();
+    const orderPayload = {
+      id: newOrderId,
+      customer_name: formData.name,
+      customer_email: formData.email,
+      customer_phone: formData.phone,
+      shipping_address: formData.address,
+      shipping_city: formData.city,
+      shipping_region: formData.state,
+      subtotal: total,
+      shipping: 0,
+      total: discountedTotal,
+      payment_method: paymentMethod === "cod" ? "cod" : paymentMethod,
+      items: items.map(item => ({
+        product_id: item.id,
+        product_name: item.name,
+        product_slug: item.slug,
+        product_image: item.image,
+        price: item.price,
+        quantity: item.quantity,
+      })),
+    };
+
+    // ─── Cash on Delivery ───
+    if (paymentMethod === "cod") {
+      try {
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
+        });
+        if (!res.ok) throw new Error("Order creation failed");
+        setOrderId(newOrderId);
+        clearCart();
+        setOrderPlaced(true);
+      } catch (err) {
+        setError("Failed to place order. Please try again.");
+      } finally {
+        setIsProcessing(false);
+      }
+      return;
+    }
+
+    // ─── Mobile Money ───
+    if (paymentMethod === "momo") {
+      if (!formData.phone) {
+        setError("Please enter your phone number for MoMo payment.");
+        setIsProcessing(false);
+        return;
+      }
+      try {
+        const momoRes = await fetch("/api/flutterwave/momo", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: discountedTotal,
+            currency: "GHS",
+            phone: formData.phone.replace(/\D/g, ""),
+            email: formData.email,
+            name: formData.name,
+            orderId: newOrderId,
+            provider: momoProvider,
+          }),
+        });
+        const momoData = await momoRes.json();
+        if (!momoRes.ok) throw new Error(momoData.error || "MoMo payment initiation failed");
+
+        // Create order in pending state
+        await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...orderPayload, payment_method: `momo_${momoProvider}` }),
+        });
+
+        setOrderId(newOrderId);
+        clearCart();
+        // Redirect to order success page — Flutterwave will have sent a USSD prompt
+        // Customer confirms on their phone, Flutterwave webhook updates payment status
+        router.push(`/order-success?order=${newOrderId}&total=${discountedTotal}&method=momo&provider=${momoProvider}`);
+      } catch (err: any) {
+        setError(err.message || "Payment initiation failed. Please try again.");
+      } finally {
+        setIsProcessing(false);
+      }
+      return;
+    }
+
+    // ─── Card / Paystack ───
+    if (paymentMethod === "card") {
+      try {
+        const initRes = await fetch("/api/paystack/initialize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: discountedTotal,
+            email: formData.email,
+            orderId: newOrderId,
+            products: items,
+            customer_name: formData.name,
+            customer_phone: formData.phone,
+            shipping_address: formData.address,
+            shipping_city: formData.city,
+            shipping_region: formData.state,
+            subtotal: total,
+            shipping: 0,
+            total: discountedTotal,
+            payment_method: "card",
+          }),
+        });
+        const initData = await initRes.json();
+        if (!initRes.ok || !initData.authorizationUrl) throw new Error(initData.error || "Failed to initialize payment");
+        // Redirect to Paystack payment page
+        window.location.href = initData.authorizationUrl;
+      } catch (err: any) {
+        setError(err.message || "Payment failed. Please try again.");
+        setIsProcessing(false);
+      }
+    }
   };
 
   const isStep0Valid = formData.name.trim() && formData.email.trim() && formData.address.trim();
 
   // Order success animation
   if (orderPlaced) {
+    const isCod = paymentMethod === "cod";
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0a0a" }}>
         <div className="text-center max-w-md px-4">
           <div className="mb-6">
             <div
               className="w-24 h-24 rounded-full mx-auto flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #22c55e, #4ade80)" }}
+              style={{ background: isCod ? "linear-gradient(135deg, #7c3aed, #06b6d4)" : "linear-gradient(135deg, #22c55e, #4ade80)" }}
             >
-              <Check className="w-12 h-12 text-white" />
+              {isCod ? <Truck className="w-12 h-12 text-white" /> : <Check className="w-12 h-12 text-white" />}
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Order Placed! 🎉</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">
+            {isCod ? "Order Confirmed! 🎉" : "Order Placed! 🎉"}
+          </h1>
           <p className="text-white/60 mb-2">Thank you, {formData.name || "customer"}!</p>
-          <p className="text-sm text-white/40 mb-8">
-            Your order is being processed. You&apos;ll receive a confirmation shortly.
-          </p>
+
+          {isCod ? (
+            <p className="text-sm text-white/40 mb-8">
+              Your order <span className="font-mono text-white/60">#{orderId}</span> has been received.
+              Please have <span className="font-bold text-white">¢{discountedTotal.toLocaleString()}</span> ready when our delivery agent arrives.
+            </p>
+          ) : (
+            <p className="text-sm text-white/40 mb-8">
+              Your order <span className="font-mono text-white/60">#{orderId}</span> is being processed.
+              You&apos;ll receive a confirmation shortly.
+            </p>
+          )}
 
           <div
             className="flex items-center gap-3 p-3 rounded-xl mb-6"
@@ -75,7 +215,7 @@ export default function CheckoutPage() {
             <div className="text-2xl">🚚</div>
             <div className="text-left">
               <p className="text-sm font-semibold text-white">Estimated Delivery</p>
-              <p className="text-xs text-white/60">2-5 business days (Lagos) · 3-7 days (other states)</p>
+              <p className="text-xs text-white/60">3-5 business days (Ghana) · 5-10 days (other regions)</p>
             </div>
           </div>
 
@@ -85,8 +225,13 @@ export default function CheckoutPage() {
           >
             <p className="text-xs text-white/40 mb-2">Order total</p>
             <p className="text-3xl font-bold" style={{ color: "#a78bfa" }}>
-              ${discountedTotal.toLocaleString()}
+              ¢{discountedTotal.toLocaleString()}
             </p>
+            {isCod && (
+              <p className="text-xs mt-1" style={{ color: "rgba(124,58,237,0.8)" }}>
+                Pay on delivery · Do not pay before receiving your order
+              </p>
+            )}
           </div>
           <Link
             href="/products"
@@ -241,7 +386,7 @@ export default function CheckoutPage() {
                     {PAYMENT_METHODS.map(({ id, label, icon: Icon, desc }) => (
                       <button
                         key={id}
-                        onClick={() => setPaymentMethod(id)}
+                        onClick={() => { setPaymentMethod(id); setShowMomoProviders(false); setError(""); }}
                         className="w-full flex items-center gap-4 p-4 rounded-xl transition-all text-left"
                         style={{
                           background:
@@ -277,6 +422,29 @@ export default function CheckoutPage() {
                         )}
                       </button>
                     ))}
+
+                    {/* MoMo sub-step: Provider selection */}
+                    {paymentMethod === "momo" && (
+                      <div className="mt-3 pl-4 border-l-2 border-violet-500/30 space-y-2">
+                        <p className="text-xs text-white/40 mb-2">Select your network:</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {MOMO_PROVIDERS.map(p => (
+                            <button
+                              key={p.id}
+                              onClick={() => setMomoProvider(p.id)}
+                              className="py-2.5 px-3 rounded-xl text-xs font-semibold transition-all"
+                              style={{
+                                background: momoProvider === p.id ? `${p.color}22` : "rgba(255,255,255,0.04)",
+                                border: momoProvider === p.id ? `2px solid ${p.color}` : "1px solid rgba(255,255,255,0.08)",
+                                color: momoProvider === p.id ? p.color : "rgba(255,255,255,0.6)",
+                              }}
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -344,7 +512,7 @@ export default function CheckoutPage() {
                             +
                           </button>
                           <p className="text-sm font-bold text-white ml-2">
-                            ${(item.price * item.quantity).toLocaleString()}
+                            ¢{(item.price * item.quantity).toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -370,12 +538,12 @@ export default function CheckoutPage() {
                   >
                     <div className="flex justify-between text-sm">
                       <span style={{ color: "rgba(255,255,255,0.5)" }}>Subtotal</span>
-                      <span className="text-white">${total.toLocaleString()}</span>
+                      <span className="text-white">¢{total.toLocaleString()}</span>
                     </div>
                     {discount && (
                       <div className="flex justify-between text-sm">
                         <span style={{ color: "#22c55e" }}>Discount ({discount.code})</span>
-                        <span style={{ color: "#22c55e" }}>-${discount.amount.toLocaleString()}</span>
+                        <span style={{ color: "#22c55e" }}>-¢{discount.amount.toLocaleString()}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-sm">
@@ -384,7 +552,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex justify-between text-lg font-bold pt-2 border-t border-white/10">
                       <span className="text-white">Total</span>
-                      <span style={{ color: "#a78bfa" }}>${discountedTotal.toLocaleString()}</span>
+                      <span style={{ color: "#a78bfa" }}>¢{discountedTotal.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -410,11 +578,16 @@ export default function CheckoutPage() {
                 </Link>
               )}
 
+              {error && (
+                <div className="mt-3 px-4 py-3 rounded-xl text-sm text-red-300" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }}>
+                  {error}
+                </div>
+              )}
               {step < STEPS.length - 1 ? (
                 <button
                   onClick={handleNext}
                   disabled={step === 0 && !isStep0Valid}
-                  className="flex items-center gap-2 px-8 py-3 rounded-xl text-white font-bold"
+                  className="flex items-center gap-2 px-8 py-3 rounded-xl text-white font-bold transition-all"
                   style={{
                     background: "linear-gradient(135deg, #7c3aed, #06b6d4)",
                     opacity: step === 0 && !isStep0Valid ? 0.5 : 1,
@@ -426,14 +599,25 @@ export default function CheckoutPage() {
               ) : (
                 <button
                   onClick={handlePlaceOrder}
-                  className="flex items-center gap-2 px-8 py-3 rounded-xl text-white font-bold"
+                  disabled={isProcessing}
+                  className="flex items-center gap-2 px-8 py-3 rounded-xl text-white font-bold transition-all disabled:opacity-60"
                   style={{
-                    background: "linear-gradient(135deg, #22c55e, #4ade80)",
-                    boxShadow: "0 8px 32px rgba(34,197,94,0.4)",
+                    background: paymentMethod === "cod"
+                      ? "linear-gradient(135deg, #7c3aed, #06b6d4)"
+                      : "linear-gradient(135deg, #22c55e, #4ade80)",
+                    boxShadow: paymentMethod === "cod"
+                      ? "0 8px 32px rgba(124,58,237,0.3)"
+                      : "0 8px 32px rgba(34,197,94,0.4)",
+                    cursor: isProcessing ? "not-allowed" : "pointer",
                   }}
                 >
-                  Place Order →{" "}
-                  {discountedTotal > 0 ? `$${discountedTotal.toLocaleString()}` : ""}
+                  {isProcessing ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
+                  ) : paymentMethod === "cod" ? (
+                    <>Confirm Order → {discountedTotal > 0 ? `¢${discountedTotal.toLocaleString()}` : ""}</>
+                  ) : (
+                    <>{paymentMethod === "momo" ? "Pay with MoMo →" : "Pay Now →"} {discountedTotal > 0 ? `¢${discountedTotal.toLocaleString()}` : ""}</>
+                  )}
                 </button>
               )}
             </div>
@@ -468,7 +652,7 @@ export default function CheckoutPage() {
                       <p className="text-xs text-white/40">×{item.quantity}</p>
                     </div>
                     <p className="text-xs font-bold text-white">
-                      ${(item.price * item.quantity).toLocaleString()}
+                      ¢{(item.price * item.quantity).toLocaleString()}
                     </p>
                   </div>
                 ))}
@@ -479,12 +663,12 @@ export default function CheckoutPage() {
               <div className="p-5 border-t border-white/10 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span style={{ color: "rgba(255,255,255,0.5)" }}>Subtotal</span>
-                  <span className="text-white">${total.toLocaleString()}</span>
+                  <span className="text-white">¢{total.toLocaleString()}</span>
                 </div>
                 {discount && (
                   <div className="flex justify-between text-sm">
                     <span style={{ color: "#22c55e" }}>Discount</span>
-                    <span style={{ color: "#22c55e" }}>-${discount.amount.toLocaleString()}</span>
+                    <span style={{ color: "#22c55e" }}>-¢{discount.amount.toLocaleString()}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
@@ -493,7 +677,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-lg font-bold pt-2 border-t border-white/10">
                   <span className="text-white">Total</span>
-                  <span style={{ color: "#a78bfa" }}>${discountedTotal.toLocaleString()}</span>
+                  <span style={{ color: "#a78bfa" }}>¢{discountedTotal.toLocaleString()}</span>
                 </div>
               </div>
             </div>
