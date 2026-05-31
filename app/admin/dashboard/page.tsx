@@ -27,12 +27,14 @@ export default function AdminDashboardPage() {
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [topProducts, setTopProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dataError, setDataError] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
   }, []);
 
   async function loadData() {
+    setDataError(null);
     try {
       const supabase = createClient();
 
@@ -44,7 +46,7 @@ export default function AdminDashboardPage() {
 
       if (ordersRes.error) {
         console.error('Orders error:', ordersRes.error.message);
-        throw ordersRes.error;
+        throw new Error(ordersRes.error.message);
       }
       const ordersData = ordersRes.data || [];
       const totalRevenue = ordersData.reduce((sum: number, o: Order) => sum + (o.total || 0), 0);
@@ -64,8 +66,9 @@ export default function AdminDashboardPage() {
       if (customersRes.count !== null) {
         setStats(prev => [prev[0], prev[1], prev[2], { ...prev[3], value: String(customersRes.count || 0) }]);
       }
-    } catch {
-      // silent — keep zeros
+    } catch (err: any) {
+      console.error('Dashboard load error:', err);
+      setDataError(err.message || "Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
@@ -85,7 +88,19 @@ export default function AdminDashboardPage() {
         <span className="text-xs text-charcoal/50">🟢 All systems normal</span>
       </div>
 
-      {loading ? (
+      {dataError ? (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
+          <div className="text-4xl mb-4">⚠️</div>
+          <h3 className="text-lg font-bold text-red-800 mb-2">Failed to load dashboard</h3>
+          <p className="text-sm text-red-600 mb-6">{dataError}</p>
+          <button
+            onClick={() => loadData()}
+            className="px-6 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      ) : loading ? (
         <div className="space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (

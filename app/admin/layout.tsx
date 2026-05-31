@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Package, ShoppingCart, Users, BarChart3, Settings, LogOut, LayoutDashboard, Megaphone, Star } from "lucide-react";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const NAV_ITEMS = [
   { id: "overview", label: "Overview", icon: LayoutDashboard, href: "/admin/dashboard" },
@@ -63,7 +64,45 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Main content */}
       <div className="flex-1 overflow-auto">
-        {children}
+        <ErrorBoundary
+          fallback={
+            <div style={{
+              minHeight: "100vh",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#F8F9FB",
+              fontFamily: "system-ui, sans-serif",
+              padding: "24px",
+            }}>
+              <div style={{ textAlign: "center", maxWidth: "400px" }}>
+                <div style={{ fontSize: "48px", marginBottom: "16px" }}>⚠️</div>
+                <h1 style={{ fontSize: "20px", fontWeight: "700", color: "#1A1A1A", marginBottom: "8px" }}>
+                  This page couldn&apos;t load
+                </h1>
+                <p style={{ color: "#666", fontSize: "14px", marginBottom: "16px" }}>
+                  An unexpected error occurred.
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  style={{
+                    padding: "12px 24px",
+                    background: "#0B1F3A",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Reload page
+                </button>
+              </div>
+            </div>
+          }
+        >
+          {children}
+        </ErrorBoundary>
       </div>
     </div>
   );
