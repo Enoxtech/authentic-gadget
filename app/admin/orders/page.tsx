@@ -41,7 +41,7 @@ export default function OrdersPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const adminSession = document.cookie.includes("admin_session");
+    const adminSession = document.cookie.includes("admin_session_client");
     if (!adminSession) {
       router.push("/admin/login");
       return;

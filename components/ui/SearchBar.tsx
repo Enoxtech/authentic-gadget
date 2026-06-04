@@ -20,6 +20,33 @@ interface SearchBarProps {
   products: Product[];
 }
 
+interface SpeechRecognitionEventLike extends Event {
+  results: ArrayLike<ArrayLike<{ transcript: string }>>;
+}
+
+interface SpeechRecognitionErrorEventLike extends Event {
+  error: string;
+}
+
+interface SpeechRecognitionInstance {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
+
 const TRENDING_PRODUCTS = [
   { id: "1", name: "iPhone 15 Pro Max", slug: "iphone-15-pro-max", price: 12499, image: "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=400", category: "smartphones", brand: "Apple", tags: ["phone", "apple", "iphone"], rating: 4.9 },
   { id: "6", name: "Apple Watch Ultra 2", slug: "apple-watch-ultra-2", price: 4499, image: "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=400", category: "wearables", brand: "Apple", tags: ["watch", "apple", "wearable"], rating: 4.9 },
@@ -82,7 +109,7 @@ export default function SearchBar({ products }: SearchBarProps) {
 
   // Voice search
   const handleVoiceSearch = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert("Voice search not supported in this browser. Try Chrome.");
       return;
@@ -96,7 +123,7 @@ export default function SearchBar({ products }: SearchBarProps) {
     setIsListening(true);
     recognition.start();
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
       setQuery(transcript);
       setIsListening(false);
@@ -114,7 +141,7 @@ export default function SearchBar({ products }: SearchBarProps) {
       }, 100);
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event) => {
       console.log("Speech recognition error:", event.error);
       setIsListening(false);
     };
@@ -137,6 +164,9 @@ export default function SearchBar({ products }: SearchBarProps) {
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Search products..."
+          className="w-full rounded-xl border border-white/[0.08] bg-white/[0.06] py-3 pl-10 pr-20 text-sm text-fog placeholder:text-fog-muted outline-none transition-all focus:border-gold/30"
           onFocus={e => { if (query.trim().length > 1) setIsOpen(true); e.currentTarget.style.borderColor = 'rgba(212,168,67,0.4)'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
         />
         {query && (
@@ -199,7 +229,7 @@ export default function SearchBar({ products }: SearchBarProps) {
           <div className="px-4 py-2.5 border-t border-white/8 text-center">
             <Link href={`/products?search=${encodeURIComponent(query)}`} onClick={() => setIsOpen(false)}
               className="text-xs font-medium" style={{ color: '#D4A843' }}>
-              See all results for "{query}"
+              See all results for &quot;{query}&quot;
             </Link>
           </div>
         </div>
@@ -210,7 +240,7 @@ export default function SearchBar({ products }: SearchBarProps) {
         <div ref={dropdownRef} className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden z-50 px-6 py-8 text-center"
           style={{ background: 'rgba(6,17,43,0.98)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <div className="text-3xl mb-2">🔍</div>
-          <p className="text-fog font-medium mb-1">No results for "{query}"</p>
+          <p className="text-fog font-medium mb-1">No results for &quot;{query}&quot;</p>
           <p className="text-sm text-fog-muted">Try different keywords or browse categories</p>
           <Link href="/products" onClick={() => setIsOpen(false)} className="mt-3 inline-block text-sm font-medium" style={{ color: '#D4A843' }}>
             Browse all products →

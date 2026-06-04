@@ -1,8 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import Link from "next/link";
 import { Package, ShoppingCart, Users, BarChart3, Settings, LogOut, LayoutDashboard, Megaphone, Star } from "lucide-react";
+import Link from "next/link";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 const NAV_ITEMS = [
@@ -18,6 +18,11 @@ const NAV_ITEMS = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+
+  const handleLogout = async () => {
+    await fetch("/api/admin/logout", { method: "POST" });
+    window.location.href = "/";
+  };
 
   // Login page renders full-screen with NO sidebar
   if (pathname === "/admin/login") {
@@ -52,13 +57,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
         <div className="p-3 border-t border-white/10">
-          <Link
-            href="/"
+          <button
+            type="button"
+            onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white transition-all"
           >
             <LogOut className="w-4 h-4" />
-            Exit to Store
-          </Link>
+            Log Out
+          </button>
         </div>
       </aside>
 

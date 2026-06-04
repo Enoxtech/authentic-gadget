@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   Search, User, Menu, X, Heart, ShoppingBag, Home,
   Smartphone, Laptop, Headphones, Watch, Gamepad2, Tag,
-  MapPin, Info, Package, LogOut
+  Info, Package, LogOut
 } from "lucide-react";
 import CartBadge from "@/components/ui/CartBadge";
 import SearchBarWrapper from "@/components/ui/SearchBarWrapper";
@@ -38,7 +38,6 @@ export default function Navbar() {
   const { itemCount, openCart } = useCart();
   const [bounced, setBounced] = useState(false);
   const prevCountRef = useRef(0);
-  const menuRef = useRef<HTMLDivElement>(null);
 
   // Auth state
   const [user, setUser] = useState<{ email?: string } | null>(null);
@@ -126,7 +125,7 @@ export default function Navbar() {
 
         {/* Main nav bar */}
         <div className="bg-[#040820]">
-          <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
+          <div className="w-full min-w-0 max-w-7xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2 sm:gap-3 overflow-hidden">
             {/* Logo */}
             <Link href="/" className="shrink-0">
               <Image
@@ -134,7 +133,7 @@ export default function Navbar() {
                 alt="Authentic Gadget"
                 width={120}
                 height={36}
-                className="h-8 w-auto object-contain"
+                className="h-7 w-auto object-contain sm:h-8"
                 priority
               />
             </Link>
@@ -145,11 +144,11 @@ export default function Navbar() {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1">
               {/* Search toggle */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="lg:hidden p-2.5 hover:bg-white/[0.08] rounded-xl transition-colors"
+                className="lg:hidden p-2 sm:p-2.5 hover:bg-white/[0.08] rounded-xl transition-colors"
                 aria-label="Search"
               >
                 <Search className="w-5 h-5" />
@@ -192,7 +191,7 @@ export default function Navbar() {
               {/* Hamburger — mobile only */}
               <button
                 onClick={() => setMobileOpen(true)}
-                className="sm:hidden p-2.5 hover:bg-white/[0.08] rounded-xl transition-colors"
+                className="sm:hidden p-2 sm:p-2.5 hover:bg-white/[0.08] rounded-xl transition-colors"
                 aria-label="Open menu"
               >
                 <Menu className="w-5 h-5" />
@@ -203,15 +202,7 @@ export default function Navbar() {
           {/* Mobile search */}
           {searchOpen && (
             <div className="lg:hidden px-4 pb-3">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fog-muted" />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  className="w-full pl-11 pr-4 h-11 rounded-xl bg-white/[0.08] border border-white/[0.08] text-fog text-sm placeholder:text-fog-muted focus:outline-none focus:border-gold/30 transition-all"
-                  autoFocus
-                />
-              </div>
+              <SearchBarWrapper />
             </div>
           )}
 
@@ -291,14 +282,7 @@ export default function Navbar() {
 
             {/* Search bar */}
             <div className="px-5 py-3 border-b border-white/[0.08] shrink-0">
-              <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-fog-muted" />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  className="w-full pl-10 pr-4 h-11 rounded-xl bg-white/[0.06] border border-white/[0.08] text-fog text-sm placeholder:text-fog-muted focus:outline-none focus:border-gold/30 transition-all"
-                />
-              </div>
+              <SearchBarWrapper />
             </div>
 
             {/* Nav content — scrollable */}

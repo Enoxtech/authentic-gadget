@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { ToastContainer, ToastData } from "@/components/ui/Toast";
 
 let showToastFn: ((message: string, sub?: string) => void) | null = null;
@@ -21,8 +21,12 @@ export default function ToastProvider({ children }: { children: React.ReactNode 
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  // Expose globally
-  showToastFn = showToast;
+  useEffect(() => {
+    showToastFn = showToast;
+    return () => {
+      showToastFn = null;
+    };
+  }, [showToast]);
 
   return (
     <>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Package, User, MapPin, Clock, ChevronRight, LogOut, ShoppingBag } from "lucide-react";
+import { Package, User, ChevronRight, LogOut, ShoppingBag } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 
 interface Order {
@@ -39,12 +39,7 @@ export default function AccountPage() {
         setUser(user);
 
         // Fetch orders for this user
-        const res = await fetch(`/api/orders?email=${encodeURIComponent(user.email || "")}`, {
-          headers: {
-            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-          },
-        });
+        const res = await fetch("/api/orders");
         if (res.ok) {
           const data = await res.json();
           setOrders(data.orders || []);
@@ -54,6 +49,7 @@ export default function AccountPage() {
         router.push("/login?redirect=/account/profile");
       } finally {
         setCheckingAuth(false);
+        setLoading(false);
       }
     }
     checkAuth();

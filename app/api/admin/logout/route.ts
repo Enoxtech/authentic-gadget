@@ -1,0 +1,22 @@
+import { NextResponse } from "next/server";
+import {
+  ADMIN_SESSION_CLIENT_COOKIE,
+  ADMIN_SESSION_COOKIE,
+} from "@/lib/admin-auth";
+
+export async function POST() {
+  const response = NextResponse.json({ success: true });
+
+  response.cookies.set(ADMIN_SESSION_COOKIE, "", {
+    httpOnly: true,
+    maxAge: 0,
+    path: "/",
+  });
+  response.cookies.set(ADMIN_SESSION_CLIENT_COOKIE, "", {
+    httpOnly: false,
+    maxAge: 0,
+    path: "/",
+  });
+
+  return response;
+}

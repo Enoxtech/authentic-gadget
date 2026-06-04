@@ -35,6 +35,7 @@ export default function CheckoutPage() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderId, setOrderId] = useState("");
+  const [confirmedTotal, setConfirmedTotal] = useState(0);
   const [error, setError] = useState("");
 
   const discountedTotal = discount ? Math.max(0, total - discount.amount) : total;
@@ -70,10 +71,6 @@ export default function CheckoutPage() {
       payment_method: paymentMethod === "cod" ? "cod" : paymentMethod,
       items: items.map(item => ({
         product_id: item.id,
-        product_name: item.name,
-        product_slug: item.slug,
-        product_image: item.image,
-        price: item.price,
         quantity: item.quantity,
       })),
     };
@@ -86,12 +83,16 @@ export default function CheckoutPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(orderPayload),
         });
-        if (!res.ok) throw new Error("Order creation failed");
-        setOrderId(newOrderId);
+        const data = (await res.json()) as { error?: string; orderId?: string; total?: number };
+        if (!res.ok || !data.orderId || !data.total) {
+          throw new Error(data.error || "Order creation failed");
+        }
+        setOrderId(data.orderId);
+        setConfirmedTotal(data.total);
         clearCart();
         setOrderPlaced(true);
-      } catch (err) {
-        setError("Failed to place order. Please try again.");
+      } catch (error: unknown) {
+        setError(error instanceof Error ? error.message : "Failed to place order. Please try again.");
       } finally {
         setIsProcessing(false);
       }
@@ -106,36 +107,41 @@ export default function CheckoutPage() {
         return;
       }
       try {
+        const orderRes = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...orderPayload,
+            payment_method: `momo_${momoProvider}`,
+          }),
+        });
+        const orderData = (await orderRes.json()) as {
+          error?: string;
+          orderId?: string;
+          total?: number;
+        };
+        if (!orderRes.ok || !orderData.orderId || !orderData.total) {
+          throw new Error(orderData.error || "Order creation failed");
+        }
+
         const momoRes = await fetch("/api/flutterwave/momo", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            amount: discountedTotal,
-            currency: "GHS",
-            phone: formData.phone.replace(/\D/g, ""),
-            email: formData.email,
-            name: formData.name,
-            orderId: newOrderId,
+            orderId: orderData.orderId,
             provider: momoProvider,
           }),
         });
-        const momoData = await momoRes.json();
+        const momoData = (await momoRes.json()) as { error?: string };
         if (!momoRes.ok) throw new Error(momoData.error || "MoMo payment initiation failed");
 
-        // Create order in pending state
-        await fetch("/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...orderPayload, payment_method: `momo_${momoProvider}` }),
-        });
-
-        setOrderId(newOrderId);
+        setOrderId(orderData.orderId);
         clearCart();
         // Redirect to order success page — Flutterwave will have sent a USSD prompt
         // Customer confirms on their phone, Flutterwave webhook updates payment status
-        router.push(`/order-success?order=${newOrderId}&total=${discountedTotal}&method=momo&provider=${momoProvider}`);
-      } catch (err: any) {
-        setError(err.message || "Payment initiation failed. Please try again.");
+        router.push(`/order-success?order=${orderData.orderId}&total=${orderData.total}&method=momo&provider=${momoProvider}`);
+      } catch (error: unknown) {
+        setError(error instanceof Error ? error.message : "Payment initiation failed. Please try again.");
       } finally {
         setIsProcessing(false);
       }
@@ -145,31 +151,33 @@ export default function CheckoutPage() {
     // ─── Card / Paystack ───
     if (paymentMethod === "card") {
       try {
+        const orderRes = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...orderPayload, payment_method: "card" }),
+        });
+        const orderData = (await orderRes.json()) as {
+          error?: string;
+          orderId?: string;
+        };
+        if (!orderRes.ok || !orderData.orderId) {
+          throw new Error(orderData.error || "Order creation failed");
+        }
+
         const initRes = await fetch("/api/paystack/initialize", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            amount: discountedTotal,
-            email: formData.email,
-            orderId: newOrderId,
-            products: items,
-            customer_name: formData.name,
-            customer_phone: formData.phone,
-            shipping_address: formData.address,
-            shipping_city: formData.city,
-            shipping_region: formData.state,
-            subtotal: total,
-            shipping: 0,
-            total: discountedTotal,
-            payment_method: "card",
-          }),
+          body: JSON.stringify({ orderId: orderData.orderId }),
         });
-        const initData = await initRes.json();
+        const initData = (await initRes.json()) as {
+          error?: string;
+          authorizationUrl?: string;
+        };
         if (!initRes.ok || !initData.authorizationUrl) throw new Error(initData.error || "Failed to initialize payment");
         // Redirect to Paystack payment page
         window.location.href = initData.authorizationUrl;
-      } catch (err: any) {
-        setError(err.message || "Payment failed. Please try again.");
+      } catch (error: unknown) {
+        setError(error instanceof Error ? error.message : "Payment failed. Please try again.");
         setIsProcessing(false);
       }
     }
@@ -180,6 +188,7 @@ export default function CheckoutPage() {
   // Order success animation
   if (orderPlaced) {
     const isCod = paymentMethod === "cod";
+    const finalTotal = confirmedTotal || discountedTotal;
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0a0a" }}>
         <div className="text-center max-w-md px-4">
@@ -199,7 +208,7 @@ export default function CheckoutPage() {
           {isCod ? (
             <p className="text-sm text-white/40 mb-8">
               Your order <span className="font-mono text-white/60">#{orderId}</span> has been received.
-              Please have <span className="font-bold text-white">¢{discountedTotal.toLocaleString()}</span> ready when our delivery agent arrives.
+              Please have <span className="font-bold text-white">¢{finalTotal.toLocaleString()}</span> ready when our delivery agent arrives.
             </p>
           ) : (
             <p className="text-sm text-white/40 mb-8">
@@ -225,7 +234,7 @@ export default function CheckoutPage() {
           >
             <p className="text-xs text-white/40 mb-2">Order total</p>
             <p className="text-3xl font-bold" style={{ color: "#a78bfa" }}>
-              ¢{discountedTotal.toLocaleString()}
+              ¢{finalTotal.toLocaleString()}
             </p>
             {isCod && (
               <p className="text-xs mt-1" style={{ color: "rgba(124,58,237,0.8)" }}>

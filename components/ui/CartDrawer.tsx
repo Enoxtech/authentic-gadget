@@ -173,7 +173,7 @@ export default function CartDrawer() {
                   />
                 </div>
                 {cartTotal >= FREE_SHIPPING_THRESHOLD && (
-                  <p className="text-xs mt-1.5 font-semibold" style={{ color: '#22c55e' }}>🎉 You've unlocked free shipping!</p>
+                  <p className="text-xs mt-1.5 font-semibold" style={{ color: '#22c55e' }}>🎉 You&apos;ve unlocked free shipping!</p>
                 )}
               </li>
               {items.map((item) => (

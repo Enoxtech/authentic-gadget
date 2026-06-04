@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase";
 import { Package, ShoppingCart, Users, DollarSign, Eye } from "lucide-react";
@@ -18,6 +19,7 @@ interface Product { id: string; name: string; price: number; stock: number; imag
 interface Stat { label: string; value: string; icon: React.ElementType; }
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
   const [stats, setStats] = useState<Stat[]>([
     { label: "Total Revenue", value: "¢0", icon: DollarSign },
     { label: "Orders", value: "0", icon: ShoppingCart },
@@ -30,8 +32,13 @@ export default function AdminDashboardPage() {
   const [dataError, setDataError] = useState<string | null>(null);
 
   useEffect(() => {
+    const adminSession = document.cookie.includes("admin_session_client");
+    if (!adminSession) {
+      router.push("/admin/login");
+      return;
+    }
     loadData();
-  }, []);
+  }, [router]);
 
   async function loadData() {
     setDataError(null);
@@ -46,7 +53,7 @@ export default function AdminDashboardPage() {
 
       if (ordersRes.error) {
         console.error('Orders error:', ordersRes.error.message);
-        throw new Error(ordersRes.error.message);
+        // Don't throw — show empty state gracefully
       }
       const ordersData = ordersRes.data || [];
       const totalRevenue = ordersData.reduce((sum: number, o: Order) => sum + (o.total || 0), 0);
@@ -66,9 +73,9 @@ export default function AdminDashboardPage() {
       if (customersRes.count !== null) {
         setStats(prev => [prev[0], prev[1], prev[2], { ...prev[3], value: String(customersRes.count || 0) }]);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Dashboard load error:', err);
-      setDataError(err.message || "Failed to load dashboard data");
+      setDataError(err instanceof Error ? err.message : "Failed to load dashboard data");
     } finally {
       setLoading(false);
     }

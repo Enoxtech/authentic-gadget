@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Lock, Eye, EyeOff, LayoutDashboard, ShieldCheck } from "lucide-react";
 
 export default function AdminLoginPage() {
-  const router = useRouter();
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,8 +27,8 @@ export default function AdminLoginPage() {
 
       // Use window.location for hard redirect — more reliable for auth cookie propagation
       window.location.href = "/admin/dashboard";
-    } catch (err: any) {
-      setError(err.message || "Invalid password. Please try again.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Invalid password. Please try again.");
     } finally {
       setLoading(false);
     }

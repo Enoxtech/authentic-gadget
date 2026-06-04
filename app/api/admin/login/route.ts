@@ -1,25 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const ADMIN_TOKEN = "ag-admin-token-2026";
+import {
+  ADMIN_SESSION_CLIENT_COOKIE,
+  ADMIN_SESSION_COOKIE,
+  ADMIN_SESSION_MAX_AGE,
+  adminPasswordMatches,
+  createAdminSessionToken,
+  isAdminAuthConfigured,
+} from "@/lib/admin-auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { password } = body;
+    if (!isAdminAuthConfigured()) {
+      return NextResponse.json(
+        { error: "Admin authentication is not configured" },
+        { status: 503 }
+      );
+    }
 
-    const VALID_PASSWORD = "Admin2026!";
-
-    if (!password || password !== VALID_PASSWORD) {
+    const body = (await request.json()) as { password?: unknown };
+    const password = typeof body.password === "string" ? body.password : "";
+    if (!password || !(await adminPasswordMatches(password))) {
       return NextResponse.json({ error: "Invalid admin password" }, { status: 401 });
     }
 
     const isProduction = process.env.NODE_ENV === "production";
     const response = NextResponse.json({ success: true });
-    response.cookies.set("admin_session", ADMIN_TOKEN, {
+    response.cookies.set(ADMIN_SESSION_COOKIE, await createAdminSessionToken(), {
       httpOnly: true,
       secure: isProduction,
       sameSite: "lax",
-      maxAge: 60 * 60 * 24,
+      maxAge: ADMIN_SESSION_MAX_AGE,
+      path: "/",
+    });
+    response.cookies.set(ADMIN_SESSION_CLIENT_COOKIE, "true", {
+      httpOnly: false,
+      secure: isProduction,
+      sameSite: "lax",
+      maxAge: ADMIN_SESSION_MAX_AGE,
       path: "/",
     });
 

@@ -57,7 +57,7 @@ export default function EditProductPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const adminSession = document.cookie.includes("admin_session");
+    const adminSession = document.cookie.includes("admin_session_client");
     if (!adminSession) {
       router.push("/admin/login");
       return;
@@ -277,7 +277,7 @@ export default function EditProductPage() {
               </div>
             ))}
             {form.features.length === 0 && (
-              <p className="text-sm text-charcoal/40">No features added. Click "Add Feature" to add product highlights.</p>
+              <p className="text-sm text-charcoal/40">No features added. Click &quot;Add Feature&quot; to add product highlights.</p>
             )}
           </div>
         </div>

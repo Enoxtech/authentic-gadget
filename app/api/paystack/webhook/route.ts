@@ -1,42 +1,46 @@
+import { createHmac } from "node:crypto";
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
 export async function POST(request: Request) {
   try {
     const body = await request.text();
     const signature = request.headers.get("x-paystack-signature");
-    const webhookSecret = process.env.PAYSTACK_WEBHOOK_SECRET;
+    const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY;
 
-    // Verify webhook signature
-    if (webhookSecret) {
-      const crypto = require("crypto");
-      const hash = crypto.createHmac("sha512", webhookSecret).update(body).digest("hex");
-      if (hash !== signature) {
-        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-      }
+    if (!paystackSecretKey || !signature) {
+      return NextResponse.json({ error: "Webhook is not configured" }, { status: 503 });
     }
 
-    const event = JSON.parse(body);
+    const expectedSignature = createHmac("sha512", paystackSecretKey)
+      .update(body)
+      .digest("hex");
 
-    if (event.event === "charge.success") {
-      const reference = event.data.reference;
-      const supabase = createClient();
+    if (expectedSignature !== signature) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
 
-      // Update order payment status
-      await supabase
+    const event = JSON.parse(body) as {
+      event?: string;
+      data?: { reference?: string; channel?: string };
+    };
+
+    if (event.event === "charge.success" && event.data?.reference) {
+      const supabase = await createClient();
+      const { error } = await supabase
         .from("orders")
         .update({
           payment_status: "paid",
-          payment_method: event.data.channel,
-          payment_reference: reference,
+          payment_method: event.data.channel || "paystack",
+          payment_reference: event.data.reference,
+          order_status: "processing",
         })
-        .eq("id", reference);
+        .eq("id", event.data.reference);
 
-      // Update order status to processing
-      await supabase
-        .from("orders")
-        .update({ order_status: "processing" })
-        .eq("id", reference);
+      if (error) {
+        console.error("Paystack webhook update error:", error);
+        return NextResponse.json({ error: "Unable to update order" }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ received: true });

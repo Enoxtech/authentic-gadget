@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Star, Heart, Filter, SlidersHorizontal, X, ShoppingCart, ArrowLeft } from "lucide-react";
+import { Star, Heart, SlidersHorizontal, X, ShoppingCart } from "lucide-react";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import { useCart } from "@/context/CartContext";
 
@@ -173,7 +173,6 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sort, setSort] = useState("featured");
   const [showFilter, setShowFilter] = useState(false);
-  const [isFiltering, setIsFiltering] = useState(false);
   const [activeColor, setActiveColor] = useState<string | null>(null);
 
   const handleColorFilter = (color: string) => {
@@ -209,8 +208,8 @@ export default function ProductsPage() {
         if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
         setProducts(data as Product[]);
-      } catch (err: any) {
-        setError(err.message || "Failed to load products");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to load products");
       } finally {
         setLoading(false);
       }
@@ -219,11 +218,7 @@ export default function ProductsPage() {
   }, []);
 
   const handleFilter = (category: string) => {
-    setIsFiltering(true);
-    setTimeout(() => {
-      setSelectedCategory(category);
-      setIsFiltering(false);
-    }, 200);
+    setSelectedCategory(category);
   };
 
   const filtered = products.filter((p) => {

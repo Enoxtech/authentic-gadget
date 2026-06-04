@@ -53,7 +53,7 @@ export default function OrderDetailPage() {
   const orderId = router.id as string;
 
   useEffect(() => {
-    const adminSession = document.cookie.includes("admin_session");
+    const adminSession = document.cookie.includes("admin_session_client");
     if (!adminSession) {
       router2.push("/admin/login");
       return;

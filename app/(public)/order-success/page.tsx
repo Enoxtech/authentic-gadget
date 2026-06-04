@@ -15,6 +15,7 @@ function OrderSuccessContent() {
 
   const isMomo = method === "momo";
   const isCod = method === "cod" || !method;
+  const isCard = method === "card";
 
   const PROVIDER_LABELS: Record<string, string> = {
     mtn: "MTN MoMo",
@@ -22,7 +23,11 @@ function OrderSuccessContent() {
     airteltigo: "AirtelTigo Money",
     card: "Card Payment",
   };
-  const methodLabel = isMomo ? (PROVIDER_LABELS[provider] || "Mobile Money") : "Pay on Delivery";
+  const methodLabel = isMomo
+    ? (PROVIDER_LABELS[provider] || "Mobile Money")
+    : isCard
+      ? "Card Payment"
+      : "Pay on Delivery";
 
   // Clear the cart after a successful order
   const { clearCart } = useCart();
@@ -93,7 +98,7 @@ function OrderSuccessContent() {
 
         <div className="space-y-3">
           <Link
-            href={`/orders/${orderId}`}
+            href={`/track-order?order=${encodeURIComponent(orderId)}`}
             className="block w-full py-4 bg-electric text-white font-semibold rounded-2xl hover:bg-electric/90 transition-colors"
           >
             Track Order

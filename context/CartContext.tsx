@@ -51,7 +51,15 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = window.localStorage.getItem("cart");
+      return saved ? (JSON.parse(saved) as CartItem[]) : [];
+    } catch {
+      return [];
+    }
+  });
   const [isOpen, setIsOpen] = useState(false);
   const [bounced, setBounced] = useState(false);
   const [discount, setDiscount] = useState<Discount | null>(null);
@@ -64,12 +72,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   ];
 
   useEffect(() => {
-    const saved = localStorage.getItem("cart");
-    if (saved) setItems(JSON.parse(saved));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(items));
+    window.localStorage.setItem("cart", JSON.stringify(items));
   }, [items]);
 
   const triggerCartShake = useCallback(() => {
@@ -93,7 +96,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     triggerCartShake();
     try {
       showToast(`${product.name} added to cart`, `${product.category ?? "Product"} – ${product.brand ?? ""}`);
-    } catch (_) {
+    } catch {
       // Toast context may not be ready yet — silently ignore
     }
     setBounced(true);

@@ -2,7 +2,6 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
-import Link from "next/link";
 
 interface CartBadgeProps {
   count: number;
@@ -15,7 +14,7 @@ export default function CartBadge({ count, justBounced, onClick }: CartBadgeProp
     <button
       id="cart-icon-btn"
       onClick={onClick}
-      className="p-2.5 rounded-xl transition-colors relative"
+      className="p-2 sm:p-2.5 rounded-xl transition-colors relative"
       style={{
         background: 'rgba(255,255,255,0.1)',
         border: '1px solid rgba(255,255,255,0.15)',

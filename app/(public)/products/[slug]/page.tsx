@@ -7,7 +7,7 @@ import { useParams } from "next/navigation";
 import {
   Star, Heart, ShieldCheck, Truck, RotateCcw,
   Minus, Plus, Check, ChevronLeft, ChevronRight,
-  ShoppingCart, ArrowLeft, X, CheckCircle
+  ShoppingCart, ArrowLeft
 } from "lucide-react";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import DeliveryBadges from "@/components/ui/DeliveryBadges";
@@ -74,8 +74,8 @@ export default function ProductDetailPage() {
         } else {
           setProduct(data[0] as Product);
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to load product");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to load product");
       } finally {
         setLoading(false);
       }

@@ -15,7 +15,7 @@ export default function AuthLayout({
   return (
     <div className="min-h-screen flex flex-col bg-fog">
       <Navbar />
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
+      <main className="w-full min-w-0 flex-1 flex items-center justify-center overflow-x-clip px-4 py-12">
         {children}
       </main>
       <Footer />

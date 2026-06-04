@@ -9,7 +9,7 @@ export default function NewCampaignPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const adminSession = document.cookie.includes("admin_session");
+    const adminSession = document.cookie.includes("admin_session_client");
     if (!adminSession) {
       router.push("/admin/login");
     }

@@ -79,7 +79,11 @@ export default function HeroSlider() {
   }, [isPaused, next]);
 
   return (
-    <section className="hero-slider">
+    <section
+      className="hero-slider"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
       {/* Slides */}
       {SLIDES.map((slide, i) => (
         <div
@@ -97,7 +101,7 @@ export default function HeroSlider() {
           {/* Content */}
           <div className="hero-slide-content">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-              <div className="max-w-xl">
+              <div className="w-full min-w-0 max-w-xl">
                 {/* Badge */}
                 <div className="hero-badge" style={slide.badgeStyle}>
                   {slide.badge}
@@ -105,7 +109,7 @@ export default function HeroSlider() {
 
                 {/* Headline */}
                 <h1
-                  className="font-display leading-[1.05]"
+                  className="font-display leading-[1.05] break-words"
                   style={{
                     fontSize: "clamp(2rem, 5vw, 3.5rem)",
                     fontWeight: 800,
@@ -118,7 +122,7 @@ export default function HeroSlider() {
                 </h1>
 
                 {/* Subtext */}
-                <p className="mt-4 text-base sm:text-lg leading-relaxed text-white/70 max-w-md">
+                <p className="mt-4 text-base sm:text-lg leading-relaxed text-white/70 max-w-md break-words">
                   {slide.subtext}
                 </p>
 

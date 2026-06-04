@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, ShieldCheck, Lock } from "lucide-react";
@@ -146,8 +146,8 @@ function LoginPageInner() {
               if (!res.ok) throw new Error(data.error || "Authentication failed");
               router.push(redirectTo);
               router.refresh();
-            } catch (err: any) {
-              setError(err.message || "Authentication failed");
+            } catch (err: unknown) {
+              setError(err instanceof Error ? err.message : "Authentication failed");
             } finally {
               setLoading(false);
             }
@@ -302,7 +302,7 @@ function LoginPageInner() {
                       onClick={() => { setOtpSent(false); setOtp(""); }}
                       className="w-full mt-3 py-3 text-sm text-electric font-medium hover:underline"
                     >
-                      Didn't get it? Resend
+                      Didn&apos;t get it? Resend
                     </button>
                   </>
                 ) : (
@@ -320,10 +320,16 @@ function LoginPageInner() {
         )}
       </div>
 
+      {error && (
+        <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       {/* Footer */}
       {!isAdminMode && (
         <p className="text-center text-sm text-charcoal/50 mt-6">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link
             href="/register"
             className="text-electric font-semibold hover:underline"

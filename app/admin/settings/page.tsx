@@ -1,25 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Settings, Store, CreditCard, User, Database, Wrench } from "lucide-react";
+import { Store, CreditCard, User, Database, Wrench } from "lucide-react";
 
 export default function SettingsPage() {
-  const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const adminSession = document.cookie.includes("admin_session");
-    if (!adminSession) {
-      router.push("/admin/login");
-      return;
-    }
-    setMounted(true);
-  }, [router]);
-
-  if (!mounted) return null;
-
   return (
     <div className="p-8">
       <div className="mb-6">
