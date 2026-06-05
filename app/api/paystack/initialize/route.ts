@@ -1,8 +1,17 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server";
+import { NextRequest, NextResponse } from "next/server";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const limit = rateLimit(request, "paystack-init", { max: 12, windowMs: 60_000 });
+    if (limit.limited) {
+      return NextResponse.json(
+        { error: "Too many payment attempts. Please wait and try again." },
+        { status: 429, headers: rateLimitHeaders(limit) }
+      );
+    }
+
     const body = (await request.json()) as { orderId?: unknown };
     const orderId = typeof body.orderId === "string" ? body.orderId.trim() : "";
     const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY;
@@ -17,7 +26,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = await createClient();
+    const supabase = getSupabaseAdminClient();
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .select("id, customer_email, total, payment_status")

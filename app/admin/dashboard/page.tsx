@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase";
 import { Package, ShoppingCart, Users, DollarSign, Eye } from "lucide-react";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -21,7 +20,7 @@ interface Stat { label: string; value: string; icon: React.ElementType; }
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [stats, setStats] = useState<Stat[]>([
-    { label: "Total Revenue", value: "¢0", icon: DollarSign },
+    { label: "Total Revenue", value: "GHS 0", icon: DollarSign },
     { label: "Orders", value: "0", icon: ShoppingCart },
     { label: "Products", value: "0", icon: Package },
     { label: "Customers", value: "0", icon: Users },
@@ -38,41 +37,38 @@ export default function AdminDashboardPage() {
       return;
     }
     loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   async function loadData() {
     setDataError(null);
     try {
-      const supabase = createClient();
+      const response = await fetch("/api/admin/dashboard");
+      if (response.status === 401) {
+        router.push("/admin/login");
+        return;
+      }
+      const data = (await response.json()) as {
+        error?: string;
+        stats?: {
+          totalRevenue: number;
+          totalOrders: number;
+          totalProducts: number;
+          totalCustomers: number;
+        };
+        recentOrders?: Order[];
+        topProducts?: Product[];
+      };
+      if (!response.ok) throw new Error(data.error || "Failed to load dashboard");
 
-      const [ordersRes, productsRes, customersRes] = await Promise.all([
-        supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(10),
-        supabase.from("products").select("*").order("name", { ascending: true }).limit(6),
-        supabase.from("customers").select("id", { count: "exact", head: true }),
+      setStats([
+        { label: "Total Revenue", value: `GHS ${(data.stats?.totalRevenue || 0).toLocaleString()}`, icon: DollarSign },
+        { label: "Orders", value: String(data.stats?.totalOrders || 0), icon: ShoppingCart },
+        { label: "Products", value: String(data.stats?.totalProducts || 0), icon: Package },
+        { label: "Customers", value: String(data.stats?.totalCustomers || 0), icon: Users },
       ]);
-
-      if (ordersRes.error) {
-        console.error('Orders error:', ordersRes.error.message);
-        // Don't throw — show empty state gracefully
-      }
-      const ordersData = ordersRes.data || [];
-      const totalRevenue = ordersData.reduce((sum: number, o: Order) => sum + (o.total || 0), 0);
-      setStats(prev => [
-        { ...prev[0], value: `¢${totalRevenue.toLocaleString()}` },
-        { ...prev[1], value: String(ordersData.length || 0) },
-      ]);
-      setRecentOrders(ordersData);
-
-      if (productsRes.error) {
-        console.error('Products error:', productsRes.error.message);
-      } else if (productsRes.data) {
-        setTopProducts(productsRes.data);
-        setStats(prev => [prev[0], prev[1], { ...prev[2], value: String(productsRes.data?.length || 0) }, prev[3]]);
-      }
-
-      if (customersRes.count !== null) {
-        setStats(prev => [prev[0], prev[1], prev[2], { ...prev[3], value: String(customersRes.count || 0) }]);
-      }
+      setRecentOrders(data.recentOrders || []);
+      setTopProducts(data.topProducts || []);
     } catch (err: unknown) {
       console.error('Dashboard load error:', err);
       setDataError(err instanceof Error ? err.message : "Failed to load dashboard data");
@@ -86,13 +82,13 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-charcoal">Overview</h2>
           <p className="text-sm text-charcoal/50">Welcome back, Admin</p>
         </div>
-        <span className="text-xs text-charcoal/50">🟢 All systems normal</span>
+        <span className="text-xs text-charcoal/50">All systems normal</span>
       </div>
 
       {dataError ? (
@@ -141,7 +137,7 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-2xl p-6 shadow-card">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-charcoal">Recent Orders</h3>
-              <Link href="/admin/orders" className="text-sm text-electric font-medium hover:underline">View all →</Link>
+              <Link href="/admin/orders" className="text-sm text-electric font-medium hover:underline">View all -&gt;</Link>
             </div>
             {recentOrders.length === 0 ? (
               <p className="text-charcoal/40 text-sm text-center py-8">No orders yet</p>
@@ -162,12 +158,12 @@ export default function AdminDashboardPage() {
                     {recentOrders.map((o) => (
                       <tr key={o.id} className="border-b border-fog last:border-0 hover:bg-fog/30 transition-colors">
                         <td className="py-3 font-medium text-charcoal">#{String(o.id).padStart(4, "0")}</td>
-                        <td className="py-3 text-charcoal/70">{o.customer_name || "—"}</td>
+                        <td className="py-3 text-charcoal/70">{o.customer_name || "-"}</td>
                         <td className="py-3 text-charcoal/50 text-sm">{formatDate(o.created_at)}</td>
-                        <td className="py-3 font-medium text-charcoal">¢{(o.total || 0).toLocaleString()}</td>
+                        <td className="py-3 font-medium text-charcoal">GHS {(o.total || 0).toLocaleString()}</td>
                         <td className="py-3">
                           <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_COLORS[o.order_status] || "bg-gray-100 text-gray-600"}`}>
-                            {o.order_status?.charAt(0).toUpperCase() + (o.order_status?.slice(1) || "—")}
+                            {o.order_status?.charAt(0).toUpperCase() + (o.order_status?.slice(1) || "-")}
                           </span>
                         </td>
                         <td className="py-3 text-right">
@@ -186,7 +182,7 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-2xl p-6 shadow-card">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-charcoal">Products</h3>
-              <Link href="/admin/products" className="text-sm text-electric font-medium hover:underline">Manage →</Link>
+              <Link href="/admin/products" className="text-sm text-electric font-medium hover:underline">Manage -&gt;</Link>
             </div>
             {topProducts.length === 0 ? (
               <p className="text-charcoal/40 text-sm text-center py-8">No products yet</p>
@@ -206,7 +202,7 @@ export default function AdminDashboardPage() {
                       <p className="font-medium text-sm text-charcoal truncate">{p.name}</p>
                       <p className="text-xs text-charcoal/50">Stock: {p.stock}</p>
                     </div>
-                    <p className="font-bold text-sm text-charcoal">¢{p.price?.toLocaleString()}</p>
+                    <p className="font-bold text-sm text-charcoal">GHS {p.price?.toLocaleString()}</p>
                     <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
                       p.stock === 0 ? "bg-red-100 text-red-700" :
                       p.stock < 5 ? "bg-orange-100 text-orange-700" :

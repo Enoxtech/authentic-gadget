@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase";
 import { Star, Trash2, Search } from "lucide-react";
 
 interface Review {
@@ -41,17 +40,19 @@ export default function ReviewsPage() {
       return;
     }
     loadReviews();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   async function loadReviews() {
     try {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("reviews")
-        .select("*, products(name)")
-        .order("created_at", { ascending: false });
-
-      if (data) setReviews(data);
+      const response = await fetch("/api/admin/reviews");
+      if (response.status === 401) {
+        router.push("/admin/login");
+        return;
+      }
+      if (!response.ok) throw new Error("Failed to load reviews");
+      const data = (await response.json()) as { reviews?: Review[] };
+      setReviews(data.reviews || []);
     } catch {
       // error
     } finally {
@@ -63,8 +64,10 @@ export default function ReviewsPage() {
     if (!confirm("Delete this review?")) return;
     setDeleting(id);
     try {
-      const supabase = createClient();
-      await supabase.from("reviews").delete().eq("id", id);
+      const response = await fetch(`/api/admin/reviews/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete review");
       setReviews((prev) => prev.filter((r) => r.id !== id));
     } finally {
       setDeleting(null);
@@ -86,8 +89,8 @@ export default function ReviewsPage() {
   );
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-charcoal">Reviews</h2>
           <p className="text-sm text-charcoal/50">{reviews.length} reviews</p>
@@ -115,7 +118,8 @@ export default function ReviewsPage() {
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center text-charcoal/40">No reviews found</div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-charcoal/50 text-left border-b border-fog">
@@ -130,12 +134,12 @@ export default function ReviewsPage() {
               <tbody>
                 {filtered.map((r) => (
                   <tr key={r.id} className="border-b border-fog last:border-0 hover:bg-fog/50">
-                    <td className="py-3.5 px-6 font-medium text-charcoal">{r.products?.name || "—"}</td>
-                    <td className="py-3.5 px-6 text-charcoal/70">{r.customer_name || "—"}</td>
+                    <td className="py-3.5 px-6 font-medium text-charcoal">{r.products?.name || "-"}</td>
+                    <td className="py-3.5 px-6 text-charcoal/70">{r.customer_name || "-"}</td>
                     <td className="py-3.5 px-6">
                       <StarRating rating={r.rating || 0} />
                     </td>
-                    <td className="py-3.5 px-6 text-charcoal/70 max-w-xs truncate">{r.comment || "—"}</td>
+                    <td className="py-3.5 px-6 text-charcoal/70 max-w-xs truncate">{r.comment || "-"}</td>
                     <td className="py-3.5 px-6 text-charcoal/50">{formatDate(r.created_at)}</td>
                     <td className="py-3.5 px-6">
                       <button
@@ -151,6 +155,31 @@ export default function ReviewsPage() {
               </tbody>
             </table>
           </div>
+          <div className="divide-y divide-fog md:hidden">
+            {filtered.map((r) => (
+              <div key={r.id} className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-charcoal">{r.products?.name || "-"}</p>
+                    <p className="mt-1 text-sm text-charcoal/60">{r.customer_name || "-"}</p>
+                  </div>
+                  <button
+                    onClick={() => deleteReview(r.id)}
+                    disabled={deleting === r.id}
+                    className="p-2 hover:bg-red-50 rounded-lg text-charcoal/40 hover:text-red-500 transition-colors disabled:opacity-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="mt-3">
+                  <StarRating rating={r.rating || 0} />
+                  <p className="mt-2 text-sm text-charcoal/70">{r.comment || "-"}</p>
+                  <p className="mt-2 text-xs text-charcoal/40">{formatDate(r.created_at)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          </>
         )}
       </div>
     </div>

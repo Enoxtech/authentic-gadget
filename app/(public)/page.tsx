@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { ArrowRight, Star, Truck, RotateCcw, ShieldCheck } from "lucide-react";
-import { motion } from "framer-motion";
 import TrustBadges from "@/components/ui/TrustBadges";
 import DeliveryBadges from "@/components/ui/DeliveryBadges";
 import HeroSlider from "../components/ui/HeroSlider";
@@ -55,6 +54,8 @@ const FEATURED_PRODUCTS = [
   },
 ];
 
+type FeaturedProduct = (typeof FEATURED_PRODUCTS)[number];
+
 const CATEGORIES = [
   { name: "Smartphones", slug: "smartphones", icon: "📱", count: 42 },
   { name: "Laptops", slug: "laptops", icon: "💻", count: 28 },
@@ -77,11 +78,86 @@ function StarRating({ rating }: { rating: number }) {
 export default function HomePage() {
   const { addItem } = useCart();
   const [added, setAdded] = useState<string | null>(null);
+  const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>(FEATURED_PRODUCTS);
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [newsletterMessage, setNewsletterMessage] = useState("");
 
-  const handleAddToCart = (product: typeof FEATURED_PRODUCTS[0]) => {
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadFeaturedProducts() {
+      try {
+        const response = await fetch("/api/products");
+        if (!response.ok) return;
+        const products = (await response.json()) as Array<{
+          id: string;
+          name: string;
+          slug: string;
+          price: number;
+          compare_at_price: number | null;
+          images: string[] | null;
+          rating: number | null;
+          reviews_count: number | null;
+          badge: string | null;
+          brand: string | null;
+          description: string | null;
+        }>;
+
+        const liveProducts = products.slice(0, 6).map((product) => ({
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          price: Number(product.price || 0),
+          compareAt: product.compare_at_price ? Number(product.compare_at_price) : 0,
+          image: product.images?.[0] || "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400",
+          rating: Number(product.rating || 4.8),
+          reviews: Number(product.reviews_count || 0),
+          badge: product.badge,
+          brand: product.brand || "",
+          description: product.description || "",
+        }));
+
+        if (!cancelled && liveProducts.length > 0) {
+          setFeaturedProducts(liveProducts);
+        }
+      } catch {
+        // Keep curated fallback products if the live catalog is unavailable.
+      }
+    }
+
+    loadFeaturedProducts();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleAddToCart = (product: FeaturedProduct) => {
     addItem({ id: product.id, name: product.name, price: product.price, image: product.image, slug: product.slug });
     setAdded(product.id);
     setTimeout(() => setAdded(null), 1500);
+  };
+
+  const handleNewsletterSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setNewsletterStatus("saving");
+    setNewsletterMessage("");
+
+    try {
+      const response = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newsletterEmail }),
+      });
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(data.error || "Subscription failed");
+      setNewsletterStatus("saved");
+      setNewsletterMessage("You are subscribed. Watch your inbox for deals and arrivals.");
+      setNewsletterEmail("");
+    } catch (error) {
+      setNewsletterStatus("error");
+      setNewsletterMessage(error instanceof Error ? error.message : "Unable to subscribe right now.");
+    }
   };
 
   return (
@@ -155,7 +231,7 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="product-grid-subgrid">
-            {FEATURED_PRODUCTS.map((product) => (
+            {featuredProducts.map((product) => (
               <div key={product.id} className="glass-card rounded-2xl overflow-hidden">
                 <Link href={`/products/${product.slug}`} className="block">
                   <div className="glass-card-image relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)' }}>
@@ -164,12 +240,14 @@ export default function HomePage() {
                         {product.badge}
                       </span>
                     )}
-                    <img
+                    <Image
                       src={product.image}
                       alt={product.name}
+                      width={320}
+                      height={320}
                       className="w-full aspect-square object-contain p-4"
                       style={{ transition: 'transform 0.4s ease' }}
-                      loading="lazy"
+                      unoptimized
                     />
                   </div>
                   <div className="p-2">
@@ -216,11 +294,13 @@ export default function HomePage() {
           </p>
           <form
             className="mx-auto flex max-w-xl flex-col gap-3 rounded-[1.35rem] border border-white/[0.08] bg-white/[0.04] p-2 shadow-layers sm:flex-row"
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={handleNewsletterSubmit}
           >
             <input
               type="email"
               placeholder="Enter your email"
+              value={newsletterEmail}
+              onChange={(event) => setNewsletterEmail(event.target.value)}
               className="min-w-0 flex-1 rounded-2xl px-5 py-4 text-sm text-fog placeholder:text-fog-muted transition-all focus:outline-none"
               style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}
               onFocus={e => (e.currentTarget.style.borderColor = 'rgba(167,139,250,0.4)')}
@@ -228,14 +308,20 @@ export default function HomePage() {
             />
             <button
               type="submit"
+              disabled={newsletterStatus === "saving"}
               className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-2xl px-7 py-4 text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_42px_rgba(124,58,237,0.45)] focus:outline-none focus:ring-2 focus:ring-cyan-300/60 focus:ring-offset-2 focus:ring-offset-[#040820]"
               style={{ background: 'linear-gradient(135deg, #7c3aed, #06b6d4)', boxShadow: '0 8px 32px rgba(124,58,237,0.4)' }}
             >
               <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-              <span className="relative">Subscribe</span>
+              <span className="relative">{newsletterStatus === "saving" ? "Saving..." : "Subscribe"}</span>
               <ArrowRight className="relative h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </button>
           </form>
+          {newsletterMessage && (
+            <p className={`mt-4 text-sm ${newsletterStatus === "error" ? "text-red-300" : "text-green-300"}`}>
+              {newsletterMessage}
+            </p>
+          )}
         </div>
       </section>
 

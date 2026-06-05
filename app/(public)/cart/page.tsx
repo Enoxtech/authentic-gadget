@@ -6,11 +6,6 @@ import { useCart } from "@/context/CartContext";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 
-const metadata = {
-  title: "Your Cart | Authentic Gadget",
-  description: "Review items in your cart and proceed to checkout.",
-};
-
 export default function CartPage() {
   const { items, updateQuantity, removeItem, total } = useCart();
 

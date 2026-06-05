@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 const PROVIDER_NETWORK_MAP: Record<string, string> = {
   mtn: "MTN",
@@ -9,6 +10,14 @@ const PROVIDER_NETWORK_MAP: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
   try {
+    const limit = rateLimit(request, "flutterwave-momo-init", { max: 12, windowMs: 60_000 });
+    if (limit.limited) {
+      return NextResponse.json(
+        { error: "Too many payment attempts. Please wait and try again." },
+        { status: 429, headers: rateLimitHeaders(limit) }
+      );
+    }
+
     const body = (await request.json()) as {
       orderId?: unknown;
       provider?: unknown;
@@ -32,7 +41,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
+    const supabase = getSupabaseAdminClient();
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .select("id, customer_name, customer_email, customer_phone, total, payment_status")

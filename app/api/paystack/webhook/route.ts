@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export async function POST(request: Request) {
   try {
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     };
 
     if (event.event === "charge.success" && event.data?.reference) {
-      const supabase = await createClient();
+      const supabase = getSupabaseAdminClient();
       const { error } = await supabase
         .from("orders")
         .update({

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase";
 import { ArrowLeft, X, Plus } from "lucide-react";
 
 interface Category {
@@ -45,12 +44,17 @@ export default function NewProductPage() {
       return;
     }
     loadCategories();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   async function loadCategories() {
-    const supabase = createClient();
-    const { data } = await supabase.from("categories").select("name").order("name", { ascending: true });
-    if (data) setCategories(data.map((c: { name: string }) => ({ id: c.name, name: c.name })));
+    const response = await fetch("/api/admin/products");
+    if (response.status === 401) {
+      router.push("/admin/login");
+      return;
+    }
+    const data = (await response.json()) as { categories?: Category[] };
+    setCategories((data.categories || []).map((c) => ({ id: c.id || c.name, name: c.name })));
   }
 
   function handleNameChange(value: string) {
@@ -92,7 +96,6 @@ export default function NewProductPage() {
 
     setLoading(true);
     try {
-      const supabase = createClient();
       const imagesArray = form.images
         .split("\n")
         .map((u) => u.trim())
@@ -100,21 +103,26 @@ export default function NewProductPage() {
 
       const featuresArray = form.features.filter(Boolean);
 
-      const { error } = await supabase.from("products").insert({
-        name: form.name.trim(),
-        slug: form.slug || slugify(form.name),
-        brand: form.brand.trim() || null,
-        category: form.category,
-        price: Number(form.price),
-        compare_at_price: form.compare_at_price ? Number(form.compare_at_price) : null,
-        stock: Number(form.stock),
-        description: form.description.trim() || null,
-        badge: form.badge.trim() || null,
-        images: imagesArray.length > 0 ? imagesArray : [],
-        features: featuresArray.length > 0 ? featuresArray : [],
+      const response = await fetch("/api/admin/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name.trim(),
+          slug: form.slug || slugify(form.name),
+          brand: form.brand.trim() || null,
+          category: form.category,
+          price: Number(form.price),
+          compare_at_price: form.compare_at_price ? Number(form.compare_at_price) : null,
+          stock: Number(form.stock),
+          description: form.description.trim() || null,
+          badge: form.badge.trim() || null,
+          images: imagesArray,
+          features: featuresArray,
+        }),
       });
 
-      if (error) throw error;
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(data.error || "Failed to create product");
       router.push("/admin/products");
     } catch (err: unknown) {
       setErrors({ form: err instanceof Error ? err.message : "Failed to create product" });
@@ -124,7 +132,7 @@ export default function NewProductPage() {
   }
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-3xl">
       <div className="flex items-center gap-4 mb-6">
         <Link href="/admin/products" className="w-10 h-10 rounded-xl bg-white shadow-card flex items-center justify-center hover:bg-fog transition-colors">
           <ArrowLeft className="w-5 h-5 text-charcoal" />
@@ -165,7 +173,7 @@ export default function NewProductPage() {
                 className="w-full px-4 py-2.5 bg-fog rounded-xl text-sm text-charcoal/60 focus:outline-none"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-medium text-charcoal mb-1.5">Brand</label>
                 <input type="text" value={form.brand} onChange={(e) => setForm((prev) => ({ ...prev, brand: e.target.value }))} placeholder="Apple" className="w-full px-4 py-2.5 bg-fog rounded-xl text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-electric/30" />
@@ -189,14 +197,14 @@ export default function NewProductPage() {
         {/* Pricing */}
         <div className="bg-white rounded-2xl p-6 shadow-card">
           <h3 className="font-semibold text-charcoal mb-4">Pricing</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">Price (¢) *</label>
+              <label className="block text-sm font-medium text-charcoal mb-1.5">Price (GHS) *</label>
               <input type="number" value={form.price} onChange={(e) => setForm((prev) => ({ ...prev, price: e.target.value }))} placeholder="12499" min="0" className={`w-full px-4 py-2.5 bg-fog rounded-xl text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-electric/30 ${errors.price ? "ring-2 ring-red-400" : ""}`} />
               {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">Compare at Price (¢)</label>
+              <label className="block text-sm font-medium text-charcoal mb-1.5">Compare at Price (GHS)</label>
               <input type="number" value={form.compare_at_price} onChange={(e) => setForm((prev) => ({ ...prev, compare_at_price: e.target.value }))} placeholder="Optional" min="0" className="w-full px-4 py-2.5 bg-fog rounded-xl text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-electric/30" />
             </div>
             <div>
@@ -267,7 +275,7 @@ export default function NewProductPage() {
           </div>
         </div>
 
-        <div className="flex justify-end gap-3">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Link href="/admin/products" className="px-6 py-2.5 bg-fog text-charcoal/70 rounded-xl text-sm font-medium hover:bg-charcoal/10 transition-colors">Cancel</Link>
           <button type="submit" disabled={loading} className="px-6 py-2.5 bg-electric text-white rounded-xl text-sm font-semibold hover:bg-electric/90 transition-colors disabled:opacity-60">
             {loading ? "Creating..." : "Create Product"}

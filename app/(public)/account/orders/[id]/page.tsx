@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, MapPin, Package } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 interface OrderItem {
   id: string;
@@ -27,7 +28,8 @@ export default async function AccountOrderDetailPage({
     redirect(`/login?redirect=/account/orders/${encodeURIComponent(id)}`);
   }
 
-  const { data: order } = await supabase
+  const adminSupabase = getSupabaseAdminClient();
+  const { data: order } = await adminSupabase
     .from("orders")
     .select("*")
     .eq("id", id)
@@ -36,7 +38,7 @@ export default async function AccountOrderDetailPage({
 
   if (!order) notFound();
 
-  const { data: itemData } = await supabase
+  const { data: itemData } = await adminSupabase
     .from("order_items")
     .select("id, product_name, product_image, price, quantity")
     .eq("order_id", id);

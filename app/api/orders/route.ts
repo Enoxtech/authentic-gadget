@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server";
+import { createClient as createServerClient } from "@/lib/supabase-server";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 interface SubmittedItem {
   product_id: string;
@@ -51,6 +53,14 @@ function createOrderId() {
 
 export async function POST(request: NextRequest) {
   try {
+    const limit = rateLimit(request, "order-create", { max: 10, windowMs: 60_000 });
+    if (limit.limited) {
+      return NextResponse.json(
+        { error: "Too many order attempts. Please wait and try again." },
+        { status: 429, headers: rateLimitHeaders(limit) }
+      );
+    }
+
     const body = (await request.json()) as Record<string, unknown>;
     const customerName = readString(body.customer_name);
     const customerEmail = readString(body.customer_email).toLowerCase();
@@ -69,7 +79,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
+    const supabase = getSupabaseAdminClient();
+    const sessionSupabase = await createServerClient();
     const productIds = [...new Set(items.map((item) => item.product_id))];
     const { data: products, error: productsError } = await supabase
       .from("products")
@@ -127,7 +138,7 @@ export async function POST(request: NextRequest) {
 
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await sessionSupabase.auth.getUser();
 
     let customerId: string | null = null;
     if (user) {
@@ -194,7 +205,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase = await createServerClient();
     const {
       data: { user },
       error: authError,
@@ -204,7 +215,8 @@ export async function GET() {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
-    const { data, error } = await supabase
+    const adminSupabase = getSupabaseAdminClient();
+    const { data, error } = await adminSupabase
       .from("orders")
       .select("*")
       .ilike("customer_email", user.email)

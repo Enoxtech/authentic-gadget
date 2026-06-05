@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export async function GET(request: NextRequest) {
   const orderId = request.nextUrl.searchParams.get("orderId")?.trim();
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const supabase = await createClient();
+  const supabase = getSupabaseAdminClient();
   const { data: order, error } = await supabase
     .from("orders")
     .select("id, total, payment_method, payment_status, order_status, shipping_city, shipping_region, created_at")

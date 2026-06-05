@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase";
-import { Search, Eye, ChevronDown } from "lucide-react";
+import { Search, Eye } from "lucide-react";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700",
@@ -25,7 +24,7 @@ const FILTERS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancel
 interface Order {
   id: string;
   customer_name: string;
-  phone: string;
+  customer_phone: string | null;
   total: number;
   payment_status: string;
   order_status: string;
@@ -47,28 +46,19 @@ export default function OrdersPage() {
       return;
     }
     loadOrders();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   async function loadOrders() {
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (!error && data) {
-        const withCounts = await Promise.all(
-          data.map(async (order: Order) => {
-            const countRes = await supabase
-              .from("order_items")
-              .select("id", { count: "exact", head: true })
-              .eq("order_id", order.id);
-            return { ...order, item_count: countRes.count || 0 };
-          })
-        );
-        setOrders(withCounts);
+      const response = await fetch("/api/admin/orders");
+      if (response.status === 401) {
+        router.push("/admin/login");
+        return;
       }
+      if (!response.ok) throw new Error("Failed to load orders");
+      const data = (await response.json()) as { orders?: Order[] };
+      setOrders(data.orders || []);
     } catch {
       // handle error
     } finally {
@@ -95,8 +85,8 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-charcoal">Orders</h2>
           <p className="text-sm text-charcoal/50">{orders.length} total orders</p>
@@ -139,7 +129,8 @@ export default function OrdersPage() {
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center text-charcoal/40">No orders found</div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-charcoal/50 text-left border-b border-fog">
@@ -162,18 +153,18 @@ export default function OrdersPage() {
                     onClick={() => router.push(`/admin/orders/${o.id}`)}
                   >
                     <td className="py-3.5 px-6 font-medium text-charcoal">{o.id}</td>
-                    <td className="py-3.5 px-6 text-charcoal/70">{o.customer_name || "—"}</td>
-                    <td className="py-3.5 px-6 text-charcoal/70">{o.phone || "—"}</td>
+                    <td className="py-3.5 px-6 text-charcoal/70">{o.customer_name || "-"}</td>
+                    <td className="py-3.5 px-6 text-charcoal/70">{o.customer_phone || "-"}</td>
                     <td className="py-3.5 px-6 text-charcoal/70">{o.item_count ?? 0}</td>
-                    <td className="py-3.5 px-6 font-medium text-charcoal">¢{(o.total || 0).toLocaleString()}</td>
+                    <td className="py-3.5 px-6 font-medium text-charcoal">GHS {(o.total || 0).toLocaleString()}</td>
                     <td className="py-3.5 px-6">
                       <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${PAYMENT_COLORS[o.payment_status] || "bg-gray-100 text-gray-600"}`}>
-                        {o.payment_status?.charAt(0).toUpperCase() + (o.payment_status?.slice(1) || "—")}
+                        {o.payment_status?.charAt(0).toUpperCase() + (o.payment_status?.slice(1) || "-")}
                       </span>
                     </td>
                     <td className="py-3.5 px-6">
                       <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_COLORS[o.order_status] || "bg-gray-100 text-gray-600"}`}>
-                        {o.order_status?.charAt(0).toUpperCase() + (o.order_status?.slice(1) || "—")}
+                        {o.order_status?.charAt(0).toUpperCase() + (o.order_status?.slice(1) || "-")}
                       </span>
                     </td>
                     <td className="py-3.5 px-6 text-charcoal/50">{formatDate(o.created_at)}</td>
@@ -190,6 +181,38 @@ export default function OrdersPage() {
               </tbody>
             </table>
           </div>
+          <div className="divide-y divide-fog md:hidden">
+            {filtered.map((o) => (
+              <button
+                key={o.id}
+                type="button"
+                onClick={() => router.push(`/admin/orders/${o.id}`)}
+                className="w-full p-4 text-left"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-charcoal">{o.id}</p>
+                    <p className="mt-1 text-sm text-charcoal/60">{o.customer_name || "-"}</p>
+                    <p className="mt-1 text-xs text-charcoal/40">
+                      {formatDate(o.created_at)} - {o.item_count ?? 0} items
+                    </p>
+                  </div>
+                  <p className="shrink-0 font-bold text-charcoal">
+                    GHS {(o.total || 0).toLocaleString()}
+                  </p>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${PAYMENT_COLORS[o.payment_status] || "bg-gray-100 text-gray-600"}`}>
+                    {o.payment_status?.charAt(0).toUpperCase() + (o.payment_status?.slice(1) || "-")}
+                  </span>
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_COLORS[o.order_status] || "bg-gray-100 text-gray-600"}`}>
+                    {o.order_status?.charAt(0).toUpperCase() + (o.order_status?.slice(1) || "-")}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+          </>
         )}
       </div>
     </div>

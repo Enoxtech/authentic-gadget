@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Megaphone, Plus, ArrowLeft } from "lucide-react";
+import { Megaphone, Plus } from "lucide-react";
 
 export default function CampaignsPage() {
   const router = useRouter();

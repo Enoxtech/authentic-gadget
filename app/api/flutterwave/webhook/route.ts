@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 interface FlutterwaveWebhook {
   event?: string;
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Transaction verification failed" }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const supabase = getSupabaseAdminClient();
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .select("id, total")

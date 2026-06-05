@@ -7,9 +7,18 @@ import {
   createAdminSessionToken,
   isAdminAuthConfigured,
 } from "@/lib/admin-auth";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    const limit = rateLimit(request, "admin-login", { max: 5, windowMs: 60_000 });
+    if (limit.limited) {
+      return NextResponse.json(
+        { error: "Too many login attempts. Please wait and try again." },
+        { status: 429, headers: rateLimitHeaders(limit) }
+      );
+    }
+
     if (!isAdminAuthConfigured()) {
       return NextResponse.json(
         { error: "Admin authentication is not configured" },

@@ -14,7 +14,7 @@ export default function CartBadge({ count, justBounced, onClick }: CartBadgeProp
     <button
       id="cart-icon-btn"
       onClick={onClick}
-      className="p-2 sm:p-2.5 rounded-xl transition-colors relative"
+      className={`p-2 sm:p-2.5 rounded-xl transition-colors relative ${justBounced ? "cart-icon-shake" : ""}`}
       style={{
         background: 'rgba(255,255,255,0.1)',
         border: '1px solid rgba(255,255,255,0.15)',

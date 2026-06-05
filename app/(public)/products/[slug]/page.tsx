@@ -12,6 +12,7 @@ import {
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import DeliveryBadges from "@/components/ui/DeliveryBadges";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 interface Product {
   id: string;
@@ -48,10 +49,10 @@ export default function ProductDetailPage() {
   const [error, setError] = useState("");
   const [selectedImage, setSelectedImage] = useState(0);
   const [qty, setQty] = useState(1);
-  const [wishlist, setWishlist] = useState(false);
   const [added, setAdded] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
   const { addItem, openCart } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
 
   useEffect(() => {
     async function fetchProduct() {
@@ -122,6 +123,7 @@ export default function ProductDetailPage() {
     : 0;
   const features = product.features || [];
   const primaryImage = images[selectedImage];
+  const wishlist = isWishlisted(product.id);
 
   const handleAddToCart = () => {
     addItem({
@@ -332,7 +334,7 @@ export default function ProductDetailPage() {
                   Buy Now — ¢{(product.price * qty).toLocaleString()}
                 </button>
                 <button
-                  onClick={() => setWishlist(!wishlist)}
+                  onClick={() => toggleWishlist({ ...product, images })}
                   className={`p-4 rounded-2xl border transition-all ${
                     wishlist ? "bg-red-500/10 border-red-500/30 text-red-400" : "bg-white/[0.04] border-white/[0.08] text-fog-muted hover:text-red-400"
                   }`}
@@ -349,7 +351,7 @@ export default function ProductDetailPage() {
                   Out of Stock
                 </button>
                 <button
-                  onClick={() => setWishlist(!wishlist)}
+                  onClick={() => toggleWishlist({ ...product, images })}
                   className={`p-4 rounded-2xl border transition-all ${
                     wishlist ? "bg-red-500/10 border-red-500/30 text-red-400" : "bg-white/[0.04] border-white/[0.08] text-fog-muted hover:text-red-400"
                   }`}

@@ -24,7 +24,7 @@ export default function TrustBadges() {
     let x = 0;
     const speed = 30; // px per second
 
-    const step = (timestamp: number) => {
+    const step = () => {
       if (!track) return;
       x -= speed / 60;
       const half = track.scrollWidth / 2;

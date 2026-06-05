@@ -126,11 +126,6 @@ function LoadingContent() {
   );
 }
 
-const metadata = {
-  title: "Order Confirmed | Authentic Gadget",
-  description: "Your order has been placed successfully. Authentic Gadget is preparing it for delivery.",
-};
-
 export default function OrderSuccessPage() {
   return (
     <Suspense fallback={<LoadingContent />}>

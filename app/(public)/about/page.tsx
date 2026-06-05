@@ -15,11 +15,6 @@ const stagger = {
   animate: { animTransition: { staggerChildren: 0.15 } },
 };
 
-const metadata = {
-  title: "About Us | Authentic Gadget",
-  description: "Learn about Authentic Gadget — Ghana's trusted source for authentic tech. Our story, mission, and commitment to genuine products.",
-};
-
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-dark-space">

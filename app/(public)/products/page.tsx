@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Star, Heart, SlidersHorizontal, X, ShoppingCart } from "lucide-react";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 interface Product {
   id: string;
@@ -48,12 +49,13 @@ function CheckCircle({ className }: { className?: string }) {
 
 function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
-  const [wishlist, setWishlist] = useState(false);
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const [added, setAdded] = useState(false);
   const discount = product.compare_at_price
     ? Math.round((1 - product.price / product.compare_at_price) * 100)
     : 0;
   const primaryImage = product.images?.[0] || "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400";
+  const wishlist = isWishlisted(product.id);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -117,7 +119,11 @@ function ProductCard({ product }: { product: Product }) {
         </div>
         {/* Wishlist */}
         <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setWishlist(!wishlist); }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleWishlist({ ...product, images: product.images || [] });
+          }}
           className={`absolute bottom-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all ${
             wishlist ? "bg-red-500 text-white" : "bg-[rgba(255,255,255,0.08)] text-white/60 hover:text-red-400 backdrop-blur-sm"
           }`}

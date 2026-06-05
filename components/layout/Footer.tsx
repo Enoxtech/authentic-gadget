@@ -14,7 +14,7 @@ const SHOP_LINKS = [
 
 const COMPANY_LINKS = [
   { label: "About Us", href: "/about" },
-  { label: "Contact Us", href: "/about" },
+  { label: "Contact Us", href: "/contact" },
   { label: "Track Order", href: "/track-order" },
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Terms of Service", href: "/terms" },

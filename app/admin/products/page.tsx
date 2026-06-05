@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase";
-import { Package, Plus, Edit, Trash2, Search, AlertCircle } from "lucide-react";
+import { Package, Plus, Edit, Trash2, Search } from "lucide-react";
 
 interface Product {
   id: string;
@@ -35,17 +34,19 @@ export default function ProductsPage() {
       return;
     }
     loadProducts();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   async function loadProducts() {
     try {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("products")
-        .select("*")
-        .order("name", { ascending: true });
-
-      if (data) setProducts(data);
+      const response = await fetch("/api/admin/products");
+      if (response.status === 401) {
+        router.push("/admin/login");
+        return;
+      }
+      if (!response.ok) throw new Error("Failed to load products");
+      const data = (await response.json()) as { products?: Product[] };
+      setProducts(data.products || []);
     } catch {
       // error
     } finally {
@@ -57,8 +58,10 @@ export default function ProductsPage() {
     if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
     setDeleting(id);
     try {
-      const supabase = createClient();
-      await supabase.from("products").delete().eq("id", id);
+      const response = await fetch(`/api/admin/products/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete product");
       setProducts((prev) => prev.filter((p) => p.id !== id));
     } finally {
       setDeleting(null);
@@ -81,15 +84,15 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-charcoal">Products</h2>
           <p className="text-sm text-charcoal/50">{products.length} products</p>
         </div>
         <Link
           href="/admin/products/new"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-electric text-white text-sm font-semibold rounded-xl hover:bg-electric/90 transition-colors"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-electric text-white text-sm font-semibold rounded-xl hover:bg-electric/90 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add Product
@@ -125,7 +128,7 @@ export default function ProductsPage() {
 
       {/* Grid */}
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="bg-white rounded-2xl p-4 shadow-card animate-pulse">
               <div className="aspect-square bg-fog rounded-xl mb-3" />
@@ -141,7 +144,7 @@ export default function ProductsPage() {
           <Link href="/admin/products/new" className="mt-3 inline-block text-electric underline text-sm">Add your first product</Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((p) => (
             <div key={p.id} className="bg-white rounded-2xl p-4 shadow-card hover:shadow-card-hover transition-shadow">
               <div className="relative aspect-square rounded-xl overflow-hidden bg-fog mb-3">
@@ -156,7 +159,7 @@ export default function ProductsPage() {
               </div>
               <p className="font-medium text-sm text-charcoal mb-0.5 truncate">{p.name}</p>
               {p.brand && <p className="text-xs text-charcoal/40 mb-1">{p.brand}</p>}
-              <p className="font-bold text-electric mb-2">¢{p.price?.toLocaleString()}</p>
+              <p className="font-bold text-electric mb-2">GHS {p.price?.toLocaleString()}</p>
               <div className="flex items-center justify-between">
                 <StockBadge stock={p.stock ?? 0} />
                 <div className="flex items-center gap-1">

@@ -21,24 +21,10 @@ export default function CartDrawer() {
   const [clearConfirm, setClearConfirm] = useState(false);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const cartTotal = discount ? Math.max(0, total - discount.amount) : total;
-  const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
 
   // Animate subtotal on change
   useEffect(() => {
-    const diff = cartTotal - animatedTotal;
-    if (diff === 0) return;
-    const steps = 20;
-    const stepValue = diff / steps;
-    let step = 0;
-    const interval = setInterval(() => {
-      step++;
-      setAnimatedTotal(prev => Math.round(prev + stepValue));
-      if (step >= steps) {
-        clearInterval(interval);
-        setAnimatedTotal(cartTotal);
-      }
-    }, 20);
-    return () => clearInterval(interval);
+    setAnimatedTotal(cartTotal);
   }, [cartTotal]);
 
   return (

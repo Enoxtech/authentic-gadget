@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight, Package, ShoppingBag } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 interface Order {
   id: string;
@@ -21,7 +22,8 @@ export default async function AccountOrdersPage() {
     redirect("/login?redirect=/account/orders");
   }
 
-  const { data } = await supabase
+  const adminSupabase = getSupabaseAdminClient();
+  const { data } = await adminSupabase
     .from("orders")
     .select("id, total, payment_status, order_status, created_at")
     .ilike("customer_email", user.email)

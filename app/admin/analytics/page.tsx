@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase";
 import { BarChart3, DollarSign, ShoppingCart, TrendingUp, Users, Package } from "lucide-react";
 
 export default function AnalyticsPage() {
@@ -24,36 +23,19 @@ export default function AnalyticsPage() {
       return;
     }
     loadAnalytics();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   async function loadAnalytics() {
     try {
-      const supabase = createClient();
-
-      const [ordersRes, productsRes, customersRes] = await Promise.all([
-        supabase.from("orders").select("total, created_at"),
-        supabase.from("products").select("name, price"),
-        supabase.from("customers").select("id", { count: "exact", head: true }),
-      ]);
-
-      const orders = ordersRes.data || [];
-      const products = productsRes.data || [];
-
-      const totalRevenue = orders.reduce((sum: number, o: { total?: number }) => sum + (o.total || 0), 0);
-      const totalOrders = orders.length;
-      const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-
-      // Top product by order count (simplified)
-      const topProduct = products.length > 0 ? products[0].name : "—";
-
-      setStats({
-        totalRevenue,
-        totalOrders,
-        totalCustomers: customersRes.count || 0,
-        totalProducts: products.length,
-        avgOrderValue,
-        topProduct,
-      });
+      const response = await fetch("/api/admin/analytics");
+      if (response.status === 401) {
+        router.push("/admin/login");
+        return;
+      }
+      const data = (await response.json()) as { stats?: typeof stats; error?: string };
+      if (!response.ok) throw new Error(data.error || "Failed to load analytics");
+      if (data.stats) setStats(data.stats);
     } catch (err) {
       console.error(err);
     } finally {
@@ -62,15 +44,15 @@ export default function AnalyticsPage() {
   }
 
   const statCards = [
-    { label: "Total Revenue", value: `¢${stats.totalRevenue.toLocaleString()}`, icon: DollarSign, color: "bg-green-50 text-green-600" },
+    { label: "Total Revenue", value: `GHS ${stats.totalRevenue.toLocaleString()}`, icon: DollarSign, color: "bg-green-50 text-green-600" },
     { label: "Total Orders", value: String(stats.totalOrders), icon: ShoppingCart, color: "bg-blue-50 text-blue-600" },
-    { label: "Avg Order Value", value: `¢${stats.avgOrderValue.toLocaleString()}`, icon: TrendingUp, color: "bg-purple-50 text-purple-600" },
+    { label: "Avg Order Value", value: `GHS ${stats.avgOrderValue.toLocaleString()}`, icon: TrendingUp, color: "bg-purple-50 text-purple-600" },
     { label: "Total Customers", value: String(stats.totalCustomers), icon: Users, color: "bg-orange-50 text-orange-600" },
     { label: "Total Products", value: String(stats.totalProducts), icon: Package, color: "bg-electric/10 text-electric" },
   ];
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-charcoal">Analytics</h2>
         <p className="text-sm text-charcoal/50">Store performance insights</p>

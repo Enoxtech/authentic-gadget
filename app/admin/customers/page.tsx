@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase";
-import { Users, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
 interface Customer {
   id: string;
@@ -28,28 +27,19 @@ export default function CustomersPage() {
       return;
     }
     loadCustomers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   async function loadCustomers() {
     try {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("customers")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (data) {
-        const withOrders = await Promise.all(
-          data.map(async (c: { id: string; name?: string; email?: string; phone?: string; region?: string; created_at: string }) => {
-            const countRes = await supabase
-              .from("orders")
-              .select("id", { count: "exact", head: true })
-              .eq("customer_id", c.id);
-            return { ...c, order_count: countRes.count || 0 };
-          })
-        );
-        setCustomers(withOrders);
+      const response = await fetch("/api/admin/customers");
+      if (response.status === 401) {
+        router.push("/admin/login");
+        return;
       }
+      if (!response.ok) throw new Error("Failed to load customers");
+      const data = (await response.json()) as { customers?: Customer[] };
+      setCustomers(data.customers || []);
     } catch {
       // error
     } finally {
@@ -72,8 +62,8 @@ export default function CustomersPage() {
   );
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-charcoal">Customers</h2>
           <p className="text-sm text-charcoal/50">{customers.length} customers</p>
@@ -101,7 +91,8 @@ export default function CustomersPage() {
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center text-charcoal/40">No customers found</div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-charcoal/50 text-left border-b border-fog">
@@ -121,12 +112,12 @@ export default function CustomersPage() {
                         <div className="w-8 h-8 rounded-full bg-electric/10 flex items-center justify-center shrink-0">
                           <span className="text-electric text-sm font-bold">{(c.name || "?").charAt(0).toUpperCase()}</span>
                         </div>
-                        {c.name || "—"}
+                        {c.name || "-"}
                       </div>
                     </td>
-                    <td className="py-3.5 px-6 text-charcoal/70">{c.email || "—"}</td>
-                    <td className="py-3.5 px-6 text-charcoal/70">{c.phone || "—"}</td>
-                    <td className="py-3.5 px-6 text-charcoal/70">{c.region || "—"}</td>
+                    <td className="py-3.5 px-6 text-charcoal/70">{c.email || "-"}</td>
+                    <td className="py-3.5 px-6 text-charcoal/70">{c.phone || "-"}</td>
+                    <td className="py-3.5 px-6 text-charcoal/70">{c.region || "-"}</td>
                     <td className="py-3.5 px-6">
                       <span className="font-medium text-charcoal">{c.order_count ?? 0}</span>
                     </td>
@@ -136,6 +127,25 @@ export default function CustomersPage() {
               </tbody>
             </table>
           </div>
+          <div className="divide-y divide-fog md:hidden">
+            {filtered.map((c) => (
+              <div key={c.id} className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-electric/10 flex items-center justify-center shrink-0">
+                    <span className="text-electric text-sm font-bold">{(c.name || "?").charAt(0).toUpperCase()}</span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-charcoal truncate">{c.name || "-"}</p>
+                    <p className="mt-1 text-sm text-charcoal/60 truncate">{c.email || "-"}</p>
+                    <p className="mt-2 text-xs text-charcoal/40">
+                      {c.order_count ?? 0} orders - Joined {formatDate(c.created_at)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          </>
         )}
       </div>
     </div>

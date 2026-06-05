@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
-import { Check, ArrowRight, ArrowLeft, CreditCard, Banknote, ShoppingBag, Loader2, Smartphone, Truck } from "lucide-react";
+import { Check, ArrowRight, ArrowLeft, ShoppingBag, Loader2, Smartphone, Truck } from "lucide-react";
 
 const STEPS = [
   { id: "info", label: "Information", icon: "📋" },
@@ -30,7 +30,6 @@ export default function CheckoutPage() {
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", address: "", city: "", state: "" });
   const [paymentMethod, setPaymentMethod] = useState("momo");
   const [momoProvider, setMomoProvider] = useState("mtn");
-  const [showMomoProviders, setShowMomoProviders] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -395,7 +394,7 @@ export default function CheckoutPage() {
                     {PAYMENT_METHODS.map(({ id, label, icon: Icon, desc }) => (
                       <button
                         key={id}
-                        onClick={() => { setPaymentMethod(id); setShowMomoProviders(false); setError(""); }}
+                        onClick={() => { setPaymentMethod(id); setError(""); }}
                         className="w-full flex items-center gap-4 p-4 rounded-xl transition-all text-left"
                         style={{
                           background:
