@@ -214,20 +214,26 @@ export default function HomePage() {
           <p className="text-fog-muted mb-8">
             Get exclusive deals, new arrivals, and gadget tips delivered to your inbox.
           </p>
-          <form className="flex flex-col sm:flex-row gap-3" onSubmit={(e) => e.preventDefault()}>
+          <form
+            className="mx-auto flex max-w-xl flex-col gap-3 rounded-[1.35rem] border border-white/[0.08] bg-white/[0.04] p-2 shadow-layers sm:flex-row"
+            onSubmit={(e) => e.preventDefault()}
+          >
             <input
               type="email"
               placeholder="Enter your email"
-              className="flex-1 px-5 py-4 rounded-2xl text-sm focus:outline-none transition-all"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)', color: '#f8f9fb' }}
+              className="min-w-0 flex-1 rounded-2xl px-5 py-4 text-sm text-fog placeholder:text-fog-muted transition-all focus:outline-none"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}
               onFocus={e => (e.currentTarget.style.borderColor = 'rgba(167,139,250,0.4)')}
               onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)')}
             />
             <button
               type="submit"
+              className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-2xl px-7 py-4 text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_42px_rgba(124,58,237,0.45)] focus:outline-none focus:ring-2 focus:ring-cyan-300/60 focus:ring-offset-2 focus:ring-offset-[#040820]"
               style={{ background: 'linear-gradient(135deg, #7c3aed, #06b6d4)', boxShadow: '0 8px 32px rgba(124,58,237,0.4)' }}
             >
-              Subscribe
+              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+              <span className="relative">Subscribe</span>
+              <ArrowRight className="relative h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </button>
           </form>
         </div>
