@@ -167,7 +167,7 @@ export default function HomePage() {
       {/* === END HERO SLIDER === */}
 
       {/* Trust badges */}
-      <section className="border-y border-white/[0.06] bg-[#06112B]">
+      <section className="premium-trust-strip border-y border-white/[0.06] bg-[#06112B]">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[

@@ -22,7 +22,7 @@ const COMPANY_LINKS = [
 
 export default function Footer() {
   return (
-    <footer className="bg-[#030618] text-white border-t border-white/[0.06]">
+    <footer className="site-footer bg-[#030618] text-white border-t border-white/[0.06]">
       {/* Trust strip */}
       <div className="border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-2 md:grid-cols-4 gap-6">

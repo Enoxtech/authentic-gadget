@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -101,7 +102,7 @@ export default function HeroSlider() {
           {/* Content */}
           <div className="hero-slide-content">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-              <div className="w-full min-w-0 max-w-xl">
+              <div className="hero-copy-panel w-full min-w-0 max-w-xl">
                 {/* Badge */}
                 <div className="hero-badge" style={slide.badgeStyle}>
                   {slide.badge}
@@ -109,14 +110,12 @@ export default function HeroSlider() {
 
                 {/* Headline */}
                 <h1
-                  className="font-display leading-[1.05] break-words"
+                  className="hero-headline font-display leading-[1.05] break-words"
                   style={{
+                    "--hero-accent": slide.accentColor,
                     fontSize: "clamp(2rem, 5vw, 3.5rem)",
                     fontWeight: 800,
-                    background: slide.headlineGradient,
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
+                  } as CSSProperties}
                 >
                   {slide.headline}
                 </h1>
