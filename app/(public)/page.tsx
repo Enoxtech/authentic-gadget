@@ -220,7 +220,7 @@ export default function HomePage() {
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="font-display text-xl md:text-2xl font-bold" style={{ color: '#f8f9fb' }}>
+            <h2 className="font-display text-xl md:text-2xl font-bold text-fog">
               Featured Products
             </h2>
             <Link href="/products" className="text-sm font-medium transition-colors" style={{ color: '#a78bfa' }}
@@ -234,7 +234,7 @@ export default function HomePage() {
             {featuredProducts.map((product) => (
               <div key={product.id} className="glass-card rounded-2xl overflow-hidden">
                 <Link href={`/products/${product.slug}`} className="block">
-                  <div className="glass-card-image relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                  <div className="glass-card-image relative overflow-hidden">
                     {product.badge && (
                       <span className="absolute top-3 left-3 text-[11px] font-bold px-2.5 py-1 rounded-full z-10 text-white" style={{ background: product.badge === "Best Seller" ? 'linear-gradient(135deg, #7c3aed, #06b6d4)' : 'linear-gradient(135deg, #f59e0b, #06b6d4)' }}>
                         {product.badge}
@@ -251,25 +251,29 @@ export default function HomePage() {
                     />
                   </div>
                   <div className="p-2">
-                    <h3 className="font-semibold text-[11px] leading-tight line-clamp-2 mb-1" style={{ color: '#f8f9fb' }}>
+                    <h3 className="font-semibold text-[11px] leading-tight line-clamp-2 mb-1 text-fog">
                       {product.name}
                     </h3>
                     <div className="flex items-center gap-1.5 mb-3">
                       <StarRating rating={product.rating} />
-                      <span className="text-[11px]" style={{ color: 'rgba(248,249,251,0.4)' }}>({product.reviews})</span>
+                      <span className="text-[11px] text-fog-muted">({product.reviews})</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="glass-card-price">¢{product.price.toLocaleString()}</span>
                         {product.compareAt && (
-                          <span className="ml-2 text-[12px] line-through" style={{ color: 'rgba(248,249,251,0.4)' }}>¢{product.compareAt.toLocaleString()}</span>
+                          <span className="ml-2 text-[12px] line-through text-fog-muted">¢{product.compareAt.toLocaleString()}</span>
                         )}
                       </div>
                     </div>
                     <button
                       onClick={(e) => { e.preventDefault(); handleAddToCart(product); }}
-                      className="mt-3 w-full py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 text-white"
-                      style={{ background: added === product.id ? '#22c55e' : 'rgba(255,255,255,0.1)', border: added === product.id ? 'none' : '1px solid rgba(255,255,255,0.15)' }}
+                      className="mt-3 w-full py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2"
+                      style={{
+                        background: added === product.id ? '#22c55e' : 'var(--theme-muted-action)',
+                        border: added === product.id ? 'none' : '1px solid var(--theme-muted-action-border)',
+                        color: added === product.id ? '#fff' : 'var(--foreground)',
+                      }}
                     >
                       {added === product.id ? '✓ Added' : '+ Add to Cart'}
                     </button>
@@ -293,7 +297,11 @@ export default function HomePage() {
             Get exclusive deals, new arrivals, and gadget tips delivered to your inbox.
           </p>
           <form
-            className="mx-auto flex max-w-xl flex-col gap-3 rounded-[1.35rem] border border-white/[0.08] bg-white/[0.04] p-2 shadow-layers sm:flex-row"
+            className="mx-auto flex max-w-xl flex-col gap-3 rounded-[1.35rem] border p-2 shadow-layers sm:flex-row"
+            style={{
+              background: 'var(--theme-card-bg)',
+              borderColor: 'var(--theme-card-border)',
+            }}
             onSubmit={handleNewsletterSubmit}
           >
             <input
@@ -302,9 +310,9 @@ export default function HomePage() {
               value={newsletterEmail}
               onChange={(event) => setNewsletterEmail(event.target.value)}
               className="min-w-0 flex-1 rounded-2xl px-5 py-4 text-sm text-fog placeholder:text-fog-muted transition-all focus:outline-none"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}
-              onFocus={e => (e.currentTarget.style.borderColor = 'rgba(167,139,250,0.4)')}
-              onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)')}
+              style={{ background: 'var(--theme-input-bg)', border: '1px solid var(--theme-input-border)' }}
+              onFocus={e => (e.currentTarget.style.borderColor = 'color-mix(in oklch, var(--primary) 45%, var(--theme-input-border))')}
+              onBlur={e => (e.currentTarget.style.borderColor = 'var(--theme-input-border)')}
             />
             <button
               type="submit"

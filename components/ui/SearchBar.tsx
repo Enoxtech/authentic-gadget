@@ -167,7 +167,9 @@ export default function SearchBar({ products }: SearchBarProps) {
           onKeyDown={handleKeyDown}
           placeholder="Search products..."
           className="w-full rounded-xl border border-white/[0.08] bg-white/[0.06] py-3 pl-10 pr-20 text-sm text-fog placeholder:text-fog-muted outline-none transition-all focus:border-gold/30"
-          onFocus={e => { if (query.trim().length > 1) setIsOpen(true); e.currentTarget.style.borderColor = 'rgba(212,168,67,0.4)'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+          style={{ background: 'var(--theme-input-bg)', borderColor: 'var(--theme-input-border)' }}
+          onFocus={e => { if (query.trim().length > 1) setIsOpen(true); e.currentTarget.style.borderColor = 'color-mix(in oklch, var(--gold) 55%, var(--theme-input-border))'; e.currentTarget.style.background = 'var(--theme-hover-bg)'; }}
+          onBlur={e => { e.currentTarget.style.borderColor = 'var(--theme-input-border)'; e.currentTarget.style.background = 'var(--theme-input-bg)'; }}
         />
         {query && (
           <button
@@ -196,7 +198,7 @@ export default function SearchBar({ products }: SearchBarProps) {
       {/* Dropdown */}
       {showResults && (
         <div ref={dropdownRef} className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden z-50"
-          style={{ background: 'rgba(6,17,43,0.98)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 16px 48px rgba(0,0,0,0.5)' }}>
+          style={{ background: 'var(--theme-card-bg)', backdropFilter: 'blur(20px)', border: '1px solid var(--theme-card-border)', boxShadow: 'var(--theme-card-shadow)' }}>
           {!query.trim() && (
             <div className="px-4 py-2 border-b border-white/8 flex items-center gap-2 text-xs" style={{ color: 'rgba(212,168,67,0.8)' }}>
               <TrendingUp className="w-3 h-3" /> Trending searches
@@ -238,7 +240,7 @@ export default function SearchBar({ products }: SearchBarProps) {
       {/* No results */}
       {showNoResults && (
         <div ref={dropdownRef} className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden z-50 px-6 py-8 text-center"
-          style={{ background: 'rgba(6,17,43,0.98)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          style={{ background: 'var(--theme-card-bg)', backdropFilter: 'blur(20px)', border: '1px solid var(--theme-card-border)' }}>
           <div className="text-3xl mb-2">🔍</div>
           <p className="text-fog font-medium mb-1">No results for &quot;{query}&quot;</p>
           <p className="text-sm text-fog-muted">Try different keywords or browse categories</p>

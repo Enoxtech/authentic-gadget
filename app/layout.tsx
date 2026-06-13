@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { poppins, playfair } from "@/lib/fonts";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -36,11 +37,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${poppins.variable} ${playfair.variable}`}>
+    <html
+      lang="en"
+      data-theme="light"
+      className={`${poppins.variable} ${playfair.variable}`}
+      suppressHydrationWarning
+    >
       <body className="font-sans antialiased">
-        <CartProvider>
-          <WishlistProvider>{children}</WishlistProvider>
-        </CartProvider>
+        <ThemeProvider>
+          <CartProvider>
+            <WishlistProvider>{children}</WishlistProvider>
+          </CartProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

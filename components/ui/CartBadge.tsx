@@ -16,11 +16,12 @@ export default function CartBadge({ count, justBounced, onClick }: CartBadgeProp
       onClick={onClick}
       className={`p-2 sm:p-2.5 rounded-xl transition-colors relative ${justBounced ? "cart-icon-shake" : ""}`}
       style={{
-        background: 'rgba(255,255,255,0.1)',
-        border: '1px solid rgba(255,255,255,0.15)',
+        background: 'var(--theme-muted-action)',
+        border: '1px solid var(--theme-muted-action-border)',
+        color: 'var(--foreground)',
       }}
-      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
-      onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+      onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-hover-bg)')}
+      onMouseLeave={e => (e.currentTarget.style.background = 'var(--theme-muted-action)')}
       aria-label={`Cart with ${count} items`}
     >
       <ShoppingCart className="w-5 h-5" />

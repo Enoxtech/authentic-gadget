@@ -11,7 +11,9 @@ import {
 } from "lucide-react";
 import CartBadge from "@/components/ui/CartBadge";
 import SearchBarWrapper from "@/components/ui/SearchBarWrapper";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import { useCart } from "@/context/CartContext";
+import { useTheme } from "@/context/ThemeContext";
 import { createClient } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 
@@ -36,8 +38,10 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { itemCount, openCart } = useCart();
+  const { resolvedTheme } = useTheme();
   const [bounced, setBounced] = useState(false);
   const prevCountRef = useRef(0);
+  const logoSrc = resolvedTheme === "light" ? "/logo-dark.png" : "/logo-white.png";
 
   // Auth state
   const [user, setUser] = useState<{ email?: string } | null>(null);
@@ -100,15 +104,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header
-        className="sticky top-0 z-50 transition-all duration-300"
-        style={{
-          background: 'rgba(10, 10, 10, 0.7)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-        }}
-      >
+      <header className="site-header sticky top-0 z-50 transition-all duration-300">
         {/* Top bar — hidden on mobile */}
         <div className="hidden sm:block border-b border-white/[0.06]">
           <div className="max-w-7xl mx-auto px-4 h-7 flex items-center justify-between">
@@ -124,12 +120,12 @@ export default function Navbar() {
         </div>
 
         {/* Main nav bar */}
-        <div className="bg-[#040820]">
+        <div className="site-nav-shell">
           <div className="w-full min-w-0 max-w-7xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2 sm:gap-3 overflow-hidden">
             {/* Logo */}
             <Link href="/" className="shrink-0">
               <Image
-                src="/logo-white.png"
+                src={logoSrc}
                 alt="Authentic Gadget"
                 width={120}
                 height={36}
@@ -145,6 +141,10 @@ export default function Navbar() {
 
             {/* Actions */}
             <div className="flex shrink-0 items-center gap-1">
+              <div className="hidden sm:block">
+                <ThemeToggle compact />
+              </div>
+
               {/* Search toggle */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
@@ -211,10 +211,7 @@ export default function Navbar() {
             <div className="max-w-7xl mx-auto px-4 h-10 flex items-center gap-1 overflow-x-auto scrollbar-hide">
               <Link
                 href="/products"
-                className="shrink-0 text-sm font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5"
-                style={{ color: 'rgba(255,255,255,0.7)' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
+                className="shrink-0 text-sm font-medium transition-colors px-3 py-1.5 rounded-lg text-fog-muted hover:bg-white/5 hover:text-fog"
               >
                 All Products
               </Link>
@@ -222,20 +219,14 @@ export default function Navbar() {
                 <Link
                   key={cat.label}
                   href={cat.href}
-                  className="shrink-0 text-sm font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5"
-                  style={{ color: 'rgba(255,255,255,0.7)' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
+                  className="shrink-0 text-sm font-medium transition-colors px-3 py-1.5 rounded-lg text-fog-muted hover:bg-white/5 hover:text-fog"
                 >
                   {cat.label}
                 </Link>
               ))}
               <Link
                 href="/offers"
-                className="shrink-0 text-sm font-bold transition-colors px-3 py-1.5 rounded-lg hover:bg-violet-500/10"
-                style={{ color: '#a78bfa' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#c4b5fd')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#a78bfa')}
+                className="shrink-0 text-sm font-bold transition-colors px-3 py-1.5 rounded-lg text-primary hover:bg-violet-500/10 hover:text-primary-light"
               >
                 Offers 🔥
               </Link>
@@ -264,7 +255,7 @@ export default function Navbar() {
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.08] shrink-0">
               <Link href="/" onClick={() => setMobileOpen(false)}>
                 <Image
-                  src="/logo-white.png"
+                  src={logoSrc}
                   alt="Authentic Gadget"
                   width={110}
                   height={34}
@@ -287,6 +278,10 @@ export default function Navbar() {
 
             {/* Nav content — scrollable */}
             <div className="flex-1 overflow-y-auto py-2">
+              <div className="px-5 py-3">
+                <ThemeToggle />
+              </div>
+
               {/* Home */}
               <Link
                 href="/"

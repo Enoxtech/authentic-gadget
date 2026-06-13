@@ -55,7 +55,14 @@ export default function Footer() {
               alt="Authentic Gadget"
               width={120}
               height={36}
-              className="h-8 w-auto object-contain"
+              className="theme-logo-dark h-8 w-auto object-contain"
+            />
+            <Image
+              src="/logo-dark.png"
+              alt="Authentic Gadget"
+              width={120}
+              height={36}
+              className="theme-logo-light h-8 w-auto object-contain"
             />
           </Link>
           <p className="text-fog-muted text-sm leading-relaxed mb-6 max-w-xs">
