@@ -3,6 +3,9 @@ import { fileURLToPath } from 'node:url';
 
 const projectRoot = dirname(fileURLToPath(import.meta.url));
 const isDev = process.env.NODE_ENV !== 'production';
+const railwayBackendUrl = process.env.RAILWAY_BACKEND_URL?.replace(/\/+$/, '');
+const shouldProxyApiToRailway = Boolean(railwayBackendUrl && !process.env.RAILWAY_SERVICE_ID);
+const backendConnectSource = railwayBackendUrl ? ` ${railwayBackendUrl}` : '';
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -10,7 +13,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co https://api.paystack.co https://api.flutterwave.com https://checkout.flutterwave.com",
+  `connect-src 'self'${backendConnectSource} https://*.supabase.co https://api.paystack.co https://api.flutterwave.com https://checkout.flutterwave.com`,
   "frame-src https://checkout.paystack.com https://checkout.flutterwave.com",
   "object-src 'none'",
   "base-uri 'self'",
@@ -52,6 +55,7 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  ...(process.env.NEXT_OUTPUT_STANDALONE === 'true' ? { output: 'standalone' } : {}),
   reactStrictMode: true,
   turbopack: {
     root: projectRoot,
@@ -68,6 +72,16 @@ const nextConfig = {
       {
         source: '/:path*',
         headers: securityHeaders,
+      },
+    ];
+  },
+  async rewrites() {
+    if (!shouldProxyApiToRailway) return [];
+
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${railwayBackendUrl}/api/:path*`,
       },
     ];
   },
