@@ -30,11 +30,11 @@ export default function SettingsPage() {
             </div>
             <div className="flex justify-between py-2 border-b border-fog">
               <span className="text-charcoal/50 text-sm">Contact Email</span>
-              <span className="font-medium text-charcoal text-sm">hello@authenticgadget.com</span>
+              <span className="font-medium text-charcoal text-sm">authenticgadgets@gmail.com</span>
             </div>
             <div className="flex justify-between py-2 border-b border-fog">
               <span className="text-charcoal/50 text-sm">Phone</span>
-              <span className="font-medium text-charcoal text-sm">+233 200 000 000</span>
+              <span className="font-medium text-charcoal text-sm">+233 53 455 3165</span>
             </div>
             <div className="flex justify-between py-2">
               <span className="text-charcoal/50 text-sm">Address</span>

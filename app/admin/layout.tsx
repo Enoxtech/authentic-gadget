@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Package, ShoppingCart, Users, BarChart3, Settings, LogOut, LayoutDashboard, Megaphone, Star } from "lucide-react";
+import { Package, ShoppingCart, Users, BarChart3, Settings, LogOut, LayoutDashboard, Megaphone, Star, Image as ImageIcon, Tag } from "lucide-react";
 import Link from "next/link";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
@@ -9,6 +9,8 @@ const NAV_ITEMS = [
   { id: "overview", label: "Overview", icon: LayoutDashboard, href: "/admin/dashboard" },
   { id: "orders", label: "Orders", icon: ShoppingCart, href: "/admin/orders" },
   { id: "products", label: "Products", icon: Package, href: "/admin/products" },
+  { id: "categories", label: "Categories", icon: Tag, href: "/admin/categories" },
+  { id: "banners", label: "Banners", icon: ImageIcon, href: "/admin/banners" },
   { id: "customers", label: "Customers", icon: Users, href: "/admin/customers" },
   { id: "analytics", label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
   { id: "campaigns", label: "Campaigns", icon: Megaphone, href: "/admin/campaigns" },
@@ -32,9 +34,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-fog lg:flex">
       {/* Sidebar */}
-      <aside className="sticky top-0 z-30 bg-midnight text-white lg:flex lg:min-h-screen lg:w-64 lg:shrink-0 lg:flex-col">
+      <aside className="sticky top-0 z-30 bg-midnight text-white lg:flex lg:min-h-screen lg:w-64 lg:shrink-0 lg:flex-col" style={{ borderRight: "1px solid rgba(201,169,110,0.12)" }}>
         <div className="p-4 border-b border-white/10 lg:p-6">
-          <h1 className="text-lg font-bold">Authentic Gadget</h1>
+          <h1 className="text-lg font-bold font-display" style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>
+            Authentic Gadget
+          </h1>
           <p className="text-xs text-white/40 mt-0.5">Admin Panel</p>
         </div>
         <nav className="flex gap-2 overflow-x-auto p-3 lg:flex-1 lg:flex-col lg:space-y-1 lg:overflow-visible">
@@ -46,11 +50,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={href}
                 className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all lg:w-full lg:gap-3 ${
                   isActive
-                    ? "bg-electric text-white"
+                    ? "text-white shadow-gold-glow-sm"
                     : "text-white/50 hover:bg-white/5 hover:text-white"
                 }`}
+                style={isActive ? { background: "linear-gradient(135deg, rgba(212,168,67,0.22), rgba(25,175,255,0.18))", border: "1px solid rgba(212,168,67,0.3)" } : undefined}
               >
-                <Icon className="w-4 h-4 shrink-0" />
+                <Icon className="w-4 h-4 shrink-0" style={isActive ? { color: "#D4A843" } : undefined} />
                 {label}
               </Link>
             );

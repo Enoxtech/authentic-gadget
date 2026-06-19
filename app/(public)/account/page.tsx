@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Package, User, ChevronRight, LogOut, ShoppingBag } from "lucide-react";
 import { createClient } from "@/lib/supabase";
+import { formatPrice } from "@/lib/utils";
 
 interface Order {
   id: string;
@@ -174,7 +175,7 @@ export default function AccountPage() {
                         </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="font-bold text-charcoal text-sm">GHS {Number(order.total).toLocaleString()}</p>
+                        <p className="font-bold text-charcoal text-sm">{formatPrice(Number(order.total))}</p>
                         <p className={`text-xs font-medium ${statusColors[order.order_status] || "text-charcoal/50"}`}>
                           {order.order_status || "pending"}
                         </p>

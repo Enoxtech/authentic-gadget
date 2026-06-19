@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { Check, ArrowRight, ArrowLeft, ShoppingBag, Loader2, Smartphone, Truck } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 const STEPS = [
   { id: "info", label: "Information", icon: "📋" },
@@ -207,7 +208,7 @@ export default function CheckoutPage() {
           {isCod ? (
             <p className="text-sm text-white/40 mb-8">
               Your order <span className="font-mono text-white/60">#{orderId}</span> has been received.
-              Please have <span className="font-bold text-white">¢{finalTotal.toLocaleString()}</span> ready when our delivery agent arrives.
+              Please have <span className="font-bold text-white">{formatPrice(finalTotal)}</span> ready when our delivery agent arrives.
             </p>
           ) : (
             <p className="text-sm text-white/40 mb-8">
@@ -233,7 +234,7 @@ export default function CheckoutPage() {
           >
             <p className="text-xs text-white/40 mb-2">Order total</p>
             <p className="text-3xl font-bold" style={{ color: "#a78bfa" }}>
-              ¢{finalTotal.toLocaleString()}
+              {formatPrice(finalTotal)}
             </p>
             {isCod && (
               <p className="text-xs mt-1" style={{ color: "rgba(124,58,237,0.8)" }}>
@@ -520,7 +521,7 @@ export default function CheckoutPage() {
                             +
                           </button>
                           <p className="text-sm font-bold text-white ml-2">
-                            ¢{(item.price * item.quantity).toLocaleString()}
+                            {formatPrice(item.price * item.quantity)}
                           </p>
                         </div>
                       </div>
@@ -546,12 +547,12 @@ export default function CheckoutPage() {
                   >
                     <div className="flex justify-between text-sm">
                       <span style={{ color: "rgba(255,255,255,0.5)" }}>Subtotal</span>
-                      <span className="text-white">¢{total.toLocaleString()}</span>
+                      <span className="text-white">{formatPrice(total)}</span>
                     </div>
                     {discount && (
                       <div className="flex justify-between text-sm">
                         <span style={{ color: "#22c55e" }}>Discount ({discount.code})</span>
-                        <span style={{ color: "#22c55e" }}>-¢{discount.amount.toLocaleString()}</span>
+                        <span style={{ color: "#22c55e" }}>-{formatPrice(discount.amount)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-sm">
@@ -560,7 +561,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex justify-between text-lg font-bold pt-2 border-t border-white/10">
                       <span className="text-white">Total</span>
-                      <span style={{ color: "#a78bfa" }}>¢{discountedTotal.toLocaleString()}</span>
+                      <span style={{ color: "#a78bfa" }}>{formatPrice(discountedTotal)}</span>
                     </div>
                   </div>
                 </div>
@@ -622,9 +623,9 @@ export default function CheckoutPage() {
                   {isProcessing ? (
                     <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
                   ) : paymentMethod === "cod" ? (
-                    <>Confirm Order → {discountedTotal > 0 ? `¢${discountedTotal.toLocaleString()}` : ""}</>
+                    <>Confirm Order → {discountedTotal > 0 ? formatPrice(discountedTotal) : ""}</>
                   ) : (
-                    <>{paymentMethod === "momo" ? "Pay with MoMo →" : "Pay Now →"} {discountedTotal > 0 ? `¢${discountedTotal.toLocaleString()}` : ""}</>
+                    <>{paymentMethod === "momo" ? "Pay with MoMo →" : "Pay Now →"} {discountedTotal > 0 ? formatPrice(discountedTotal) : ""}</>
                   )}
                 </button>
               )}
@@ -660,7 +661,7 @@ export default function CheckoutPage() {
                       <p className="text-xs text-white/40">×{item.quantity}</p>
                     </div>
                     <p className="text-xs font-bold text-white">
-                      ¢{(item.price * item.quantity).toLocaleString()}
+                      {formatPrice(item.price * item.quantity)}
                     </p>
                   </div>
                 ))}
@@ -671,12 +672,12 @@ export default function CheckoutPage() {
               <div className="p-5 border-t border-white/10 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span style={{ color: "rgba(255,255,255,0.5)" }}>Subtotal</span>
-                  <span className="text-white">¢{total.toLocaleString()}</span>
+                  <span className="text-white">{formatPrice(total)}</span>
                 </div>
                 {discount && (
                   <div className="flex justify-between text-sm">
                     <span style={{ color: "#22c55e" }}>Discount</span>
-                    <span style={{ color: "#22c55e" }}>-¢{discount.amount.toLocaleString()}</span>
+                    <span style={{ color: "#22c55e" }}>-{formatPrice(discount.amount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
@@ -685,7 +686,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-lg font-bold pt-2 border-t border-white/10">
                   <span className="text-white">Total</span>
-                  <span style={{ color: "#a78bfa" }}>¢{discountedTotal.toLocaleString()}</span>
+                  <span style={{ color: "#a78bfa" }}>{formatPrice(discountedTotal)}</span>
                 </div>
               </div>
             </div>

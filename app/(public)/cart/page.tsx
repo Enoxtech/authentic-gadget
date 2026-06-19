@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import { formatPrice } from "@/lib/utils";
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, total } = useCart();
@@ -58,7 +59,7 @@ export default function CartPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-charcoal text-sm line-clamp-2">{item.name}</p>
-                  <p className="font-bold text-charcoal mt-1">¢{item.price.toLocaleString()}</p>
+                  <p className="font-bold text-charcoal mt-1">{formatPrice(item.price)}</p>
                   <div className="flex items-center gap-3 mt-3">
                     <div className="flex items-center gap-2 bg-fog rounded-xl">
                       <button
@@ -87,7 +88,7 @@ export default function CartPage() {
                 </div>
                 <div className="text-right shrink-0">
                   <p className="font-bold text-charcoal">
-                    ¢{(item.price * item.quantity).toLocaleString()}
+                    {formatPrice(item.price * item.quantity)}
                   </p>
                 </div>
               </div>
@@ -100,12 +101,12 @@ export default function CartPage() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-charcoal/60">Subtotal</span>
-                <span className="text-charcoal font-medium">¢{subtotal.toLocaleString()}</span>
+                <span className="text-charcoal font-medium">{formatPrice(subtotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-charcoal/60">Shipping</span>
                 <span className="text-charcoal font-medium">
-                  {shipping === 0 ? "Free" : `¢${shipping}`}
+                  {shipping === 0 ? "Free" : formatPrice(shipping)}
                 </span>
               </div>
               {shipping === 0 && (
@@ -115,7 +116,7 @@ export default function CartPage() {
               )}
               <div className="border-t border-fog-200 pt-3 flex justify-between">
                 <span className="font-bold text-charcoal">Total</span>
-                <span className="font-bold text-electric">¢{overallTotal.toLocaleString()}</span>
+                <span className="font-bold text-electric">{formatPrice(overallTotal)}</span>
               </div>
             </div>
             <Link

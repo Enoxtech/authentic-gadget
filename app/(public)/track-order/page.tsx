@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CheckCircle, Clock, Package, Search, Truck } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 interface TrackedOrder {
   id: string;
@@ -112,7 +113,7 @@ export default function TrackOrderPage() {
               </div>
               <div className="text-right">
                 <p className="font-bold text-electric">
-                  GHS {Number(order.total).toLocaleString()}
+                  {formatPrice(Number(order.total))}
                 </p>
                 <p className="text-xs text-charcoal/50 capitalize">
                   Payment: {order.payment_status}

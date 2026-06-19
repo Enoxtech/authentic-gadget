@@ -3,6 +3,7 @@ import { ChevronRight, Package, ShoppingBag } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { formatPrice } from "@/lib/utils";
 
 interface Order {
   id: string;
@@ -70,7 +71,7 @@ export default async function AccountOrdersPage() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-charcoal">GHS {Number(order.total).toLocaleString()}</p>
+                  <p className="font-bold text-charcoal">{formatPrice(Number(order.total))}</p>
                   <p className="text-xs text-electric font-medium capitalize">{order.order_status}</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-charcoal/30" />

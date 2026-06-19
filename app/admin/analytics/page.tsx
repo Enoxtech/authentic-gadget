@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BarChart3, DollarSign, ShoppingCart, TrendingUp, Users, Package } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 export default function AnalyticsPage() {
   const router = useRouter();
@@ -44,9 +45,9 @@ export default function AnalyticsPage() {
   }
 
   const statCards = [
-    { label: "Total Revenue", value: `GHS ${stats.totalRevenue.toLocaleString()}`, icon: DollarSign, color: "bg-green-50 text-green-600" },
+    { label: "Total Revenue", value: formatPrice(stats.totalRevenue), icon: DollarSign, color: "bg-green-50 text-green-600" },
     { label: "Total Orders", value: String(stats.totalOrders), icon: ShoppingCart, color: "bg-blue-50 text-blue-600" },
-    { label: "Avg Order Value", value: `GHS ${stats.avgOrderValue.toLocaleString()}`, icon: TrendingUp, color: "bg-purple-50 text-purple-600" },
+    { label: "Avg Order Value", value: formatPrice(stats.avgOrderValue), icon: TrendingUp, color: "bg-purple-50 text-purple-600" },
     { label: "Total Customers", value: String(stats.totalCustomers), icon: Users, color: "bg-orange-50 text-orange-600" },
     { label: "Total Products", value: String(stats.totalProducts), icon: Package, color: "bg-electric/10 text-electric" },
   ];

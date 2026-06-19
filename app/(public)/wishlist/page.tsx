@@ -5,15 +5,16 @@ import Link from "next/link";
 import { Heart, PackageSearch, ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import { formatPrice } from "@/lib/utils";
 
 export default function WishlistPage() {
   const { items, loading, removeWishlist } = useWishlist();
   const { addItem } = useCart();
 
   return (
-    <main className="min-h-screen bg-[#040820] px-4 py-12">
+    <main className="min-h-screen bg-[var(--bg)] px-4 py-12">
       <section className="mx-auto max-w-6xl">
-        <div className="mb-8 rounded-[2rem] border border-white/[0.08] bg-[#06112B] p-6 shadow-layers sm:p-8">
+        <div className="mb-8 rounded-[2rem] border border-white/[0.08] bg-[var(--surface)] p-6 shadow-layers sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 text-red-300">
@@ -41,7 +42,7 @@ export default function WishlistPage() {
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-[2rem] border border-white/[0.08] bg-[#06112B] p-8 text-center shadow-layers">
+          <div className="rounded-[2rem] border border-white/[0.08] bg-[var(--surface)] p-8 text-center shadow-layers">
             <Heart className="mx-auto h-10 w-10 text-fog-muted" />
             <h2 className="mt-4 text-xl font-bold text-fog">No saved products yet</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-fog-muted">
@@ -62,10 +63,10 @@ export default function WishlistPage() {
               return (
                 <article
                   key={product.id}
-                  className="overflow-hidden rounded-3xl border border-white/[0.08] bg-[#06112B] shadow-layers"
+                  className="overflow-hidden rounded-3xl border border-white/[0.08] bg-[var(--surface)] shadow-layers"
                 >
                   <Link href={`/products/${product.slug}`} className="block">
-                    <div className="relative aspect-[4/3] bg-[#0B1E3D]">
+                    <div className="relative aspect-[4/3] bg-[var(--surface-raised)]">
                       <Image src={image} alt={product.name} fill className="object-cover" unoptimized />
                     </div>
                   </Link>
@@ -77,7 +78,7 @@ export default function WishlistPage() {
                       <h2 className="mt-2 line-clamp-2 font-semibold text-fog">{product.name}</h2>
                     </Link>
                     <p className="mt-3 text-lg font-bold text-gold">
-                      GHS {Number(product.price || 0).toLocaleString()}
+                      {formatPrice(Number(product.price || 0))}
                     </p>
                     <div className="mt-5 grid grid-cols-[1fr_auto] gap-2">
                       <button

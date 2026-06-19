@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Star, Heart, SlidersHorizontal, X, ShoppingCart } from "lucide-react";
+import { Heart, SlidersHorizontal, X, ShoppingCart, Eye } from "lucide-react";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import { useQuickView } from "@/context/QuickViewContext";
+import { formatPrice } from "@/lib/utils";
 
 interface Product {
   id: string;
@@ -29,16 +31,6 @@ const SORT_OPTIONS = [
   { value: "rating", label: "Top Rated" },
 ];
 
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <Star key={n} className={`w-3.5 h-3.5 ${n <= Math.round(rating) ? "fill-gold text-gold" : "text-white/20"}`} />
-      ))}
-    </div>
-  );
-}
-
 function CheckCircle({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -47,15 +39,28 @@ function CheckCircle({ className }: { className?: string }) {
   );
 }
 
+const FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%230B1E3D'/%3E%3Ctext x='300' y='320' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='140' fill='%23D4A843' text-anchor='middle'%3EAG%3C/text%3E%3C/svg%3E";
+
 function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
+  const { open: openQuickView } = useQuickView();
   const [added, setAdded] = useState(false);
+  const [imgSrc, setImgSrc] = useState(product.images?.[0] || FALLBACK_IMAGE);
+  const [imgLoaded, setImgLoaded] = useState(false);
   const discount = product.compare_at_price
     ? Math.round((1 - product.price / product.compare_at_price) * 100)
     : 0;
-  const primaryImage = product.images?.[0] || "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400";
+  const primaryImage = imgSrc;
   const wishlist = isWishlisted(product.id);
+
+  // Some image hosts can hang indefinitely (neither load nor error) — force the
+  // CSP-safe fallback if the photo hasn't rendered within a few seconds.
+  useEffect(() => {
+    if (imgLoaded || imgSrc === FALLBACK_IMAGE) return;
+    const timer = setTimeout(() => setImgSrc(FALLBACK_IMAGE), 6000);
+    return () => clearTimeout(timer);
+  }, [imgLoaded, imgSrc]);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -74,49 +79,41 @@ function ProductCard({ product }: { product: Product }) {
   return (
     <Link
       href={`/products/${product.slug}`}
-      className="group block card-dark rounded-2xl overflow-hidden transition-all duration-300 hover:border-gold/30"
-      style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.3), 0 0 0 1px rgba(201,169,110,0.08)" }}
+      className="group flex flex-col rounded-[32px] border border-[var(--border-color)] bg-[var(--surface-glass)] backdrop-blur-[12px] card-premium overflow-hidden"
     >
       {/* Image */}
-      <div className="relative aspect-square bg-[#0B1E3D] p-5 overflow-hidden">
-        {product.badge && (
-          <span className={`absolute top-3 left-3 text-[11px] font-bold px-2.5 py-1 rounded-full z-10 ${
-            product.badge === "Best Seller"
-              ? "bg-gold text-[#030618]"
-              : product.badge === "New"
-              ? "bg-electric text-white"
-              : "bg-red-500 text-white"
-          }`}>
-            {product.badge}
-          </span>
-        )}
-        {discount > 0 && !product.badge && (
-          <span className="absolute top-3 left-3 bg-red-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full z-10">
-            -{discount}%
-          </span>
-        )}
-        {/* Quick View overlay */}
-        <div className="relative w-full h-full overflow-hidden">
-          <Image
-            src={primaryImage}
-            alt={product.name}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover group-hover:scale-110 transition-transform duration-500"
-            unoptimized
-          />
-          {/* Quick View overlay */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/30">
-            <Link
-              href={`/products/${product.slug}`}
-              className="px-4 py-2 rounded-xl text-white text-xs font-semibold"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #06b6d4)' }}
-              onClick={e => e.stopPropagation()}
-            >
-              Quick View
-            </Link>
-          </div>
+      <div className="relative aspect-square overflow-hidden rounded-t-[28px] bg-[var(--surface-raised)]">
+        <Image
+          src={primaryImage}
+          alt={product.name}
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1280px) 25vw, 16vw"
+          className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+          onLoad={() => setImgLoaded(true)}
+          onError={() => setImgSrc(FALLBACK_IMAGE)}
+          unoptimized
+        />
+
+        {/* Badges */}
+        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
+          {product.badge && (
+            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+              product.badge === "Best Seller"
+                ? "bg-gold text-[#030618]"
+                : product.badge === "New"
+                ? "bg-electric text-white"
+                : "bg-red-500 text-white"
+            }`}>
+              {product.badge}
+            </span>
+          )}
+          {discount > 0 && !product.badge && (
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white">
+              -{discount}%
+            </span>
+          )}
         </div>
+
         {/* Wishlist */}
         <button
           onClick={(e) => {
@@ -124,48 +121,69 @@ function ProductCard({ product }: { product: Product }) {
             e.stopPropagation();
             toggleWishlist({ ...product, images: product.images || [] });
           }}
-          className={`absolute bottom-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all ${
-            wishlist ? "bg-red-500 text-white" : "bg-[rgba(255,255,255,0.08)] text-white/60 hover:text-red-400 backdrop-blur-sm"
+          className={`absolute top-2.5 right-2.5 h-8 w-8 flex items-center justify-center rounded-full bg-[var(--surface-glass-strong)] backdrop-blur-md border border-[var(--border-color)] transition-all duration-200 hover:scale-110 active:scale-95 ${
+            wishlist ? "text-red-500" : "text-[var(--text-muted)] hover:text-red-500"
           }`}
-          aria-label="Add to wishlist"
+          aria-label={wishlist ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <Heart className={`w-4 h-4 ${wishlist ? "fill-white" : ""}`} />
+          <Heart className={`h-3.5 w-3.5 ${wishlist ? "fill-current" : ""}`} />
+        </button>
+
+        {/* Quick view pill — appears on hover */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openQuickView({
+              id: product.id,
+              name: product.name,
+              slug: product.slug,
+              price: product.price,
+              compare_at_price: product.compare_at_price,
+              images: product.images,
+              brand: product.brand,
+              rating: product.rating,
+              reviews_count: product.reviews_count,
+            });
+          }}
+          className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-[var(--surface-glass-strong)] backdrop-blur-md border border-[var(--border-color)] text-[var(--text-primary)] opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-200 whitespace-nowrap"
+        >
+          <Eye className="h-3 w-3" /> Quick View
         </button>
       </div>
 
       {/* Info */}
-      <div className="p-4">
-        <p className="text-[11px] text-gold/60 font-medium uppercase tracking-wider mb-1">{product.brand || ""}</p>
-        <h3 className="font-semibold text-[14px] text-fog leading-tight line-clamp-2 mb-2 min-h-[40px]">
+      <div className="p-3 flex flex-col gap-1 flex-1">
+        <p className="text-[9px] font-semibold text-[var(--text-muted)] uppercase tracking-widest truncate">
+          {product.brand || ""}
+        </p>
+        <p className="text-xs font-semibold text-[var(--text-primary)] line-clamp-2 leading-snug flex-1">
           {product.name}
-        </h3>
-        <div className="flex items-center gap-1.5 mb-3">
-          <StarRating rating={product.rating} />
-          <span className="text-[11px] text-fog-muted">({product.reviews_count})</span>
-        </div>
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <span className="text-[15px] font-bold text-gold">¢{product.price.toLocaleString()}</span>
+        </p>
+
+        <div className="flex items-center justify-between mt-2 gap-1">
+          <div className="flex flex-col min-w-0">
+            <span className="font-bold text-gold font-label text-xs tabular-nums">
+              {formatPrice(product.price)}
+            </span>
             {product.compare_at_price && (
-              <span className="ml-2 text-[12px] text-fog-muted line-through">¢{product.compare_at_price.toLocaleString()}</span>
+              <span className="text-[10px] text-[var(--text-muted)] line-through font-label tabular-nums">
+                {formatPrice(product.compare_at_price)}
+              </span>
             )}
           </div>
+
+          <button
+            onClick={handleAddToCart}
+            className={`h-7 w-7 flex items-center justify-center rounded-full shrink-0 transition-all duration-200 ${
+              added ? "bg-green-600 text-white scale-95" : "bg-electric text-white hover:scale-110 hover:shadow-md active:scale-90"
+            }`}
+            aria-label="Add to cart"
+          >
+            {added ? <CheckCircle className="h-3 w-3" /> : <ShoppingCart className="h-3.5 w-3.5" />}
+          </button>
         </div>
-        {/* Add to cart */}
-        <button
-          onClick={handleAddToCart}
-          className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-            added
-              ? "bg-green-600 text-white"
-              : "bg-gold/10 border border-gold/20 text-gold hover:bg-gold hover:text-[#030618]"
-          }`}
-        >
-          {added ? (
-            <><CheckCircle className="w-4 h-4" /> Added</>
-          ) : (
-            <><ShoppingCart className="w-4 h-4" /> Add to Cart</>
-          )}
-        </button>
       </div>
     </Link>
   );
@@ -246,9 +264,9 @@ export default function ProductsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#040820]">
+    <div className="min-h-screen bg-[var(--bg)]">
       {/* Header */}
-      <div className="bg-[#06112B] border-b border-white/[0.06]">
+      <div className="bg-[var(--surface)] border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 pt-6 pb-8">
           <Breadcrumbs crumbs={[{ label: "Home", href: "/" }, { label: "Products" }]} />
           <div className="flex items-end justify-between mt-4">
@@ -296,7 +314,7 @@ export default function ProductsPage() {
                 className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   selectedCategory === cat
                     ? "bg-gold text-[#030618] font-bold"
-                    : "bg-[#06112B] text-fog-muted border border-white/[0.08] hover:border-gold/30 hover:text-gold"
+                    : "bg-[var(--surface)] text-fog-muted border border-white/[0.08] hover:border-gold/30 hover:text-gold"
                 }`}
               >
                 {cat}
@@ -308,7 +326,7 @@ export default function ProductsPage() {
         {/* Mobile filter button */}
         <button
           onClick={() => setShowFilter(true)}
-          className="sm:hidden flex items-center gap-2 px-4 py-2.5 bg-[#06112B] border border-white/[0.08] rounded-xl text-fog text-sm mb-4"
+          className="sm:hidden flex items-center gap-2 px-4 py-2.5 bg-[var(--surface)] border border-white/[0.08] rounded-xl text-fog text-sm mb-4"
         >
           <SlidersHorizontal className="w-4 h-4" /> Filter & Sort
         </button>
@@ -399,7 +417,7 @@ export default function ProductsPage() {
       {showFilter && (
         <div className="sm:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowFilter(false)} />
-          <div className="relative ml-auto w-full bg-[#06112B] border-l border-white/[0.08] p-6 pt-20">
+          <div className="relative ml-auto w-full bg-[var(--surface)] border-l border-white/[0.08] p-6 pt-20">
             <button onClick={() => setShowFilter(false)} className="absolute top-4 right-4 p-2 hover:bg-white/[0.08] rounded-xl">
               <X className="w-5 h-5 text-fog" />
             </button>

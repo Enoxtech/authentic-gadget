@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Search, X, TrendingUp, ArrowRight } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 interface Product {
   id: string;
@@ -219,7 +220,7 @@ export default function SearchBar({ products }: SearchBarProps) {
                 <p className="text-xs" style={{ color: 'rgba(212,168,67,0.6)' }}>{product.brand} · {product.category}</p>
               </div>
               <div className="text-right shrink-0">
-                <p className="text-sm font-bold text-gold">¢{product.price.toLocaleString()}</p>
+                <p className="text-sm font-bold text-gold font-label">{formatPrice(product.price)}</p>
                 <div className="flex items-center gap-0.5 justify-end">
                   <span className="text-yellow-400 text-xs">★</span>
                   <span className="text-xs text-fog-muted">{product.rating}</span>

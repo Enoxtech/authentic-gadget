@@ -13,8 +13,9 @@
   --color-gold-dark: #C9A96E;
 
   /* Electric blue accent */
-  --color-electric: #3B82F6;
+  --color-electric: #19AFFF;
   --color-electric-light: #60A5FA;
+  --color-electric-dark: #008ACC;
 
   /* Text colors - warm off-white */
   --color-fog: #F0EDE6;
@@ -34,8 +35,20 @@
   --color-border-strong: rgba(201, 169, 110, 0.25);
 
   /* Fonts */
-  --font-poppins: 'Poppins', system-ui, sans-serif;
+  --font-poppins: 'Manrope', system-ui, sans-serif;
   --font-playfair: 'Playfair Display', Georgia, serif;
+  --font-jetbrains: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+/* ── Typography helpers (mono labels/prices, display headings) ──── */
+.font-label, .font-mono {
+  font-family: var(--font-jetbrains, 'JetBrains Mono', 'Courier New', monospace) !important;
+}
+.font-display {
+  font-family: var(--font-poppins, 'Manrope', system-ui, sans-serif) !important;
+}
+.font-body {
+  font-family: var(--font-playfair, 'Playfair Display', Georgia, serif) !important;
 }
 
 :root,
@@ -120,6 +133,20 @@
   --shadow-primary: 0 8px 32px oklch(52% 0.19 285 / 0.24);
   --shadow-glow: 0 0 24px oklch(58% 0.14 210 / 0.22);
 
+  /* Asiangroceryng-compat aliases — used by ported Footer/Header/ProductCard markup */
+  --bg: var(--background);
+  --bg-offset: oklch(94% 0.022 84);
+  --surface-raised: oklch(100% 0 0);
+  --surface-glass: color-mix(in oklch, var(--surface) 62%, transparent);
+  --surface-glass-strong: color-mix(in oklch, var(--surface) 90%, transparent);
+  --text-primary: var(--foreground);
+  --text-secondary: var(--fog-muted);
+  --text-muted: color-mix(in oklch, var(--fog-muted) 65%, var(--background));
+  --border-color: var(--border);
+  --border-strong: oklch(72% 0.06 82);
+  --green: oklch(48% 0.13 150);
+  --shadow-glass: 0 8px 24px oklch(24% 0.05 260 / 0.10), inset 0 1px 0 oklch(100% 0 0 / 0.5);
+
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -157,12 +184,12 @@
   --color-card-dark: var(--card-dark);
   --color-fog: var(--fog);
   --color-fog-muted: var(--fog-muted);
-  --color-charcoal: oklch(20% 0.02 60);
-  --color-charcoal-light: oklch(30% 0.02 60);
+  --color-charcoal: var(--fog);
+  --color-charcoal-light: var(--fog-muted);
   --color-border: rgba(201, 169, 110, 0.12);
   --color-border-strong: rgba(201, 169, 110, 0.25);
 
-  --background: oklch(8% 0.02 280);
+  --background: oklch(9% 0.022 75);
   --foreground: oklch(97% 0.01 60);
   --card: oklch(20% 0.02 280);
   --card-foreground: oklch(97% 0.01 60);
@@ -198,6 +225,20 @@
   --gradient-glow: radial-gradient(circle, color-mix(in oklch, var(--primary) 30%, transparent) 0%, transparent 70%);
   --shadow-primary: 0 8px 32px oklch(55% 0.18 285 / 0.3);
   --shadow-glow: 0 0 24px oklch(75% 0.14 200 / 0.3);
+
+  /* Asiangroceryng-compat aliases — used by ported Footer/Header/ProductCard markup */
+  --bg: var(--background);
+  --bg-offset: oklch(12% 0.04 280);
+  --surface-raised: oklch(24% 0.05 280);
+  --surface-glass: color-mix(in oklch, var(--surface) 70%, transparent);
+  --surface-glass-strong: color-mix(in oklch, var(--surface) 92%, transparent);
+  --text-primary: var(--foreground);
+  --text-secondary: var(--fog-muted);
+  --text-muted: color-mix(in oklch, var(--fog-muted) 60%, var(--background));
+  --border-color: var(--border);
+  --border-strong: oklch(100% 0 0 / 0.18);
+  --green: oklch(68% 0.15 150);
+  --shadow-glass: 0 8px 24px oklch(0% 0 0 / 0.45), inset 0 1px 0 oklch(100% 0 0 / 0.05);
 }
 
 * { box-sizing: border-box; }
@@ -604,6 +645,40 @@ body::before {
   background-position: center;
   transform: scale(1.01);
   filter: saturate(1.08) contrast(1.05);
+}
+
+@keyframes hero-ken-burns-zoom {
+  0%   { transform: scale(1.02); }
+  50%  { transform: scale(1.12); }
+  100% { transform: scale(1.02); }
+}
+.hero-slide.active .hero-slide-bg.animate-hero-zoom {
+  animation: hero-ken-burns-zoom 9s ease-in-out infinite;
+}
+
+@keyframes hero-ken-burns-pan {
+  0%   { transform: scale(1.08) translateX(0%); }
+  50%  { transform: scale(1.08) translateX(-3%); }
+  100% { transform: scale(1.08) translateX(0%); }
+}
+.hero-slide.active .hero-slide-bg.animate-hero-slide {
+  animation: hero-ken-burns-pan 11s ease-in-out infinite;
+}
+
+@keyframes hero-fade-pulse {
+  0%, 100% { filter: saturate(1.08) contrast(1.05) brightness(1); }
+  50%      { filter: saturate(1.14) contrast(1.08) brightness(1.04); }
+}
+.hero-slide.active .hero-slide-bg.animate-hero-fade {
+  animation: hero-fade-pulse 7s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide-bg.animate-hero-zoom,
+  .hero-slide-bg.animate-hero-slide,
+  .hero-slide-bg.animate-hero-fade {
+    animation: none !important;
+  }
 }
 .hero-slide-overlay {
   position: absolute;
@@ -1315,20 +1390,6 @@ body::before {
   background: linear-gradient(180deg, var(--surface) 0%, var(--background) 100%);
 }
 
-.bg-\[\#040820\],
-.bg-\[\#030618\] {
-  background:
-    radial-gradient(circle at 8% 8%, color-mix(in oklch, var(--gold) 13%, transparent), transparent 28%),
-    radial-gradient(circle at 92% 18%, color-mix(in oklch, var(--primary) 10%, transparent), transparent 30%),
-    linear-gradient(180deg, var(--background), oklch(93% 0.03 84));
-}
-
-.bg-\[\#06112B\] {
-  background:
-    linear-gradient(145deg, oklch(100% 0 0 / 0.92), oklch(91% 0.035 84 / 0.82)),
-    radial-gradient(circle at 0% 0%, color-mix(in oklch, var(--gold) 16%, transparent), transparent 34%);
-}
-
 .border-white\/\[0\.06\],
 .border-white\/\[0\.08\],
 .border-white\/10,
@@ -1391,13 +1452,13 @@ body::before {
 
 [data-theme="light"] .hero-slide-overlay {
   background:
-    radial-gradient(circle at 18% 46%, color-mix(in oklch, var(--primary) 35%, transparent) 0%, transparent 33%),
-    linear-gradient(90deg, oklch(14% 0.04 265 / 0.94) 0%, oklch(17% 0.05 265 / 0.76) 32%, oklch(17% 0.05 265 / 0.24) 58%, oklch(96% 0.03 84 / 0.12) 100%),
-    linear-gradient(180deg, oklch(96% 0.03 84 / 0.06) 0%, oklch(96% 0.03 84 / 0.46) 100%);
+    radial-gradient(circle at 18% 46%, color-mix(in oklch, var(--gold) 20%, transparent) 0%, transparent 38%),
+    linear-gradient(90deg, oklch(97% 0.025 84 / 0.94) 0%, oklch(97% 0.025 84 / 0.80) 32%, oklch(97% 0.025 84 / 0.40) 58%, oklch(97% 0.025 84 / 0.10) 100%),
+    linear-gradient(180deg, oklch(97% 0.025 84 / 0.06) 0%, oklch(97% 0.025 84 / 0.30) 100%);
 }
 
 [data-theme="light"] .hero-slide-bg {
-  filter: saturate(1.18) contrast(1.18) brightness(0.88);
+  filter: saturate(1.05) contrast(1.04) brightness(1.02);
 }
 
 [data-theme="light"] .hero-copy-panel {
@@ -1405,33 +1466,36 @@ body::before {
   padding: clamp(1.25rem, 2.5vw, 2rem);
   border-radius: 2rem;
   background:
-    linear-gradient(145deg, oklch(14% 0.04 265 / 0.76), oklch(20% 0.07 275 / 0.52)),
-    radial-gradient(circle at 0% 0%, color-mix(in oklch, var(--gold) 22%, transparent), transparent 45%);
-  border: 1px solid oklch(100% 0 0 / 0.14);
-  box-shadow: 0 24px 80px oklch(16% 0.05 265 / 0.36);
+    linear-gradient(145deg, oklch(99% 0.012 84 / 0.88), oklch(94% 0.03 84 / 0.72)),
+    radial-gradient(circle at 0% 0%, color-mix(in oklch, var(--gold) 16%, transparent), transparent 45%);
+  border: 1px solid oklch(80% 0.04 84 / 0.6);
+  box-shadow: 0 24px 64px oklch(60% 0.04 84 / 0.16);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
 [data-theme="light"] .hero-headline {
-  background: linear-gradient(135deg, #fff 0%, color-mix(in oklch, var(--hero-accent) 70%, white) 58%, var(--hero-accent) 100%);
+  background: linear-gradient(135deg, oklch(22% 0.03 265) 0%, color-mix(in oklch, var(--hero-accent) 75%, oklch(22% 0.03 265)) 58%, var(--hero-accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: 0 14px 50px oklch(0% 0 0 / 0.32);
+  text-shadow: none;
 }
 
 [data-theme="light"] .hero-slide-content .text-white\/70 {
-  color: oklch(97% 0.01 84 / 0.84);
+  color: oklch(34% 0.03 265 / 0.84);
 }
 
 [data-theme="light"] .hero-copy-panel .text-white {
-  color: #fff;
+  color: oklch(22% 0.03 265);
 }
 
-[data-theme="light"] .hero-slider,
+[data-theme="light"] .hero-slider {
+  color: oklch(22% 0.03 265);
+}
+
 [data-theme="light"] .hero-slide-price {
-  color: #fff;
+  color: oklch(20% 0.06 84);
 }
 
 [data-theme="light"] .hero-slider-arrow,
@@ -1673,3 +1737,250 @@ body::before {
 .mic-active {
   animation: micPulse 1.5s ease-in-out infinite;
 }
+
+/* ================================================================
+   DARK MODE — literal-color card surfaces (checkout/account/cart/auth
+   pages were built assuming a fixed-light backdrop with bg-white /
+   bg-fog-200 / border-fog cards). Re-adapt them for dark theme.
+   ================================================================ */
+[data-theme="dark"] .bg-white {
+  background-color: var(--surface) !important;
+}
+[data-theme="dark"] .border-fog,
+[data-theme="dark"] .border-fog-200 {
+  border-color: rgba(201, 169, 110, 0.18) !important;
+}
+
+/* `--color-fog` is a text-color token (dark in light mode, light in dark
+   mode) — but many checkout/account pages use bg-fog/bg-fog-200 as a
+   literal light surface background. Force the correct surface color in
+   BOTH themes regardless of fog's text-flip semantics. */
+.bg-fog:not(.bg-ambient) {
+  background-color: var(--bg-offset) !important;
+}
+.bg-fog-200,
+.bg-fog-100 {
+  background-color: var(--surface-light) !important;
+}
+[data-theme="light"] .hover\:bg-fog-200:hover {
+  background-color: oklch(91% 0.03 84) !important;
+}
+[data-theme="dark"] .hover\:bg-fog-200:hover {
+  background-color: var(--surface-light) !important;
+}
+
+/* ================================================================
+   PREMIUM THEME LAYER — ported from asiangroceryng-pwa, recolored
+   with Authentic Gadget's brand palette (midnight / gold / electric).
+   New, non-colliding class & keyframe names — additive only.
+   ================================================================ */
+
+.glass-strong {
+  background: var(--theme-card-bg);
+  backdrop-filter: blur(28px) saturate(1.5);
+  -webkit-backdrop-filter: blur(28px) saturate(1.5);
+  border: 1px solid var(--theme-card-border);
+  box-shadow: var(--theme-card-shadow);
+}
+
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Ambient background blobs (gold + electric drift) ─────────── */
+.bg-ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.bg-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+}
+
+.bg-blob-1 {
+  width: min(700px, 70vw);
+  height: min(700px, 70vw);
+  top: -15%;
+  right: -8%;
+  background: rgba(212, 168, 67, 0.16);
+  animation: ag-blob-drift-a 24s ease-in-out infinite alternate;
+}
+
+.bg-blob-2 {
+  width: min(500px, 50vw);
+  height: min(500px, 50vw);
+  bottom: 5%;
+  left: -8%;
+  background: rgba(25, 175, 255, 0.13);
+  animation: ag-blob-drift-b 32s ease-in-out infinite alternate;
+}
+
+.bg-blob-3 {
+  width: min(360px, 36vw);
+  height: min(360px, 36vw);
+  top: 48%;
+  left: 40%;
+  background: rgba(4, 8, 32, 0.08);
+  animation: ag-blob-drift-a 40s ease-in-out infinite alternate-reverse;
+}
+
+[data-theme="dark"] .bg-blob-1 { background: rgba(212, 168, 67, 0.07); }
+[data-theme="dark"] .bg-blob-2 { background: rgba(25, 175, 255, 0.10); }
+[data-theme="dark"] .bg-blob-3 { background: rgba(212, 168, 67, 0.04); }
+
+@keyframes ag-blob-drift-a {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(35px, 22px) scale(1.06); }
+  100% { transform: translate(15px, -18px) scale(0.96); }
+}
+
+@keyframes ag-blob-drift-b {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(-22px, 38px) scale(1.05); }
+  100% { transform: translate(18px, -12px) scale(1.08); }
+}
+
+@media (max-width: 767px) {
+  .bg-blob { filter: blur(80px); will-change: transform; }
+  .bg-blob-1 { animation-duration: 34s; }
+  .bg-blob-2 { animation-duration: 46s; }
+  .bg-blob-3 { animation-duration: 58s; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-blob { animation: none !important; }
+}
+
+/* ── Premium card: 3D lift + shine sweep on hover ──────────────── */
+.card-premium {
+  position: relative;
+  overflow: hidden;
+  transform: translateZ(0);
+  will-change: transform;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
+  box-shadow: 0 2px 8px rgba(4, 8, 32, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.card-premium:hover {
+  transform: translateY(-10px) scale(1.018);
+  box-shadow:
+    0 28px 56px rgba(4, 8, 32, 0.16),
+    0 8px 24px rgba(4, 8, 32, 0.08),
+    0 0 32px rgba(212, 168, 67, 0.10);
+}
+
+.card-premium::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    128deg,
+    transparent 0%, transparent 28%,
+    rgba(255, 255, 255, 0.55) 48%,
+    rgba(255, 255, 255, 0.06) 52%,
+    transparent 72%, transparent 100%
+  );
+  transform: translateX(-200%) skewX(-20deg);
+  transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  pointer-events: none;
+  z-index: 20;
+  border-radius: inherit;
+}
+
+.card-premium:hover::after {
+  transform: translateX(200%) skewX(-20deg);
+}
+
+[data-theme="dark"] .card-premium {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .card-premium:hover {
+  box-shadow:
+    0 28px 56px rgba(0, 0, 0, 0.55),
+    0 8px 24px rgba(0, 0, 0, 0.32),
+    0 0 40px rgba(212, 168, 67, 0.16);
+}
+
+[data-theme="dark"] .card-premium::after {
+  background: linear-gradient(
+    128deg,
+    transparent 0%, transparent 28%,
+    rgba(255, 255, 255, 0.16) 48%,
+    rgba(255, 255, 255, 0.02) 52%,
+    transparent 72%, transparent 100%
+  );
+}
+
+@media (max-width: 640px) {
+  .card-premium:hover { transform: translateY(-4px) scale(1.01); }
+  .card-premium::after { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-premium, .card-premium:hover { transform: none !important; transition: box-shadow 0.2s ease !important; }
+  .card-premium::after { display: none !important; }
+}
+
+/* ── Slide / fade entrance utilities (drawers, toasts, sheets) ──── */
+@keyframes ag-slide-in-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+.animate-slide-in-right { animation: ag-slide-in-right 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+
+@keyframes ag-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: ag-fade-up 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+
+@keyframes ag-quick-view-in {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-quick-view-in { animation: ag-quick-view-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes ag-slide-in-left {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+.animate-slide-in-left { animation: ag-slide-in-left 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+
+@keyframes ag-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in { animation: ag-fade-in 0.2s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-in-right, .animate-slide-in-left, .animate-fade-in, .animate-fade-up, .animate-quick-view-in { animation: none !important; }
+}
+
+/* ── PWA splash screen ──────────────────────────────────────────── */
+@keyframes ag-bounce-logo {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30%      { transform: translateY(-18px) scale(1.08); }
+  55%      { transform: translateY(0) scale(0.96); }
+  70%      { transform: translateY(-9px) scale(1.03); }
+  85%      { transform: translateY(0) scale(0.99); }
+}
+.animate-bounce-logo { animation: ag-bounce-logo 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+@keyframes ag-fade-out {
+  0%   { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
+.animate-fade-out { animation: ag-fade-out 2.2s ease forwards; }
+
+@keyframes ag-slide-up {
+  from { transform: translateY(100%); opacity: 0.8; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-up { animation: ag-slide-up 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }

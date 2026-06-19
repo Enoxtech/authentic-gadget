@@ -13,6 +13,9 @@ import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import DeliveryBadges from "@/components/ui/DeliveryBadges";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import { useRecentlyViewed } from "@/context/RecentlyViewedContext";
+import RecentlyViewed from "@/components/ui/RecentlyViewed";
+import { formatPrice } from "@/lib/utils";
 
 interface Product {
   id: string;
@@ -53,6 +56,7 @@ export default function ProductDetailPage() {
   const [showSticky, setShowSticky] = useState(false);
   const { addItem, openCart } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
+  const { addItem: trackRecentlyViewed } = useRecentlyViewed();
 
   useEffect(() => {
     async function fetchProduct() {
@@ -73,7 +77,15 @@ export default function ProductDetailPage() {
         if (!data || data.length === 0) {
           setError("NOT_FOUND");
         } else {
-          setProduct(data[0] as Product);
+          const loaded = data[0] as Product;
+          setProduct(loaded);
+          trackRecentlyViewed({
+            id: loaded.id,
+            name: loaded.name,
+            slug: loaded.slug,
+            price: loaded.price,
+            image: loaded.images?.[0],
+          });
         }
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Failed to load product");
@@ -82,7 +94,7 @@ export default function ProductDetailPage() {
       }
     }
     fetchProduct();
-  }, [slug]);
+  }, [slug, trackRecentlyViewed]);
 
   // Track scroll position to show/hide sticky CTA
   useEffect(() => {
@@ -95,7 +107,7 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#040820] flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center">
         <div className="w-16 h-16 border-4 border-gold/20 border-t-gold rounded-full animate-spin" />
         <p className="text-fog-muted mt-4">Loading product...</p>
       </div>
@@ -104,7 +116,7 @@ export default function ProductDetailPage() {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-[#040820] flex flex-col items-center justify-center text-fog-muted px-4">
+      <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center text-fog-muted px-4">
         <div className="text-6xl mb-4">🔍</div>
         <h1 className="text-2xl font-bold text-fog mb-2">Product not found</h1>
         <p className="text-fog-muted mb-6 text-center">The product you&apos;re looking for doesn&apos;t exist or has been removed.</p>
@@ -149,25 +161,25 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#040820]">
+    <div className="min-h-screen bg-[var(--bg)]">
       <div className="max-w-7xl mx-auto px-4 pt-4 pb-24">
         <Breadcrumbs crumbs={[{ label: "Home", href: "/" }, { label: "Products", href: "/products" }, { label: product.name }]} />
       </div>
 
       {/* Sticky floating CTA bar */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-40 bg-[#06112B] border-t border-white/[0.08] px-4 py-3 flex items-center justify-between gap-3 transition-transform duration-300 ${
+        className={`fixed bottom-0 left-0 right-0 z-40 bg-[var(--surface)] border-t border-white/[0.08] px-4 py-3 flex items-center justify-between gap-3 transition-transform duration-300 ${
           showSticky ? "translate-y-0" : "translate-y-full"
         }`}
         style={{ backdropFilter: "blur(20px)" }}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-[#0B1E3D] shrink-0 hidden sm:block">
-            <Image src={primaryImage} alt={product.name} fill className="object-cover" unoptimized />
+          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-[var(--surface-raised)] shrink-0 hidden sm:block">
+            <Image src={primaryImage} alt={product.name} fill className="object-cover" onError={(e) => { e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%230B1E3D'/%3E%3Ctext x='300' y='320' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='140' fill='%23D4A843' text-anchor='middle'%3EAG%3C/text%3E%3C/svg%3E"; }} unoptimized />
           </div>
           <div className="min-w-0">
             <p className="text-fog text-sm font-semibold line-clamp-1">{product.name}</p>
-            <p className="text-gold font-bold">¢{product.price.toLocaleString()}</p>
+            <p className="text-gold font-bold">{formatPrice(product.price)}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -192,13 +204,14 @@ export default function ProductDetailPage() {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-14">
           {/* Images */}
           <div className="space-y-4">
-            <div className="relative aspect-square bg-[#06112B] rounded-3xl overflow-hidden border border-white/[0.08]">
+            <div className="relative aspect-square bg-[var(--surface)] rounded-3xl overflow-hidden border border-white/[0.08]">
               <Image
                 src={primaryImage}
                 alt={product.name}
                 fill
                 className="object-cover"
                 priority
+                onError={(e) => { e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%230B1E3D'/%3E%3Ctext x='300' y='320' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='140' fill='%23D4A843' text-anchor='middle'%3EAG%3C/text%3E%3C/svg%3E"; }}
                 unoptimized
               />
               {discount > 0 && (
@@ -232,11 +245,11 @@ export default function ProductDetailPage() {
                   <button
                     key={i}
                     onClick={() => setSelectedImage(i)}
-                    className={`relative w-20 h-20 bg-[#06112B] rounded-xl overflow-hidden border-2 transition-all ${
+                    className={`relative w-20 h-20 bg-[var(--surface)] rounded-xl overflow-hidden border-2 transition-all ${
                       selectedImage === i ? "border-gold" : "border-white/[0.08] hover:border-white/[0.2]"
                     }`}
                   >
-                    <Image src={img} alt="" fill className="object-cover" unoptimized />
+                    <Image src={img} alt="" fill className="object-cover" onError={(e) => { e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%230B1E3D'/%3E%3Ctext x='300' y='320' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='140' fill='%23D4A843' text-anchor='middle'%3EAG%3C/text%3E%3C/svg%3E"; }} unoptimized />
                   </button>
                 ))}
               </div>
@@ -259,11 +272,11 @@ export default function ProductDetailPage() {
             {/* Price */}
             <div className="card-dark rounded-2xl p-5 border border-white/[0.08]">
               <div className="flex items-end gap-3 mb-2">
-                <span className="text-4xl font-bold text-gold">¢{product.price.toLocaleString()}</span>
+                <span className="text-4xl font-bold text-gold">{formatPrice(product.price)}</span>
                 {product.compare_at_price && (
                   <>
-                    <span className="text-xl text-fog-muted line-through">¢{product.compare_at_price.toLocaleString()}</span>
-                    <span className="text-green-400 font-semibold text-sm">Save ¢{(product.compare_at_price - product.price).toLocaleString()}</span>
+                    <span className="text-xl text-fog-muted line-through">{formatPrice(product.compare_at_price)}</span>
+                    <span className="text-green-400 font-semibold text-sm">Save {formatPrice(product.compare_at_price - product.price)}</span>
                   </>
                 )}
               </div>
@@ -331,7 +344,7 @@ export default function ProductDetailPage() {
                   onClick={handleBuyNow}
                   className="flex-1 py-4 font-bold rounded-2xl transition-all flex items-center justify-center gap-2 text-base bg-white/[0.06] border border-white/[0.10] text-fog hover:bg-white/[0.10]"
                 >
-                  Buy Now — ¢{(product.price * qty).toLocaleString()}
+                  Buy Now — {formatPrice(product.price * qty)}
                 </button>
                 <button
                   onClick={() => toggleWishlist({ ...product, images })}
@@ -416,6 +429,8 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      <RecentlyViewed excludeId={product.id} />
     </div>
   );
 }

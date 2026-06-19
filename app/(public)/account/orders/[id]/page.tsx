@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Package } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { formatPrice } from "@/lib/utils";
 
 interface OrderItem {
   id: string;
@@ -65,7 +66,7 @@ export default async function AccountOrderDetailPage({
             </div>
             <div className="text-right">
               <p className="font-bold text-gold text-lg">
-                GHS {Number(order.total).toLocaleString()}
+                {formatPrice(Number(order.total))}
               </p>
               <p className="text-sm capitalize text-white/70">{order.order_status}</p>
             </div>
@@ -91,7 +92,7 @@ export default async function AccountOrderDetailPage({
                   <p className="text-xs text-charcoal/50">Quantity: {item.quantity}</p>
                 </div>
                 <p className="font-semibold text-charcoal">
-                  GHS {(Number(item.price) * item.quantity).toLocaleString()}
+                  {formatPrice(Number(item.price) * item.quantity)}
                 </p>
               </div>
             ))}

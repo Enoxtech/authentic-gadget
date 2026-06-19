@@ -3,11 +3,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { ArrowRight, Star, Truck, RotateCcw, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight, Star, Truck, RotateCcw, ShieldCheck, Heart, Eye, ShoppingCart, Check,
+  Smartphone, Laptop, Headphones, Watch, Gamepad2, Cable, Tablet, ShoppingBag,
+} from "lucide-react";
 import TrustBadges from "@/components/ui/TrustBadges";
 import DeliveryBadges from "@/components/ui/DeliveryBadges";
 import HeroSlider from "../components/ui/HeroSlider";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
+import { useQuickView } from "@/context/QuickViewContext";
+import { formatPrice } from "@/lib/utils";
 
 const FEATURED_PRODUCTS = [
   {
@@ -56,29 +62,180 @@ const FEATURED_PRODUCTS = [
 
 type FeaturedProduct = (typeof FEATURED_PRODUCTS)[number];
 
-const CATEGORIES = [
-  { name: "Smartphones", slug: "smartphones", icon: "📱", count: 42 },
-  { name: "Laptops", slug: "laptops", icon: "💻", count: 28 },
-  { name: "Audio", slug: "audio", icon: "🎧", count: 63 },
-  { name: "Wearables", slug: "wearables", icon: "⌚", count: 35 },
-  { name: "Gaming", slug: "gaming", icon: "🎮", count: 51 },
-  { name: "Accessories", slug: "accessories", icon: "🔌", count: 97 },
+const NEW_ARRIVALS: FeaturedProduct[] = [
+  {
+    id: "7", name: "PlayStation 5 Slim", slug: "playstation-5-slim",
+    price: 5499, compareAt: 5999,
+    image: "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=400",
+    rating: 4.9, reviews: 142, badge: "New", brand: "Sony",
+    description: "Slimmer design, same blistering performance for next-gen gaming.",
+  },
+  {
+    id: "8", name: "AirPods Pro 2", slug: "airpods-pro-2",
+    price: 1899, compareAt: 2199,
+    image: "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=400",
+    rating: 4.8, reviews: 310, badge: "Best Seller", brand: "Apple",
+    description: "Adaptive audio with industry-leading noise cancellation.",
+  },
+  {
+    id: "9", name: "Samsung Galaxy Watch 6", slug: "samsung-galaxy-watch-6",
+    price: 2299, compareAt: 2599,
+    image: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=400",
+    rating: 4.7, reviews: 88, badge: "New", brand: "Samsung",
+    description: "Advanced health tracking in a sleek rotating-bezel design.",
+  },
+  {
+    id: "10", name: "Dell XPS 13", slug: "dell-xps-13",
+    price: 9499, compareAt: 10499,
+    image: "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=400",
+    rating: 4.8, reviews: 54, badge: "-10%", brand: "Dell",
+    description: "Ultra-portable powerhouse with a stunning InfinityEdge display.",
+  },
+  {
+    id: "11", name: "Logitech MX Master 3S", slug: "logitech-mx-master-3s",
+    price: 699, compareAt: 799,
+    image: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=400",
+    rating: 4.9, reviews: 201, badge: null, brand: "Logitech",
+    description: "Precision-engineered ergonomic mouse for all-day productivity.",
+  },
+  {
+    id: "12", name: "Anker 737 Power Bank", slug: "anker-737-power-bank",
+    price: 899, compareAt: 999,
+    image: "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=400",
+    rating: 4.6, reviews: 173, badge: "New", brand: "Anker",
+    description: "24,000mAh fast-charging power bank for life on the move.",
+  },
 ];
 
-function StarRating({ rating }: { rating: number }) {
+const FALLBACK_PROMO_BANNERS = [
+  { id: "promo-fallback-1", image: "/banners/promo-4.jpg", href: "/products", alt: "Authentic Gadget — Home of luxury with affordable price" },
+  { id: "promo-fallback-2", image: "/banners/promo-5.jpg", href: "/offers", alt: "Authentic Gadget — Shop our premium gadget collection" },
+];
+
+const FALLBACK_CATEGORIES = [
+  { id: "smartphones", name: "Smartphones", slug: "smartphones" },
+  { id: "laptops", name: "Laptops", slug: "laptops" },
+  { id: "audio", name: "Audio", slug: "audio" },
+  { id: "wearables", name: "Wearables", slug: "wearables" },
+  { id: "gaming", name: "Gaming", slug: "gaming" },
+  { id: "accessories", name: "Accessories", slug: "accessories" },
+];
+
+const CATEGORY_ICONS: Record<string, React.ElementType> = {
+  smartphones: Smartphone,
+  laptops: Laptop,
+  audio: Headphones,
+  wearables: Watch,
+  gaming: Gamepad2,
+  accessories: Cable,
+  tablets: Tablet,
+};
+
+function ProductTile({
+  product, wishlisted, added, onToggleWishlist, onQuickView, onAddToCart,
+}: {
+  product: FeaturedProduct;
+  wishlisted: boolean;
+  added: boolean;
+  onToggleWishlist: () => void;
+  onQuickView: () => void;
+  onAddToCart: () => void;
+}) {
   return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <Star key={n} className={`w-4 h-4 ${n <= Math.round(rating) ? "fill-gold text-gold" : "text-white/20"}`} />
-      ))}
-    </div>
+    <Link
+      href={`/products/${product.slug}`}
+      className="group flex flex-col rounded-[32px] border border-[var(--border-color)] bg-[var(--surface-glass)] backdrop-blur-[12px] card-premium overflow-hidden"
+    >
+      {/* Image */}
+      <div className="relative aspect-square overflow-hidden rounded-t-[28px] bg-[var(--surface-raised)]">
+        <Image
+          src={product.image}
+          alt={product.name}
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1280px) 25vw, 16vw"
+          className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+          onError={(e) => { e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%230B1E3D'/%3E%3Ctext x='300' y='320' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='140' fill='%23D4A843' text-anchor='middle'%3EAG%3C/text%3E%3C/svg%3E"; }}
+          unoptimized
+        />
+
+        {product.badge && (
+          <span
+            className="absolute top-2.5 left-2.5 text-[9px] font-bold px-2 py-0.5 rounded-full text-white"
+            style={{ background: product.badge === "Best Seller" ? "linear-gradient(135deg, #D4A843, #C9A96E)" : "linear-gradient(135deg, #D4A843, #19AFFF)" }}
+          >
+            {product.badge}
+          </span>
+        )}
+
+        {/* Wishlist */}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleWishlist();
+          }}
+          className={`absolute top-2.5 right-2.5 h-8 w-8 flex items-center justify-center rounded-full bg-[var(--surface-glass-strong)] backdrop-blur-md border border-[var(--border-color)] transition-all duration-200 hover:scale-110 active:scale-95 ${
+            wishlisted ? "text-red-500" : "text-[var(--text-muted)] hover:text-red-500"
+          }`}
+          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          <Heart className={`h-3.5 w-3.5 ${wishlisted ? "fill-current" : ""}`} />
+        </button>
+
+        {/* Quick view */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onQuickView();
+          }}
+          className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-[var(--surface-glass-strong)] backdrop-blur-md border border-[var(--border-color)] text-[var(--text-primary)] opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-200 whitespace-nowrap"
+        >
+          <Eye className="h-3 w-3" /> Quick View
+        </button>
+      </div>
+
+      {/* Info */}
+      <div className="p-3 flex flex-col gap-1 flex-1">
+        <p className="text-[9px] font-semibold text-[var(--text-muted)] uppercase tracking-widest truncate">
+          {product.brand}
+        </p>
+        <p className="text-xs font-semibold text-[var(--text-primary)] line-clamp-2 leading-snug flex-1">
+          {product.name}
+        </p>
+
+        <div className="flex items-center justify-between mt-2 gap-1">
+          <div className="flex flex-col min-w-0">
+            <span className="font-bold text-gold font-label text-xs tabular-nums">{formatPrice(product.price)}</span>
+            {product.compareAt > 0 && (
+              <span className="text-[10px] text-[var(--text-muted)] line-through font-label tabular-nums">{formatPrice(product.compareAt)}</span>
+            )}
+          </div>
+          <button
+            onClick={(e) => { e.preventDefault(); onAddToCart(); }}
+            className={`h-7 w-7 flex items-center justify-center rounded-full shrink-0 transition-all duration-200 ${
+              added ? "bg-green-600 text-white scale-95" : "bg-electric text-white hover:scale-110 hover:shadow-md active:scale-90"
+            }`}
+            aria-label="Add to cart"
+          >
+            {added ? <Check className="h-3 w-3" /> : <ShoppingCart className="h-3.5 w-3.5" />}
+          </button>
+        </div>
+      </div>
+    </Link>
   );
 }
 
 export default function HomePage() {
   const { addItem } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
+  const { open: openQuickView } = useQuickView();
   const [added, setAdded] = useState<string | null>(null);
   const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>(FEATURED_PRODUCTS);
+  const [newArrivals, setNewArrivals] = useState<FeaturedProduct[]>(NEW_ARRIVALS);
+  const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
+  const [promoBanners, setPromoBanners] = useState(FALLBACK_PROMO_BANNERS);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [newsletterMessage, setNewsletterMessage] = useState("");
@@ -104,7 +261,7 @@ export default function HomePage() {
           description: string | null;
         }>;
 
-        const liveProducts = products.slice(0, 6).map((product) => ({
+        const mapProduct = (product: typeof products[number]) => ({
           id: product.id,
           name: product.name,
           slug: product.slug,
@@ -116,10 +273,16 @@ export default function HomePage() {
           badge: product.badge,
           brand: product.brand || "",
           description: product.description || "",
-        }));
+        });
+
+        const liveProducts = products.slice(0, 6).map(mapProduct);
+        const liveNewArrivals = products.slice(6, 12).map(mapProduct);
 
         if (!cancelled && liveProducts.length > 0) {
           setFeaturedProducts(liveProducts);
+        }
+        if (!cancelled && liveNewArrivals.length > 0) {
+          setNewArrivals(liveNewArrivals);
         }
       } catch {
         // Keep curated fallback products if the live catalog is unavailable.
@@ -127,6 +290,35 @@ export default function HomePage() {
     }
 
     loadFeaturedProducts();
+
+    async function loadCategories() {
+      try {
+        const response = await fetch("/api/categories");
+        if (!response.ok) return;
+        const data = (await response.json()) as Array<{ id: string; name: string; slug: string }>;
+        if (!cancelled && Array.isArray(data) && data.length > 0) {
+          setCategories(data);
+        }
+      } catch {
+        // Keep curated fallback categories if unavailable.
+      }
+    }
+    loadCategories();
+
+    async function loadPromoBanners() {
+      try {
+        const response = await fetch("/api/banners?placement=promo");
+        if (!response.ok) return;
+        const data = (await response.json()) as Array<{ id: string; image: string; cta_href: string; headline: string }>;
+        if (!cancelled && Array.isArray(data) && data.length > 0) {
+          setPromoBanners(data.slice(0, 2).map((b) => ({ id: b.id, image: b.image, href: b.cta_href || "/products", alt: b.headline })));
+        }
+      } catch {
+        // Keep curated fallback promo banners if unavailable.
+      }
+    }
+    loadPromoBanners();
+
     return () => {
       cancelled = true;
     };
@@ -161,13 +353,13 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#040820] overflow-x-hidden">
+    <div className="min-h-screen bg-[var(--bg)] overflow-x-hidden">
 {/* === HERO SLIDER === */}
       <HeroSlider />
       {/* === END HERO SLIDER === */}
 
       {/* Trust badges */}
-      <section className="premium-trust-strip border-y border-white/[0.06] bg-[#06112B]">
+      <section className="premium-trust-strip border-y border-white/[0.06] bg-[var(--surface)]">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
@@ -191,27 +383,32 @@ export default function HomePage() {
       </section>
 
       {/* Categories */}
-      <section className="py-16">
+      <section className="py-10">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="font-display text-2xl md:text-3xl font-bold text-fog">Shop by Category</h2>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-display text-lg font-bold text-fog">Shop by Category</h2>
             <Link href="/products" className="text-sm text-gold hover:text-gold-light transition-colors font-medium">
               View all →
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {CATEGORIES.map((cat) => (
-              <Link
-                key={cat.slug}
-                href={`/products?category=${cat.slug}`}
-                className="card-dark rounded-2xl p-5 text-center transition-all duration-300 hover:border-gold/30 hover:shadow-lg group"
-                style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}
-              >
-                <div className="text-3xl mb-3">{cat.icon}</div>
-                <p className="font-semibold text-sm text-fog group-hover:text-gold transition-colors">{cat.name}</p>
-                <p className="text-xs text-fog-muted mt-1">{cat.count} items</p>
-              </Link>
-            ))}
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
+            {categories.map((cat) => {
+              const Icon = CATEGORY_ICONS[cat.slug] ?? Cable;
+              return (
+                <Link key={cat.id} href={`/products?category=${cat.slug}`} className="flex flex-col items-center gap-2 shrink-0 group">
+                  <div className="w-16 h-16 rounded-[24px] bg-[var(--surface)] border border-[var(--border-color)] flex items-center justify-center shadow-sm group-hover:scale-105 group-hover:border-gold/40 transition-all duration-200">
+                    <Icon className="h-6 w-6 text-gold" aria-hidden="true" />
+                  </div>
+                  <span className="text-[11px] text-fog-muted font-medium text-center w-16 leading-tight">{cat.name}</span>
+                </Link>
+              );
+            })}
+            <Link href="/products" className="flex flex-col items-center gap-2 shrink-0 group">
+              <div className="w-16 h-16 rounded-[24px] flex items-center justify-center shadow-sm group-hover:scale-105 transition-all duration-200 bg-electric">
+                <ShoppingBag className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-[11px] text-fog-muted font-medium text-center w-16 leading-tight">View All</span>
+            </Link>
           </div>
         </div>
       </section>
@@ -223,63 +420,74 @@ export default function HomePage() {
             <h2 className="font-display text-xl md:text-2xl font-bold text-fog">
               Featured Products
             </h2>
-            <Link href="/products" className="text-sm font-medium transition-colors" style={{ color: '#a78bfa' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#c4b5fd')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#a78bfa')}
-            >
+            <Link href="/products" className="text-sm font-medium text-gold hover:text-gold-light transition-colors">
               See all →
             </Link>
           </div>
           <div className="product-grid-subgrid">
             {featuredProducts.map((product) => (
-              <div key={product.id} className="glass-card rounded-2xl overflow-hidden">
-                <Link href={`/products/${product.slug}`} className="block">
-                  <div className="glass-card-image relative overflow-hidden">
-                    {product.badge && (
-                      <span className="absolute top-3 left-3 text-[11px] font-bold px-2.5 py-1 rounded-full z-10 text-white" style={{ background: product.badge === "Best Seller" ? 'linear-gradient(135deg, #7c3aed, #06b6d4)' : 'linear-gradient(135deg, #f59e0b, #06b6d4)' }}>
-                        {product.badge}
-                      </span>
-                    )}
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      width={320}
-                      height={320}
-                      className="w-full aspect-square object-contain p-4"
-                      style={{ transition: 'transform 0.4s ease' }}
-                      unoptimized
-                    />
-                  </div>
-                  <div className="p-2">
-                    <h3 className="font-semibold text-[11px] leading-tight line-clamp-2 mb-1 text-fog">
-                      {product.name}
-                    </h3>
-                    <div className="flex items-center gap-1.5 mb-3">
-                      <StarRating rating={product.rating} />
-                      <span className="text-[11px] text-fog-muted">({product.reviews})</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="glass-card-price">¢{product.price.toLocaleString()}</span>
-                        {product.compareAt && (
-                          <span className="ml-2 text-[12px] line-through text-fog-muted">¢{product.compareAt.toLocaleString()}</span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={(e) => { e.preventDefault(); handleAddToCart(product); }}
-                      className="mt-3 w-full py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2"
-                      style={{
-                        background: added === product.id ? '#22c55e' : 'var(--theme-muted-action)',
-                        border: added === product.id ? 'none' : '1px solid var(--theme-muted-action-border)',
-                        color: added === product.id ? '#fff' : 'var(--foreground)',
-                      }}
-                    >
-                      {added === product.id ? '✓ Added' : '+ Add to Cart'}
-                    </button>
-                  </div>
-                </Link>
-              </div>
+              <ProductTile
+                key={product.id}
+                product={product}
+                wishlisted={isWishlisted(product.id)}
+                added={added === product.id}
+                onToggleWishlist={() => toggleWishlist({ id: product.id, name: product.name, slug: product.slug, price: product.price, image: product.image })}
+                onQuickView={() => openQuickView({
+                  id: product.id, name: product.name, slug: product.slug, price: product.price,
+                  compare_at_price: product.compareAt || null, images: [product.image],
+                  brand: product.brand, rating: product.rating, reviews_count: product.reviews,
+                })}
+                onAddToCart={() => handleAddToCart(product)}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Promo banners — admin-manageable via /admin/banners (placement: promo) */}
+      {promoBanners.map((banner) => (
+        <section key={banner.id} className="py-6">
+          <div className="max-w-7xl mx-auto px-4">
+            <Link href={banner.href} className="block rounded-[28px] overflow-hidden card-premium border border-[var(--border-color)]">
+              <Image
+                src={banner.image}
+                alt={banner.alt}
+                width={1600}
+                height={500}
+                className="w-full h-auto object-cover"
+                unoptimized
+              />
+            </Link>
+          </div>
+        </section>
+      ))}
+
+      {/* New Arrivals — shown after both banners */}
+      <section className="py-6">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="font-display text-xl md:text-2xl font-bold text-fog">
+              New Arrivals
+            </h2>
+            <Link href="/products" className="text-sm font-medium text-gold hover:text-gold-light transition-colors">
+              See all →
+            </Link>
+          </div>
+          <div className="product-grid-subgrid">
+            {newArrivals.map((product) => (
+              <ProductTile
+                key={product.id}
+                product={product}
+                wishlisted={isWishlisted(product.id)}
+                added={added === product.id}
+                onToggleWishlist={() => toggleWishlist({ id: product.id, name: product.name, slug: product.slug, price: product.price, image: product.image })}
+                onQuickView={() => openQuickView({
+                  id: product.id, name: product.name, slug: product.slug, price: product.price,
+                  compare_at_price: product.compareAt || null, images: [product.image],
+                  brand: product.brand, rating: product.rating, reviews_count: product.reviews,
+                })}
+                onAddToCart={() => handleAddToCart(product)}
+              />
             ))}
           </div>
         </div>

@@ -56,9 +56,9 @@ export default function ContactPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#040820] px-4 py-12 text-fog">
+    <main className="min-h-screen bg-[var(--bg)] px-4 py-12 text-fog">
       <section className="mx-auto max-w-6xl">
-        <div className="rounded-[2rem] border border-white/[0.08] bg-[#06112B] p-6 shadow-layers sm:p-10">
+        <div className="rounded-[2rem] border border-white/[0.08] bg-[var(--surface)] p-6 shadow-layers sm:p-10">
           <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.25em] text-gold">Support</p>
@@ -73,11 +73,11 @@ export default function ContactPage() {
               <div className="mt-8 space-y-4 text-sm text-fog-muted">
                 <p className="flex items-center gap-3">
                   <Phone className="h-4 w-4 text-gold" />
-                  +233 24 123 4567
+                  +233 53 455 3165
                 </p>
                 <p className="flex items-center gap-3">
                   <Mail className="h-4 w-4 text-gold" />
-                  hello@authenticgadget.com
+                  authenticgadgets@gmail.com
                 </p>
                 <p className="flex items-center gap-3">
                   <MapPin className="h-4 w-4 text-gold" />
@@ -168,7 +168,7 @@ export default function ContactPage() {
 
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {SUPPORT_CARDS.map(({ icon: Icon, title, body }) => (
-            <article key={title} className="rounded-3xl border border-white/[0.08] bg-[#06112B] p-6">
+            <article key={title} className="rounded-3xl border border-white/[0.08] bg-[var(--surface)] p-6">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gold/10 text-gold">
                 <Icon className="h-5 w-5" />
               </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Phone, Mail, Package } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 const ORDER_STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
@@ -190,7 +191,7 @@ export default function OrderDetailPage() {
                       <p className="font-medium text-sm text-charcoal">{item.products?.name || item.product_name || "-"}</p>
                       <p className="text-xs text-charcoal/50">Qty: {item.quantity}</p>
                     </div>
-                    <p className="font-bold text-charcoal">GHS {(item.price * item.quantity).toLocaleString()}</p>
+                    <p className="font-bold text-charcoal">{formatPrice(item.price * item.quantity)}</p>
                   </div>
                 ))}
               </div>
@@ -200,15 +201,15 @@ export default function OrderDetailPage() {
             <div className="mt-4 pt-4 border-t border-fog space-y-2">
               <div className="flex justify-between text-sm text-charcoal/60">
                 <span>Subtotal</span>
-                <span>GHS {(order.subtotal || order.total).toLocaleString()}</span>
+                <span>{formatPrice(order.subtotal || order.total)}</span>
               </div>
               <div className="flex justify-between text-sm text-charcoal/60">
                 <span>Shipping</span>
-                <span>GHS {(order.shipping || 0).toLocaleString()}</span>
+                <span>{formatPrice(order.shipping || 0)}</span>
               </div>
               <div className="flex justify-between font-bold text-charcoal text-base pt-2 border-t border-fog">
                 <span>Total</span>
-                <span>GHS {order.total?.toLocaleString()}</span>
+                <span>{formatPrice(order.total || 0)}</span>
               </div>
             </div>
           </div>

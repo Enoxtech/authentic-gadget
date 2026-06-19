@@ -24,8 +24,8 @@ const offers = [
 
 export default function OffersPage() {
   return (
-    <main className="min-h-screen bg-[#040820]">
-      <section className="relative overflow-hidden border-b border-white/[0.06] bg-[#06112B]">
+    <main className="min-h-screen bg-[var(--bg)]">
+      <section className="relative overflow-hidden border-b border-white/[0.06] bg-[var(--surface)]">
         <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-violet-500/20 blur-3xl" />
         <div className="absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-cyan-400/10 blur-3xl" />
         <div className="relative mx-auto max-w-7xl px-4 py-16 sm:py-20">

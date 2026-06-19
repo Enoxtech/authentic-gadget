@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Package, Plus, Edit, Trash2, Search } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 interface Product {
   id: string;
@@ -17,14 +18,13 @@ interface Product {
   badge?: string;
 }
 
-const CATEGORIES = ["All", "Smartphones", "Laptops", "Audio", "Wearables", "Accessories", "Other"];
-
 export default function ProductsPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
+  const [categoryOptions, setCategoryOptions] = useState<string[]>(["All"]);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,8 +45,9 @@ export default function ProductsPage() {
         return;
       }
       if (!response.ok) throw new Error("Failed to load products");
-      const data = (await response.json()) as { products?: Product[] };
+      const data = (await response.json()) as { products?: Product[]; categories?: { name: string }[] };
       setProducts(data.products || []);
+      setCategoryOptions(["All", ...(data.categories || []).map((c) => c.name)]);
     } catch {
       // error
     } finally {
@@ -112,7 +113,7 @@ export default function ProductsPage() {
           />
         </div>
         <div className="flex flex-wrap gap-2">
-          {CATEGORIES.map((c) => (
+          {categoryOptions.map((c) => (
             <button
               key={c}
               onClick={() => setCategory(c)}
@@ -159,7 +160,7 @@ export default function ProductsPage() {
               </div>
               <p className="font-medium text-sm text-charcoal mb-0.5 truncate">{p.name}</p>
               {p.brand && <p className="text-xs text-charcoal/40 mb-1">{p.brand}</p>}
-              <p className="font-bold text-electric mb-2">GHS {p.price?.toLocaleString()}</p>
+              <p className="font-bold text-electric mb-2 font-label">{formatPrice(p.price || 0)}</p>
               <div className="flex items-center justify-between">
                 <StockBadge stock={p.stock ?? 0} />
                 <div className="flex items-center gap-1">

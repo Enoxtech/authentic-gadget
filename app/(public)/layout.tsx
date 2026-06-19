@@ -2,6 +2,7 @@ import Script from "next/script";
 import type { Metadata } from "next";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import BottomNav from "@/components/layout/BottomNav";
 import ToastProvider from "@/context/ToastContext";
 import CartDrawer from "@/components/ui/CartDrawer";
 import BackToTop from "@/components/ui/BackToTop";
@@ -31,10 +32,11 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <Script src="https://cdn.socket.io/4.8.1/socket.io.min.js" />
       <ToastProvider>
         <Navbar />
-        <main>{children}</main>
+        <main className="pb-16 lg:pb-0">{children}</main>
         <Footer />
         <CartDrawer />
         <BackToTop />
+        <BottomNav />
       </ToastProvider>
     </>
   );

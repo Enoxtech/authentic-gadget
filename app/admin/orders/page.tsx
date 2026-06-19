@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, Eye } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700",
@@ -156,7 +157,7 @@ export default function OrdersPage() {
                     <td className="py-3.5 px-6 text-charcoal/70">{o.customer_name || "-"}</td>
                     <td className="py-3.5 px-6 text-charcoal/70">{o.customer_phone || "-"}</td>
                     <td className="py-3.5 px-6 text-charcoal/70">{o.item_count ?? 0}</td>
-                    <td className="py-3.5 px-6 font-medium text-charcoal">GHS {(o.total || 0).toLocaleString()}</td>
+                    <td className="py-3.5 px-6 font-medium text-charcoal">{formatPrice(o.total || 0)}</td>
                     <td className="py-3.5 px-6">
                       <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${PAYMENT_COLORS[o.payment_status] || "bg-gray-100 text-gray-600"}`}>
                         {o.payment_status?.charAt(0).toUpperCase() + (o.payment_status?.slice(1) || "-")}
@@ -198,7 +199,7 @@ export default function OrdersPage() {
                     </p>
                   </div>
                   <p className="shrink-0 font-bold text-charcoal">
-                    GHS {(o.total || 0).toLocaleString()}
+                    {formatPrice(o.total || 0)}
                   </p>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">

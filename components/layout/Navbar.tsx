@@ -4,33 +4,27 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Search, User, Menu, X, Heart, ShoppingBag, Home,
-  Smartphone, Laptop, Headphones, Watch, Gamepad2, Tag,
-  Info, Package, LogOut
-} from "lucide-react";
+import { Search, User, Menu, X, Heart } from "lucide-react";
 import CartBadge from "@/components/ui/CartBadge";
 import SearchBarWrapper from "@/components/ui/SearchBarWrapper";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { useCart } from "@/context/CartContext";
-import { useTheme } from "@/context/ThemeContext";
 import { createClient } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 
 const CATEGORIES = [
-  { label: "Smartphones", href: "/products?category=smartphones", icon: Smartphone },
-  { label: "Laptops", href: "/products?category=laptops", icon: Laptop },
-  { label: "Audio", href: "/products?category=audio", icon: Headphones },
-  { label: "Wearables", href: "/products?category=wearables", icon: Watch },
-  { label: "Gaming", href: "/products?category=gaming", icon: Gamepad2 },
-  { label: "Accessories", href: "/products?category=accessories", icon: Package },
+  { label: "Smartphones", href: "/products?category=smartphones" },
+  { label: "Laptops", href: "/products?category=laptops" },
+  { label: "Audio", href: "/products?category=audio" },
+  { label: "Wearables", href: "/products?category=wearables" },
+  { label: "Gaming", href: "/products?category=gaming" },
+  { label: "Accessories", href: "/products?category=accessories" },
 ];
 
 const QUICK_LINKS = [
-  { label: "Track Order", href: "/track-order", icon: Package },
-  { label: "About Us", href: "/about", icon: Info },
-  { label: "All Products", href: "/products", icon: ShoppingBag },
-  { label: "Offers", href: "/offers", icon: Tag },
+  { label: "Track Order", href: "/track-order" },
+  { label: "About Us", href: "/about" },
+  { label: "Offers", href: "/offers" },
 ];
 
 export default function Navbar() {
@@ -38,10 +32,8 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { itemCount, openCart } = useCart();
-  const { resolvedTheme } = useTheme();
   const [bounced, setBounced] = useState(false);
   const prevCountRef = useRef(0);
-  const logoSrc = resolvedTheme === "light" ? "/logo-dark.png" : "/logo-white.png";
 
   // Auth state
   const [user, setUser] = useState<{ email?: string } | null>(null);
@@ -123,15 +115,18 @@ export default function Navbar() {
         <div className="site-nav-shell">
           <div className="w-full min-w-0 max-w-7xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2 sm:gap-3 overflow-hidden">
             {/* Logo */}
-            <Link href="/" className="shrink-0">
+            <Link href="/" className="flex items-center gap-2 shrink-0 group">
               <Image
-                src={logoSrc}
+                src="/logo-mark.png"
                 alt="Authentic Gadget"
-                width={120}
+                width={36}
                 height={36}
-                className="h-7 w-auto object-contain sm:h-8"
+                className="h-8 w-8 object-contain logo-adaptive group-hover:scale-105 transition-transform duration-200"
                 priority
               />
+              <span className="hidden sm:block font-display text-base font-bold tracking-tight text-fog">
+                Authentic Gadget
+              </span>
             </Link>
 
             {/* Search — desktop */}
@@ -141,9 +136,7 @@ export default function Navbar() {
 
             {/* Actions */}
             <div className="flex shrink-0 items-center gap-1">
-              <div className="hidden sm:block">
-                <ThemeToggle compact />
-              </div>
+              <ThemeToggle compact />
 
               {/* Search toggle */}
               <button
@@ -235,165 +228,128 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* ==================== MOBILE MENU ==================== */}
+      {/* ── MOBILE SIDEBAR DRAWER ─────────────────────────────────── */}
       {mobileOpen && (
-        <div
-          className="sm:hidden fixed inset-0 z-[200] flex"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Navigation menu"
-        >
+        <>
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-[59] bg-black/50 animate-fade-in"
             onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
           />
 
-          {/* Panel */}
-          <div className="relative ml-auto w-[88vw] max-w-[360px] h-full bg-[#06112B] border-l border-[rgba(201,169,110,0.15)] flex flex-col overflow-hidden">
+          {/* Drawer panel */}
+          <div
+            className="fixed top-0 left-0 bottom-0 z-[60] w-[82vw] max-w-xs flex flex-col animate-slide-in-left sm:hidden overflow-hidden"
+            style={{ background: "var(--bg)", boxShadow: "6px 0 40px rgba(0,0,0,0.35)" }}
+          >
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.08] shrink-0">
-              <Link href="/" onClick={() => setMobileOpen(false)}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+              <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-2">
                 <Image
-                  src={logoSrc}
+                  src="/logo-mark.png"
                   alt="Authentic Gadget"
-                  width={110}
-                  height={34}
-                  className="h-8 w-auto object-contain"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 object-contain logo-adaptive"
                 />
+                <span className="font-display text-sm font-bold tracking-tight text-fog">Authentic Gadget</span>
               </Link>
               <button
                 onClick={() => setMobileOpen(false)}
-                className="p-2 hover:bg-white/[0.08] rounded-xl transition-colors"
                 aria-label="Close menu"
+                className="p-1 -mr-1 rounded-lg hover:bg-[var(--surface)] transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="h-5 w-5 text-[var(--text-primary)]" />
               </button>
             </div>
 
             {/* Search bar */}
-            <div className="px-5 py-3 border-b border-white/[0.08] shrink-0">
+            <div className="px-5 pb-3 shrink-0">
               <SearchBarWrapper />
             </div>
 
-            {/* Nav content — scrollable */}
-            <div className="flex-1 overflow-y-auto py-2">
-              <div className="px-5 py-3">
-                <ThemeToggle />
-              </div>
-
-              {/* Home */}
+            {/* Scrollable nav */}
+            <nav className="flex-1 overflow-y-auto px-5 scrollbar-hide min-h-0">
               <Link
                 href="/"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3.5 px-5 py-3.5 text-fog hover:text-white hover:bg-white/[0.05] transition-colors"
+                className="block py-[14px] text-[17px] font-bold text-[var(--text-primary)] border-b border-[var(--border-color)] hover:text-gold transition-colors"
               >
-                <Home className="w-[18px] h-[18px] text-gold" />
-                <span className="font-medium">Home</span>
+                Home
+              </Link>
+              <Link
+                href="/products"
+                onClick={() => setMobileOpen(false)}
+                className="block py-[14px] text-[17px] font-bold text-[var(--text-primary)] border-b border-[var(--border-color)] hover:text-gold transition-colors"
+              >
+                Shop
               </Link>
 
-              {/* Divider */}
-              <div className="px-5 py-1">
-                <p className="text-[10px] uppercase tracking-widest text-fog-muted font-bold mb-1">Categories</p>
-              </div>
+              {CATEGORIES.map((cat) => (
+                <Link
+                  key={cat.label}
+                  href={cat.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="block py-[14px] text-[17px] font-bold text-[var(--text-primary)] border-b border-[var(--border-color)] hover:text-gold transition-colors"
+                >
+                  {cat.label}
+                </Link>
+              ))}
 
-              {CATEGORIES.map((cat) => {
-                const Icon = cat.icon;
-                return (
-                  <Link
-                    key={cat.label}
-                    href={cat.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3.5 px-5 py-3.5 text-fog-muted hover:text-white hover:bg-white/[0.05] transition-colors"
-                  >
-                    <Icon className="w-[18px] h-[18px] text-gold/60" />
-                    <span className="font-medium">{cat.label}</span>
-                  </Link>
-                );
-              })}
+              {QUICK_LINKS.map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="block py-[14px] text-[17px] font-bold text-[var(--text-primary)] border-b border-[var(--border-color)] hover:text-gold transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
 
-              {/* Divider */}
-              <div className="px-5 py-1 mt-2">
-                <p className="text-[10px] uppercase tracking-widest text-fog-muted font-bold mb-1">Quick Links</p>
-              </div>
-
-              {QUICK_LINKS.map((link) => {
-                const Icon = link.icon;
-                return (
-                  <Link
-                    key={link.label}
-                    href={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3.5 px-5 py-3.5 text-fog-muted hover:text-white hover:bg-white/[0.05] transition-colors"
-                  >
-                    <Icon className="w-[18px] h-[18px] text-gold/60" />
-                    <span className="font-medium">{link.label}</span>
-                  </Link>
-                );
-              })}
-
-              {/* Divider */}
-              <div className="px-5 py-1 mt-2">
-                <p className="text-[10px] uppercase tracking-widest text-fog-muted font-bold mb-1">Account</p>
-              </div>
-
-              {user ? (
-                <>
-                  <Link
-                    href="/account/profile"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3.5 px-5 py-3.5 text-fog-muted hover:text-white hover:bg-white/[0.05] transition-colors"
-                  >
-                    <User className="w-[18px] h-[18px] text-gold/60" />
-                    <span className="font-medium">My Account</span>
-                  </Link>
+              {!checkingAuth && (
+                user ? (
                   <button
                     onClick={() => { setMobileOpen(false); handleSignOut(); }}
-                    className="flex items-center gap-3.5 px-5 py-3.5 text-fog-muted hover:text-white hover:bg-white/[0.05] transition-colors w-full text-left"
+                    className="block w-full text-left py-[14px] text-[17px] font-bold text-[var(--text-primary)] border-b border-[var(--border-color)] hover:text-gold transition-colors"
                   >
-                    <LogOut className="w-[18px] h-[18px] text-red-400/60" />
-                    <span className="font-medium">Sign Out</span>
+                    Sign Out
                   </button>
-                </>
-              ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3.5 px-5 py-3.5 text-fog-muted hover:text-white hover:bg-white/[0.05] transition-colors"
-                >
-                  <User className="w-[18px] h-[18px] text-gold/60" />
-                  <span className="font-medium">Login / Register</span>
-                </Link>
+                ) : (
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="block py-[14px] text-[17px] font-bold text-[var(--text-primary)] border-b border-[var(--border-color)] hover:text-gold transition-colors"
+                  >
+                    Login / Register
+                  </Link>
+                )
               )}
+            </nav>
 
-              <Link
-                href="/wishlist"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3.5 px-5 py-3.5 text-fog-muted hover:text-white hover:bg-white/[0.05] transition-colors"
-              >
-                <Heart className="w-[18px] h-[18px] text-gold/60" />
-                <span className="font-medium">Wishlist</span>
-              </Link>
-
-              <Link
-                href="/cart"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3.5 px-5 py-3.5 text-fog-muted hover:text-white hover:bg-white/[0.05] transition-colors"
-              >
-                <ShoppingBag className="w-[18px] h-[18px] text-gold/60" />
-                <span className="font-medium">Cart {itemCount > 0 && `(${itemCount})`}</span>
-              </Link>
-            </div>
-
-            {/* Footer */}
-            <div className="px-5 py-4 border-t border-white/[0.08] shrink-0 bg-[#040820]">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-fog-muted">© 2025 Authentic Gadget</span>
-                <span className="text-xs text-gold font-medium">🇬🇭 Ghana</span>
-              </div>
+            {/* Contact info — pinned at bottom, clears mobile safe area */}
+            <div
+              className="shrink-0 px-5 pt-4"
+              style={{
+                borderTop: "1px solid var(--border-color)",
+                paddingBottom: "calc(88px + env(safe-area-inset-bottom, 0px))",
+              }}
+            >
+              <p className="text-[13px] text-[var(--text-muted)] leading-relaxed">
+                <span className="font-semibold text-[var(--text-secondary)]">Based in:</span> Accra, Ghana 🇬🇭
+              </p>
+              <p className="text-[13px] mt-2 text-gold">
+                <span className="font-semibold">Phone:</span>{" "}
+                <a href="tel:+233534553165" className="hover:underline">+233 53 455 3165</a>
+              </p>
+              <p className="text-[13px] mt-1.5 text-gold">
+                <span className="font-semibold">Email:</span>{" "}
+                <a href="mailto:authenticgadgets@gmail.com" className="hover:underline">authenticgadgets@gmail.com</a>
+              </p>
             </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );
