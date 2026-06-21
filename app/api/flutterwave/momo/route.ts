@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     const txRef = `AG_${order.id}_${crypto.randomUUID().slice(0, 8)}`;
     const nameParts = (order.customer_name || "Customer").trim().split(/\s+/);
-    const origin = new URL(request.url).origin;
+    const origin = process.env.NEXT_PUBLIC_BASE_URL || new URL(request.url).origin;
     const payload = {
       tx_ref: txRef,
       amount: String(order.total),

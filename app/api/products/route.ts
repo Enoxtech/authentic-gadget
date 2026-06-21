@@ -1,31 +1,25 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
-export async function GET() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    return NextResponse.json({ error: "Missing Supabase config" }, { status: 500 });
-  }
-
+export async function GET(request: NextRequest) {
   try {
-    const res = await fetch(
-      `${supabaseUrl}/rest/v1/products?select=*&is_active=eq.true&order=created_at.desc`,
-      {
-        headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-        next: { revalidate: 60 },
-      }
-    );
+    const slug = request.nextUrl.searchParams.get("slug")?.trim();
+    const database = getSupabaseAdminClient();
+    const query = database
+      .from("products")
+      .select("*")
+      .eq("is_active", true);
 
-    if (!res.ok) {
-      return NextResponse.json({ error: "Failed to fetch products" }, { status: res.status });
+    if (slug) {
+      const { data, error } = await query.eq("slug", slug).maybeSingle();
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      if (!data) return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      return NextResponse.json(data);
     }
 
-    const data = await res.json();
-    return NextResponse.json(data);
+    const { data, error } = await query.order("created_at", { ascending: false });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(data || []);
   } catch (err) {
     console.error("Products API error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

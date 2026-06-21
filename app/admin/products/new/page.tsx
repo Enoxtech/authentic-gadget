@@ -149,7 +149,7 @@ export default function NewProductPage() {
         )}
 
         {/* Name */}
-        <div className="bg-white rounded-2xl p-6 shadow-card">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
           <h3 className="font-semibold text-charcoal mb-4">Basic Info</h3>
           <div className="space-y-4">
             <div>
@@ -195,7 +195,7 @@ export default function NewProductPage() {
         </div>
 
         {/* Pricing */}
-        <div className="bg-white rounded-2xl p-6 shadow-card">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
           <h3 className="font-semibold text-charcoal mb-4">Pricing</h3>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -216,7 +216,7 @@ export default function NewProductPage() {
         </div>
 
         {/* Images */}
-        <div className="bg-white rounded-2xl p-6 shadow-card">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
           <h3 className="font-semibold text-charcoal mb-4">Images</h3>
           <div>
             <label className="block text-sm font-medium text-charcoal mb-1.5">Image URLs (one per line)</label>
@@ -232,7 +232,7 @@ export default function NewProductPage() {
         </div>
 
         {/* Description */}
-        <div className="bg-white rounded-2xl p-6 shadow-card">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
           <h3 className="font-semibold text-charcoal mb-4">Description</h3>
           <div>
             <label className="block text-sm font-medium text-charcoal mb-1.5">Product Description</label>
@@ -247,7 +247,7 @@ export default function NewProductPage() {
         </div>
 
         {/* Features */}
-        <div className="bg-white rounded-2xl p-6 shadow-card">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-charcoal">Features</h3>
             <button type="button" onClick={addFeature} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-electric/10 text-electric rounded-lg hover:bg-electric/20 transition-colors">

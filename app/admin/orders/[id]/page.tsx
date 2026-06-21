@@ -168,7 +168,7 @@ export default function OrderDetailPage() {
         {/* Main info */}
         <div className="lg:col-span-2 space-y-6">
           {/* Order items */}
-          <div className="bg-white rounded-2xl p-6 shadow-card">
+          <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
             <h3 className="font-bold text-charcoal mb-4 flex items-center gap-2">
               <Package className="w-5 h-5 text-electric" />
               Order Items
@@ -215,7 +215,7 @@ export default function OrderDetailPage() {
           </div>
 
           {/* Status controls */}
-          <div className="bg-white rounded-2xl p-6 shadow-card">
+          <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
             <h3 className="font-bold text-charcoal mb-4">Update Status</h3>
             <div className="space-y-3">
               <div>
@@ -262,7 +262,7 @@ export default function OrderDetailPage() {
 
         {/* Customer info sidebar */}
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 shadow-card">
+          <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
             <h3 className="font-bold text-charcoal mb-4">Customer</h3>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
@@ -288,7 +288,7 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-card">
+          <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
             <h3 className="font-bold text-charcoal mb-4">Delivery Address</h3>
             <div className="space-y-2 text-sm text-charcoal/60">
               {order.shipping_address && <p className="text-charcoal font-medium">{order.shipping_address}</p>}
@@ -298,7 +298,7 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-card">
+          <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
             <h3 className="font-bold text-charcoal mb-4">Order Summary</h3>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">

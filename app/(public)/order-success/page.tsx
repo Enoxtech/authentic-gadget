@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CheckCircle, Package } from "lucide-react";
 import { Suspense, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
+import { formatPrice } from "@/lib/utils";
 
 function OrderSuccessContent() {
   const params = useSearchParams();
@@ -50,7 +51,7 @@ function OrderSuccessContent() {
           Thank you for shopping with Authentic Gadget. Your order has been received.
         </p>
 
-        <div className="bg-white rounded-2xl p-6 shadow-card mb-6 text-left">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)] mb-6 text-left">
           <div className="flex items-center gap-3 mb-4 pb-4 border-b border-fog">
             <div className="w-10 h-10 rounded-full bg-electric/10 flex items-center justify-center">
               <Package className="w-5 h-5 text-electric" />
@@ -63,7 +64,7 @@ function OrderSuccessContent() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-charcoal/60">Order Total</span>
-              <span className="font-bold text-electric">GHS{Number(total).toLocaleString()}</span>
+              <span className="font-bold text-electric font-label">{formatPrice(Number(total))}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-charcoal/60">Payment Method</span>
@@ -91,7 +92,7 @@ function OrderSuccessContent() {
 
         {isCod && (
           <p className="text-sm text-charcoal/50 mb-4 bg-amber-50 rounded-xl p-3">
-            💡 Please have <strong>GHS{Number(total).toLocaleString()}</strong> ready when our delivery agent arrives.
+            💡 Please have <strong>{formatPrice(Number(total))}</strong> ready when our delivery agent arrives.
             Do not make payment before receiving your order.
           </p>
         )}
@@ -99,13 +100,13 @@ function OrderSuccessContent() {
         <div className="space-y-3">
           <Link
             href={`/track-order?order=${encodeURIComponent(orderId)}`}
-            className="block w-full py-4 bg-electric text-white font-semibold rounded-2xl hover:bg-electric/90 transition-colors"
+            className="block w-full py-4 bg-electric text-white font-semibold rounded-[18px] hover:bg-electric/90 transition-colors"
           >
             Track Order
           </Link>
           <Link
             href="/"
-            className="block w-full py-4 bg-white text-charcoal font-semibold rounded-2xl hover:bg-fog transition-colors border border-fog-200"
+            className="block w-full py-4 bg-white text-charcoal font-semibold rounded-[18px] hover:bg-fog transition-colors border border-[var(--border-color)]"
           >
             Continue Shopping
           </Link>

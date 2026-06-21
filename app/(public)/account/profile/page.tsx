@@ -73,7 +73,7 @@ export default function ProfilePage() {
           ← Back to My Account
         </Link>
 
-        <div className="bg-white rounded-2xl shadow-card p-6">
+        <div className="bg-white rounded-[28px] card-premium border border-[var(--border-color)] p-6">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-2xl font-bold text-charcoal">My Profile</h1>
@@ -118,7 +118,7 @@ export default function ProfilePage() {
 
           <div className="mt-8 pt-6 border-t border-fog-200">
             <p className="text-xs text-charcoal/30 text-center">
-              To update your profile, contact us at support@authenticgadget.com
+              To update your profile, contact us at authenticgadgets@gmail.com
             </p>
           </div>
         </div>

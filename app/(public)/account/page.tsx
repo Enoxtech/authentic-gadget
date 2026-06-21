@@ -109,7 +109,7 @@ export default function AccountPage() {
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Sidebar nav */}
-          <div className="bg-white rounded-2xl p-4 shadow-card h-fit">
+          <div className="bg-white rounded-[28px] p-4 card-premium border border-[var(--border-color)] h-fit">
             <nav className="space-y-1">
               {[
                 { label: "Profile", href: "/account/profile", icon: User },
@@ -130,7 +130,7 @@ export default function AccountPage() {
           {/* Main content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Orders */}
-            <div className="bg-white rounded-2xl p-6 shadow-card">
+            <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="font-bold text-charcoal text-lg flex items-center gap-2">
                   <ShoppingBag className="w-5 h-5 text-electric" />

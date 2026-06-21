@@ -98,7 +98,7 @@ export default function ReviewsPage() {
       </div>
 
       {/* Search */}
-      <div className="bg-white rounded-2xl p-4 shadow-card mb-4">
+      <div className="bg-white rounded-[28px] p-4 card-premium border border-[var(--border-color)] mb-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/30" />
           <input
@@ -112,7 +112,7 @@ export default function ReviewsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl shadow-card overflow-hidden">
+      <div className="bg-white rounded-[28px] card-premium border border-[var(--border-color)] overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-charcoal/40">Loading reviews...</div>
         ) : filtered.length === 0 ? (

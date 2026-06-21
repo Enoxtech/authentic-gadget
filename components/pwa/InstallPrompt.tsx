@@ -35,15 +35,21 @@ export default function InstallPrompt() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem(DISMISS_KEY)) { setDismissed(true); return; }
-    if (isStandaloneDisplay()) return;
+    const id = setTimeout(() => {
+      if (localStorage.getItem(DISMISS_KEY)) { setDismissed(true); return; }
+      if (isStandaloneDisplay()) return;
 
-    // Safari on iOS/iPadOS never fires beforeinstallprompt — show manual steps instead
-    if (isIosDevice()) {
-      setIsIos(true);
-      const t = setTimeout(() => setVisible(true), 3500);
-      return () => clearTimeout(t);
-    }
+      // Safari on iOS/iPadOS never fires beforeinstallprompt — show manual steps instead
+      if (isIosDevice()) {
+        setIsIos(true);
+        setTimeout(() => setVisible(true), 3500);
+      }
+    }, 0);
+    return () => clearTimeout(id);
+  }, []);
+
+  useEffect(() => {
+    if (isIosDevice()) return;
 
     function handleBeforeInstallPrompt(event: Event) {
       event.preventDefault();

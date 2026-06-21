@@ -52,10 +52,10 @@ export default function CartPage() {
             {items.map((item) => (
               <div
                 key={item.id}
-                className="bg-white rounded-2xl p-4 flex gap-4 items-center shadow-card"
+                className="bg-white rounded-[28px] p-4 flex gap-4 items-center card-premium border border-[var(--border-color)]"
               >
-                <div className="relative w-24 h-24 bg-fog rounded-xl overflow-hidden shrink-0">
-                  <Image src={item.image ?? ""} alt={item.name} fill className="object-cover" />
+                <div className="relative w-24 h-24 bg-[var(--surface-raised)] rounded-2xl overflow-hidden shrink-0">
+                  <Image src={item.image ?? ""} alt={item.name} fill className="object-contain p-1.5" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-charcoal text-sm line-clamp-2">{item.name}</p>
@@ -96,7 +96,7 @@ export default function CartPage() {
           </div>
 
           {/* Summary */}
-          <div className="bg-white rounded-2xl p-6 shadow-card h-fit sticky top-24">
+          <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)] h-fit sticky top-24">
             <h2 className="font-bold text-charcoal mb-4">Order Summary</h2>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">

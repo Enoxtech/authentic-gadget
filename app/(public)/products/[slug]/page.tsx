@@ -63,30 +63,21 @@ export default function ProductDetailPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/products?slug=eq.${encodeURIComponent(slug)}&is_active=eq.true&limit=1`,
-          {
-            headers: {
-              apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-              Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-            },
-          }
-        );
-        if (!res.ok) throw new Error("Failed to fetch product");
-        const data = await res.json();
-        if (!data || data.length === 0) {
+        const res = await fetch(`/api/products?slug=${encodeURIComponent(slug)}`);
+        if (res.status === 404) {
           setError("NOT_FOUND");
-        } else {
-          const loaded = data[0] as Product;
-          setProduct(loaded);
-          trackRecentlyViewed({
-            id: loaded.id,
-            name: loaded.name,
-            slug: loaded.slug,
-            price: loaded.price,
-            image: loaded.images?.[0],
-          });
+          return;
         }
+        if (!res.ok) throw new Error("Failed to fetch product");
+        const loaded = (await res.json()) as Product;
+        setProduct(loaded);
+        trackRecentlyViewed({
+          id: loaded.id,
+          name: loaded.name,
+          slug: loaded.slug,
+          price: loaded.price,
+          image: loaded.images?.[0],
+        });
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Failed to load product");
       } finally {

@@ -36,9 +36,9 @@ export default function WishlistPage() {
         </div>
 
         {loading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="h-56 animate-pulse rounded-3xl bg-white/[0.05]" />
+          <div className="product-grid-subgrid">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="aspect-[3/4] animate-pulse rounded-[32px] bg-white/[0.05]" />
             ))}
           </div>
         ) : items.length === 0 ? (
@@ -57,30 +57,36 @@ export default function WishlistPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="product-grid-subgrid">
             {items.map((product) => {
               const image = product.images?.[0] || product.image || "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400";
               return (
                 <article
                   key={product.id}
-                  className="overflow-hidden rounded-3xl border border-white/[0.08] bg-[var(--surface)] shadow-layers"
+                  className="flex flex-col rounded-[32px] border border-[var(--border-color)] bg-[var(--surface-glass)] backdrop-blur-[12px] card-premium overflow-hidden"
                 >
-                  <Link href={`/products/${product.slug}`} className="block">
-                    <div className="relative aspect-[4/3] bg-[var(--surface-raised)]">
-                      <Image src={image} alt={product.name} fill className="object-cover" unoptimized />
-                    </div>
+                  <Link href={`/products/${product.slug}`} className="relative block aspect-square overflow-hidden rounded-t-[28px] bg-[var(--surface-raised)]">
+                    <Image src={image} alt={product.name} fill className="object-contain p-2" unoptimized />
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); removeWishlist(product.id); }}
+                      className="absolute top-2.5 right-2.5 h-8 w-8 flex items-center justify-center rounded-full bg-[var(--surface-glass-strong)] backdrop-blur-md border border-[var(--border-color)] text-[var(--text-muted)] hover:text-red-500 transition-all duration-200 hover:scale-110"
+                      aria-label={`Remove ${product.name} from wishlist`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </Link>
-                  <div className="p-5">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gold/70">
+                  <div className="p-3 flex flex-col gap-1 flex-1">
+                    <p className="text-[9px] font-semibold uppercase tracking-widest text-[var(--text-muted)] truncate">
                       {product.brand || product.category || "Authentic Gadget"}
                     </p>
                     <Link href={`/products/${product.slug}`}>
-                      <h2 className="mt-2 line-clamp-2 font-semibold text-fog">{product.name}</h2>
+                      <p className="text-xs font-semibold text-[var(--text-primary)] line-clamp-2 leading-snug">{product.name}</p>
                     </Link>
-                    <p className="mt-3 text-lg font-bold text-gold">
-                      {formatPrice(Number(product.price || 0))}
-                    </p>
-                    <div className="mt-5 grid grid-cols-[1fr_auto] gap-2">
+                    <div className="flex items-center justify-between mt-2 gap-1">
+                      <span className="font-bold text-gold font-label text-xs tabular-nums">
+                        {formatPrice(Number(product.price || 0))}
+                      </span>
                       <button
                         type="button"
                         onClick={() =>
@@ -94,17 +100,10 @@ export default function WishlistPage() {
                             brand: product.brand || undefined,
                           })
                         }
-                        className="rounded-2xl bg-gold px-4 py-3 text-sm font-bold text-[#030618] transition hover:bg-gold-dark"
+                        className="h-7 w-7 flex items-center justify-center rounded-full shrink-0 bg-electric text-white transition-all duration-200 hover:scale-110 hover:shadow-md active:scale-90"
+                        aria-label="Add to cart"
                       >
-                        Add to cart
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeWishlist(product.id)}
-                        className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-fog-muted transition hover:border-red-400/40 hover:text-red-300"
-                        aria-label={`Remove ${product.name} from wishlist`}
-                      >
-                        <Trash2 className="h-4 w-4" />
+                        <ShoppingBag className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>

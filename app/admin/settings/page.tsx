@@ -12,7 +12,7 @@ export default function SettingsPage() {
 
       <div className="space-y-6 max-w-3xl">
         {/* Store Info */}
-        <div className="bg-white rounded-2xl p-6 shadow-card">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 bg-electric/10 rounded-xl flex items-center justify-center">
               <Store className="w-5 h-5 text-electric" />
@@ -44,7 +44,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Payment Settings */}
-        <div className="bg-white rounded-2xl p-6 shadow-card">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
               <CreditCard className="w-5 h-5 text-green-600" />
@@ -79,7 +79,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Admin Account */}
-        <div className="bg-white rounded-2xl p-6 shadow-card">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
               <User className="w-5 h-5 text-purple-600" />
@@ -98,7 +98,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Database */}
-        <div className="bg-white rounded-2xl p-6 shadow-card">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
               <Database className="w-5 h-5 text-blue-600" />
@@ -135,7 +135,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Store Configuration */}
-        <div className="bg-white rounded-2xl p-6 shadow-card">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center">
               <Wrench className="w-5 h-5 text-orange-600" />

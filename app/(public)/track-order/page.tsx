@@ -76,7 +76,7 @@ export default function TrackOrderPage() {
           Enter the order ID and checkout email to see live status.
         </p>
 
-        <form onSubmit={trackOrder} className="bg-white rounded-2xl p-5 shadow-card mb-8 space-y-3">
+        <form onSubmit={trackOrder} className="bg-white rounded-[28px] p-5 card-premium border border-[var(--border-color)] mb-8 space-y-3">
           <input
             type="text"
             value={orderId}
@@ -102,7 +102,7 @@ export default function TrackOrderPage() {
         </form>
 
         {order && (
-          <div className="bg-white rounded-2xl p-6 shadow-card">
+          <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
             <div className="flex items-start justify-between gap-4 mb-6 pb-6 border-b border-fog">
               <div>
                 <p className="text-xs text-charcoal/50 mb-1">Order ID</p>

@@ -43,7 +43,7 @@ export default async function AccountOrdersPage() {
         </div>
 
         {orders.length === 0 ? (
-          <div className="bg-white rounded-2xl p-10 shadow-card text-center">
+          <div className="bg-white rounded-[28px] p-10 card-premium border border-[var(--border-color)] text-center">
             <ShoppingBag className="w-10 h-10 text-charcoal/20 mx-auto mb-3" />
             <p className="text-charcoal/50 text-sm mb-5">No orders found for this account.</p>
             <Link
@@ -59,7 +59,7 @@ export default async function AccountOrdersPage() {
               <Link
                 key={order.id}
                 href={`/account/orders/${order.id}`}
-                className="flex items-center gap-4 p-5 bg-white rounded-2xl shadow-card hover:shadow-card-hover transition-shadow"
+                className="flex items-center gap-4 p-5 bg-white rounded-[28px] card-premium border border-[var(--border-color)]"
               >
                 <div className="w-11 h-11 rounded-xl bg-electric/10 flex items-center justify-center">
                   <Package className="w-5 h-5 text-electric" />

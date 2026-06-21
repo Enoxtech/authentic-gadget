@@ -55,7 +55,7 @@ export default async function AccountOrderDetailPage({
           <ArrowLeft className="w-4 h-4" /> My orders
         </Link>
 
-        <div className="bg-midnight text-white rounded-2xl p-6 mb-6">
+        <div className="bg-midnight text-white rounded-[28px] p-6 mb-6 card-premium">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-white/50 text-xs uppercase tracking-wider">Order</p>
@@ -73,7 +73,7 @@ export default async function AccountOrderDetailPage({
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-card mb-6">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)] mb-6">
           <h2 className="font-bold text-charcoal mb-4 flex items-center gap-2">
             <Package className="w-5 h-5 text-electric" /> Items
           </h2>
@@ -100,12 +100,12 @@ export default async function AccountOrderDetailPage({
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
-          <div className="bg-white rounded-2xl p-5 shadow-card">
+          <div className="bg-white rounded-[28px] p-5 card-premium border border-[var(--border-color)]">
             <h2 className="font-bold text-charcoal mb-3">Payment</h2>
             <p className="text-sm text-charcoal/60 capitalize">{order.payment_method}</p>
             <p className="text-sm text-electric font-medium capitalize">{order.payment_status}</p>
           </div>
-          <div className="bg-white rounded-2xl p-5 shadow-card">
+          <div className="bg-white rounded-[28px] p-5 card-premium border border-[var(--border-color)]">
             <h2 className="font-bold text-charcoal mb-3 flex items-center gap-2">
               <MapPin className="w-4 h-4 text-electric" /> Delivery
             </h2>

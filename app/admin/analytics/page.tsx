@@ -62,7 +62,7 @@ export default function AnalyticsPage() {
       {loading ? (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl p-6 shadow-card animate-pulse">
+            <div key={i} className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)] animate-pulse">
               <div className="h-4 w-24 bg-fog rounded mb-4" />
               <div className="h-8 w-20 bg-fog rounded" />
             </div>
@@ -72,7 +72,7 @@ export default function AnalyticsPage() {
         <>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {statCards.map(({ label, value, icon: Icon, color }) => (
-              <div key={label} className="bg-white rounded-2xl p-6 shadow-card">
+              <div key={label} className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${color}`}>
                   <Icon className="w-5 h-5" />
                 </div>
@@ -82,7 +82,7 @@ export default function AnalyticsPage() {
             ))}
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-card">
+          <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-electric/10 flex items-center justify-center">
                 <BarChart3 className="w-5 h-5 text-electric" />

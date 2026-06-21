@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       .select("product_id, product_name, quantity")
       .eq("order_id", order.id);
 
-    const origin = new URL(request.url).origin;
+    const origin = process.env.NEXT_PUBLIC_BASE_URL || new URL(request.url).origin;
     const response = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
       headers: {

@@ -189,7 +189,7 @@ export default function AdminBannersPage() {
       {loading ? (
         <p className="text-sm text-charcoal/50">Loading...</p>
       ) : visibleBanners.length === 0 && editingId !== "new" ? (
-        <div className="bg-white rounded-2xl p-8 text-center shadow-card">
+        <div className="bg-white rounded-[28px] p-8 text-center card-premium border border-[var(--border-color)]">
           <p className="text-charcoal/50 text-sm">
             No {activeTab.label.toLowerCase()} banners yet. The storefront will show curated fallback content until you add one.
           </p>
@@ -197,7 +197,7 @@ export default function AdminBannersPage() {
       ) : (
         <div className="space-y-3">
           {visibleBanners.map((banner, i) => (
-            <div key={banner.id} className="bg-white rounded-2xl shadow-card overflow-hidden">
+            <div key={banner.id} className="bg-white rounded-[28px] card-premium border border-[var(--border-color)] overflow-hidden">
               <div className="flex items-center gap-4 p-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={banner.image} alt="" className="w-24 h-14 rounded-lg object-cover bg-fog shrink-0" />
@@ -224,7 +224,7 @@ export default function AdminBannersPage() {
           ))}
 
           {editingId === "new" && (
-            <div className="bg-white rounded-2xl shadow-card overflow-hidden">
+            <div className="bg-white rounded-[28px] card-premium border border-[var(--border-color)] overflow-hidden">
               <BannerForm form={form} setForm={setForm} onCancel={() => setEditingId(null)} onSave={save} saving={saving} inputClass={inputClass} inputStyle={inputStyle} />
             </div>
           )}

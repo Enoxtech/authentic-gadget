@@ -27,7 +27,7 @@ export default function NewCampaignPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-12 text-center shadow-card">
+      <div className="bg-white rounded-[28px] p-12 text-center card-premium border border-[var(--border-color)]">
         <div className="w-16 h-16 bg-electric/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <Megaphone className="w-8 h-8 text-electric" />
         </div>

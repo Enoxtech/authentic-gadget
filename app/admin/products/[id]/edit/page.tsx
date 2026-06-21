@@ -206,7 +206,7 @@ export default function EditProductPage() {
           <div className="bg-red-50 text-red-700 rounded-xl p-4 text-sm">{errors.form}</div>
         )}
 
-        <div className="bg-white rounded-2xl p-6 shadow-card">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
           <h3 className="font-semibold text-charcoal mb-4">Basic Info</h3>
           <div className="space-y-4">
             <div>
@@ -239,7 +239,7 @@ export default function EditProductPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-card">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
           <h3 className="font-semibold text-charcoal mb-4">Pricing</h3>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -259,7 +259,7 @@ export default function EditProductPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-card">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
           <h3 className="font-semibold text-charcoal mb-4">Images</h3>
           <div>
             <label className="block text-sm font-medium text-charcoal mb-1.5">Image URLs (one per line)</label>
@@ -267,14 +267,14 @@ export default function EditProductPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-card">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
           <h3 className="font-semibold text-charcoal mb-4">Description</h3>
           <div>
             <textarea value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} rows={5} className="w-full px-4 py-2.5 bg-fog rounded-xl text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-electric/30 resize-none" />
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-card">
+        <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-charcoal">Features</h3>
             <button type="button" onClick={addFeature} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-electric/10 text-electric rounded-lg hover:bg-electric/20 transition-colors">

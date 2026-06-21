@@ -101,7 +101,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl p-4 shadow-card mb-4 space-y-3">
+      <div className="bg-white rounded-[28px] p-4 card-premium border border-[var(--border-color)] mb-4 space-y-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal/30" />
           <input
@@ -131,7 +131,7 @@ export default function ProductsPage() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl p-4 shadow-card animate-pulse">
+            <div key={i} className="bg-white rounded-[28px] p-4 card-premium border border-[var(--border-color)] animate-pulse">
               <div className="aspect-square bg-fog rounded-xl mb-3" />
               <div className="h-5 bg-fog rounded w-3/4 mb-2" />
               <div className="h-4 bg-fog rounded w-1/2" />
@@ -139,7 +139,7 @@ export default function ProductsPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center shadow-card">
+        <div className="bg-white rounded-[28px] p-12 text-center card-premium border border-[var(--border-color)]">
           <Package className="w-12 h-12 text-charcoal/20 mx-auto mb-3" />
           <p className="text-charcoal/50">No products found</p>
           <Link href="/admin/products/new" className="mt-3 inline-block text-electric underline text-sm">Add your first product</Link>
@@ -147,7 +147,7 @@ export default function ProductsPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((p) => (
-            <div key={p.id} className="bg-white rounded-2xl p-4 shadow-card hover:shadow-card-hover transition-shadow">
+            <div key={p.id} className="bg-white rounded-[28px] p-4 card-premium border border-[var(--border-color)]">
               <div className="relative aspect-square rounded-xl overflow-hidden bg-fog mb-3">
                 {p.images?.[0] ? (
                   // eslint-disable-next-line @next/next/no-img-element

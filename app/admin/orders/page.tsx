@@ -95,7 +95,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Filters & Search */}
-      <div className="bg-white rounded-2xl p-4 shadow-card mb-4">
+      <div className="bg-white rounded-[28px] p-4 card-premium border border-[var(--border-color)] mb-4">
         <div className="flex flex-wrap gap-2 mb-4">
           {FILTERS.map((f) => (
             <button
@@ -124,7 +124,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl shadow-card overflow-hidden">
+      <div className="bg-white rounded-[28px] card-premium border border-[var(--border-color)] overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-charcoal/40">Loading orders...</div>
         ) : filtered.length === 0 ? (

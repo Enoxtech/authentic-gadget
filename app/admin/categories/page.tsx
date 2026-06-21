@@ -124,19 +124,19 @@ export default function AdminCategoriesPage() {
       ) : (
         <div className="space-y-3">
           {editingId === "new" && (
-            <div className="bg-white rounded-2xl shadow-card p-4">
+            <div className="bg-white rounded-[28px] card-premium border border-[var(--border-color)] p-4">
               <CategoryForm form={form} setForm={setForm} onCancel={() => setEditingId(null)} onSave={save} saving={saving} inputClass={inputClass} />
             </div>
           )}
 
           {categories.length === 0 && editingId !== "new" ? (
-            <div className="bg-white rounded-2xl p-12 text-center shadow-card">
+            <div className="bg-white rounded-[28px] p-12 text-center card-premium border border-[var(--border-color)]">
               <Tag className="w-12 h-12 text-charcoal/20 mx-auto mb-3" />
               <p className="text-charcoal/50">No categories yet</p>
             </div>
           ) : (
             categories.map((cat) => (
-              <div key={cat.id} className="bg-white rounded-2xl shadow-card overflow-hidden">
+              <div key={cat.id} className="bg-white rounded-[28px] card-premium border border-[var(--border-color)] overflow-hidden">
                 <div className="flex items-center gap-4 p-4">
                   <div className="h-11 w-11 rounded-xl bg-fog flex items-center justify-center text-2xl shrink-0">
                     {cat.icon || "📦"}
