@@ -2,11 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { User, Mail, Phone } from "lucide-react";
-import { createClient } from "@/lib/supabase";
+import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: Record<string, string> } | null>(null);
+  const [user, setUser] = useState<{
+    id: string;
+    email: string;
+    name: string;
+    phone?: string | null;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
@@ -15,19 +20,16 @@ export default function ProfilePage() {
 
     async function checkAuth() {
       try {
-        const supabase = createClient();
-
-        // Get session via getSession (cookie-based)
-        const { data: sessionData } = await supabase.auth.getSession();
+        const { data: sessionData } = await authClient.getSession();
 
         if (cancelled) return;
 
-        if (!sessionData?.session) {
+        if (!sessionData?.user) {
           window.location.href = "/login?redirect=/account/profile";
           return;
         }
 
-        setUser(sessionData.session.user);
+        setUser(sessionData.user);
       } catch (err: unknown) {
         console.error("Auth check error:", err);
         if (!cancelled) {
@@ -61,9 +63,8 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
-  const metadata = user.user_metadata || {};
-  const name = metadata.full_name || metadata.name || "";
-  const phone = metadata.phone || "";
+  const name = user.name || "";
+  const phone = user.phone || "";
 
   return (
     <div className="min-h-screen bg-fog py-10">

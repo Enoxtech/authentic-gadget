@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Package, User, ChevronRight, LogOut, ShoppingBag } from "lucide-react";
-import { createClient } from "@/lib/supabase";
+import { authClient } from "@/lib/auth-client";
 import { formatPrice } from "@/lib/utils";
 
 interface Order {
@@ -31,8 +31,8 @@ export default function AccountPage() {
   useEffect(() => {
     async function checkAuth() {
       try {
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data } = await authClient.getSession();
+        const user = data?.user || null;
         if (!user) {
           router.push("/login?redirect=/account/profile");
           return;
@@ -57,8 +57,7 @@ export default function AccountPage() {
   }, [router]);
 
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await authClient.signOut();
     router.push("/");
     router.refresh();
   };

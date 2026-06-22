@@ -7,12 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:migrate:railway": "node scripts/migrate-railway.mjs"
+    "db:migrate:railway": "node scripts/migrate-railway.mjs",
+    "db:migrate:production": "node scripts/migrate-production.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.0",
     "@types/pg": "^8.20.0",
+    "better-auth": "^1.6.20",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.8.0",
@@ -21,6 +23,7 @@
     "postcss": "8.5.15",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "resend": "^6.14.0",
     "tailwind-merge": "^3.5.0",
     "ws": "^8.21.0"
   },

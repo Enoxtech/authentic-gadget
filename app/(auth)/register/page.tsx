@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Check, Eye, EyeOff, MailCheck, ShieldCheck } from "lucide-react";
-import { createClient } from "@/lib/supabase";
+import { authClient } from "@/lib/auth-client";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -40,29 +38,17 @@ export default function RegisterPage() {
     }
 
     setLoading(true);
-    const supabase = createClient();
-    const { data, error: signUpError } = await supabase.auth.signUp({
+    const { error: signUpError } = await authClient.signUp.email({
+      name: name.trim(),
       email: email.trim().toLowerCase(),
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`,
-        data: {
-          name: name.trim(),
-          full_name: name.trim(),
-          phone: phone.trim() || null,
-        },
-      },
+      phone: phone.trim() || undefined,
+      callbackURL: "/account",
     });
 
     if (signUpError) {
-      setError(signUpError.message);
+      setError(signUpError.message || "Unable to create account");
       setLoading(false);
-      return;
-    }
-
-    if (data.session) {
-      router.push("/account");
-      router.refresh();
       return;
     }
 
@@ -228,13 +214,12 @@ export default function RegisterPage() {
           onClick={async () => {
             setLoading(true);
             setError("");
-            const supabase = createClient();
-            const { error: oauthError } = await supabase.auth.signInWithOAuth({
+            const { error: oauthError } = await authClient.signIn.social({
               provider: "google",
-              options: { redirectTo: `${window.location.origin}/auth/callback?next=/account` },
+              callbackURL: "/account",
             });
             if (oauthError) {
-              setError(oauthError.message);
+              setError(oauthError.message || "Unable to start Google sign in");
               setLoading(false);
             }
           }}

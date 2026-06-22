@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, ShieldCheck, Lock } from "lucide-react";
-import { createClient } from "@/lib/supabase";
+import { authClient } from "@/lib/auth-client";
 import { Suspense } from "react";
 
 type Mode = "password" | "otp";
@@ -23,20 +23,18 @@ function LoginPageInner() {
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState("");
 
-  const supabase = createClient();
-
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error } = await authClient.signIn.email({
       email,
       password,
     });
 
     if (error) {
-      setError(error.message);
+      setError(error.message || "Unable to sign in");
       setLoading(false);
     } else {
       // Redirect to the page they came from, or home
@@ -52,13 +50,13 @@ function LoginPageInner() {
     setError("");
 
     // Send 6-digit OTP to email (not a magic link)
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await authClient.emailOtp.sendVerificationOtp({
       email,
-      options: { email: { singleLink: false } },
+      type: "sign-in",
     });
 
     if (error) {
-      setError(error.message);
+      setError(error.message || "Unable to send the OTP");
     } else {
       setOtpSent(true);
     }
@@ -70,14 +68,13 @@ function LoginPageInner() {
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.verifyOtp({
+    const { error } = await authClient.signIn.emailOtp({
       email,
-      token: otp,
-      type: "email",
+      otp,
     });
 
     if (error) {
-      setError(error.message);
+      setError(error.message || "Invalid or expired OTP");
     } else {
       router.push("/");
       router.refresh();
@@ -250,12 +247,13 @@ function LoginPageInner() {
                   onClick={async () => {
                     setLoading(true);
                     setError("");
-                    const { error } = await supabase.auth.signInWithOAuth({
+                    const callbackURL = searchParams.get("redirect") || "/";
+                    const { error } = await authClient.signIn.social({
                       provider: "google",
-                      options: { redirectTo: `${window.location.origin}/auth/callback` },
+                      callbackURL,
                     });
                     if (error) {
-                      setError(error.message);
+                      setError(error.message || "Unable to start Google sign in");
                       setLoading(false);
                     }
                   }}

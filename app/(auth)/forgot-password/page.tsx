@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { MailCheck, ShieldCheck } from "lucide-react";
-import { createClient } from "@/lib/supabase";
+import { authClient } from "@/lib/auth-client";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -21,14 +21,13 @@ export default function ForgotPasswordPage() {
     }
 
     setLoading(true);
-    const supabase = createClient();
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-      email.trim().toLowerCase(),
-      { redirectTo: `${window.location.origin}/account/profile` }
-    );
+    const { error: resetError } = await authClient.requestPasswordReset({
+      email: email.trim().toLowerCase(),
+      redirectTo: "/reset-password",
+    });
 
     if (resetError) {
-      setError(resetError.message);
+      setError(resetError.message || "Unable to send the reset link");
       setLoading(false);
       return;
     }

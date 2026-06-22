@@ -9,8 +9,7 @@ import CartBadge from "@/components/ui/CartBadge";
 import SearchBarWrapper from "@/components/ui/SearchBarWrapper";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { useCart } from "@/context/CartContext";
-import { createClient } from "@/lib/supabase";
-import type { Session } from "@supabase/supabase-js";
+import { authClient, useSession } from "@/lib/auth-client";
 
 const CATEGORIES = [
   { label: "Smartphones", href: "/products?category=smartphones" },
@@ -35,46 +34,20 @@ export default function Navbar() {
   const [bounced, setBounced] = useState(false);
   const prevCountRef = useRef(0);
 
-  // Auth state
-  const [user, setUser] = useState<{ email?: string } | null>(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user ? { email: user.email } : null);
-      } catch {
-        setUser(null);
-      } finally {
-        setCheckingAuth(false);
-      }
-    }
-    checkAuth();
-
-    // Subscribe to auth state changes
-    const supabase = createClient();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: string, session: Session | null) => {
-      setUser(session?.user ? { email: session.user.email } : null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const { data: session, isPending: checkingAuth } = useSession();
+  const user = session?.user || null;
 
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    setUser(null);
+    await authClient.signOut();
     router.push("/");
     router.refresh();
   };
 
   useEffect(() => {
     if (itemCount > prevCountRef.current) {
-      setBounced(true);
-      const t = setTimeout(() => setBounced(false), 400);
-      return () => clearTimeout(t);
+      const onId = setTimeout(() => setBounced(true), 0);
+      const offId = setTimeout(() => setBounced(false), 400);
+      return () => { clearTimeout(onId); clearTimeout(offId); };
     }
     prevCountRef.current = itemCount;
   }, [itemCount]);

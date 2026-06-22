@@ -1,29 +1,23 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export async function createClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if a Server Component attempted to set cookies.
-            // user sessions.
-          }
-        },
+  return {
+    auth: {
+      async getUser() {
+        try {
+          const session = await auth.api.getSession({ headers: await headers() });
+          return {
+            data: { user: session?.user || null },
+            error: null,
+          };
+        } catch (error) {
+          return {
+            data: { user: null },
+            error: error instanceof Error ? error : new Error("Authentication failed"),
+          };
+        }
       },
-    }
-  );
+    },
+  };
 }

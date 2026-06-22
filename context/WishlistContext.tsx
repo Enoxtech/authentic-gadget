@@ -9,7 +9,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { createClient } from "@/lib/supabase";
+import { authClient } from "@/lib/auth-client";
 
 export interface WishlistProduct {
   id: string;
@@ -60,26 +60,21 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<WishlistProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const getSessionToken = useCallback(async () => {
-    const supabase = createClient();
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    return session?.access_token || "";
+  const isAuthenticated = useCallback(async () => {
+    const { data } = await authClient.getSession();
+    return Boolean(data?.user);
   }, []);
 
   const refreshWishlist = useCallback(async () => {
     setLoading(true);
     try {
-      const token = await getSessionToken();
-      if (!token) {
+      const authenticated = await isAuthenticated();
+      if (!authenticated) {
         setItems(readLocalWishlist());
         return;
       }
 
-      const response = await fetch("/api/wishlist", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch("/api/wishlist");
 
       if (!response.ok) {
         setItems(readLocalWishlist());
@@ -91,7 +86,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [getSessionToken]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     refreshWishlist();
@@ -106,21 +101,20 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
   const removeWishlist = useCallback(
     async (productId: string) => {
-      const token = await getSessionToken();
+      const authenticated = await isAuthenticated();
       setItems((current) => {
         const next = current.filter((item) => item.id !== productId);
-        if (!token) writeLocalWishlist(next);
+        if (!authenticated) writeLocalWishlist(next);
         return next;
       });
 
-      if (token) {
+      if (authenticated) {
         await fetch(`/api/wishlist?productId=${encodeURIComponent(productId)}`, {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
         });
       }
     },
-    [getSessionToken]
+    [isAuthenticated]
   );
 
   const toggleWishlist = useCallback(
@@ -131,18 +125,17 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const token = await getSessionToken();
+      const authenticated = await isAuthenticated();
       setItems((current) => {
         const next = [normalized, ...current.filter((item) => item.id !== normalized.id)];
-        if (!token) writeLocalWishlist(next);
+        if (!authenticated) writeLocalWishlist(next);
         return next;
       });
 
-      if (token) {
+      if (authenticated) {
         const response = await fetch("/api/wishlist", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ productId: normalized.id }),
@@ -150,7 +143,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         if (!response.ok) await removeWishlist(normalized.id);
       }
     },
-    [getSessionToken, isWishlisted, removeWishlist]
+    [isAuthenticated, isWishlisted, removeWishlist]
   );
 
   return (

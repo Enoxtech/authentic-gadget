@@ -1,5 +1,59 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+CREATE TABLE IF NOT EXISTS auth_users (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name text NOT NULL,
+  email text NOT NULL UNIQUE,
+  email_verified boolean NOT NULL DEFAULT false,
+  image text,
+  phone text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS auth_sessions (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  expires_at timestamptz NOT NULL,
+  token text NOT NULL UNIQUE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  ip_address text,
+  user_agent text,
+  user_id uuid NOT NULL REFERENCES auth_users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS auth_accounts (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  account_id text NOT NULL,
+  provider_id text NOT NULL,
+  user_id uuid NOT NULL REFERENCES auth_users(id) ON DELETE CASCADE,
+  access_token text,
+  refresh_token text,
+  id_token text,
+  access_token_expires_at timestamptz,
+  refresh_token_expires_at timestamptz,
+  scope text,
+  password text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS auth_verifications (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  identifier text NOT NULL,
+  value text NOT NULL,
+  expires_at timestamptz NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS auth_rate_limits (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  key text NOT NULL UNIQUE,
+  count integer NOT NULL,
+  last_request bigint NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS categories (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   name text NOT NULL,
@@ -130,6 +184,9 @@ CREATE TABLE IF NOT EXISTS banners (
 );
 
 CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug);
+CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_id ON auth_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_auth_accounts_user_id ON auth_accounts(user_id);
+CREATE INDEX IF NOT EXISTS idx_auth_verifications_identifier ON auth_verifications(identifier);
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
 CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders(customer_id);
