@@ -168,12 +168,12 @@
 
   --fog: oklch(95% 0.01 60);
   --fog-muted: oklch(75% 0.02 60);
-  --midnight: oklch(15% 0.05 280);
-  --navy: oklch(20% 0.06 280);
-  --navy-dark: oklch(12% 0.04 280);
-  --surface: oklch(18% 0.04 280);
-  --surface-light: oklch(24% 0.05 280);
-  --card-dark: oklch(19% 0.045 280);
+  --midnight: oklch(16% 0.045 268);
+  --navy: oklch(20% 0.05 268);
+  --navy-dark: oklch(14% 0.04 268);
+  --surface: oklch(20% 0.04 268);
+  --surface-light: oklch(25% 0.045 268);
+  --card-dark: oklch(21% 0.04 268);
   --charcoal: oklch(20% 0.02 60);
 
   --color-midnight: var(--midnight);
@@ -189,18 +189,18 @@
   --color-border: rgba(201, 169, 110, 0.12);
   --color-border-strong: rgba(201, 169, 110, 0.25);
 
-  --background: oklch(9% 0.022 75);
+  --background: oklch(14% 0.035 268);
   --foreground: oklch(97% 0.01 60);
-  --card: oklch(20% 0.02 280);
+  --card: oklch(20% 0.04 268);
   --card-foreground: oklch(97% 0.01 60);
-  --muted: oklch(25% 0.02 280);
-  --muted-foreground: oklch(65% 0.02 60);
-  --border: oklch(30% 0.02 280);
+  --muted: oklch(25% 0.035 268);
+  --muted-foreground: oklch(74% 0.022 70);
+  --border: oklch(34% 0.025 268);
 
-  --site-header-bg: oklch(10% 0.02 280 / 72%);
-  --site-nav-bg: oklch(15% 0.05 280);
-  --site-border: oklch(100% 0 0 / 8%);
-  --theme-card-bg: oklch(15% 0.04 280 / 82%);
+  --site-header-bg: oklch(15% 0.035 268 / 82%);
+  --site-nav-bg: oklch(17% 0.045 268);
+  --site-border: oklch(100% 0 0 / 10%);
+  --theme-card-bg: linear-gradient(145deg, oklch(22% 0.04 268 / 0.90), oklch(17% 0.035 268 / 0.88));
   --theme-card-border: oklch(100% 0 0 / 10%);
   --theme-card-shadow: 0 20px 60px oklch(0% 0 0 / 42%);
   --theme-input-bg: oklch(100% 0 0 / 6%);
@@ -228,15 +228,15 @@
 
   /* Asiangroceryng-compat aliases — used by ported Footer/Header/ProductCard markup */
   --bg: var(--background);
-  --bg-offset: oklch(12% 0.04 280);
-  --surface-raised: oklch(24% 0.05 280);
+  --bg-offset: oklch(17% 0.04 268);
+  --surface-raised: oklch(25% 0.045 268);
   --surface-glass: color-mix(in oklch, var(--surface) 70%, transparent);
   --surface-glass-strong: color-mix(in oklch, var(--surface) 92%, transparent);
   --text-primary: var(--foreground);
   --text-secondary: var(--fog-muted);
   --text-muted: color-mix(in oklch, var(--fog-muted) 60%, var(--background));
   --border-color: var(--border);
-  --border-strong: oklch(100% 0 0 / 0.18);
+  --border-strong: oklch(88% 0.028 78 / 0.22);
   --green: oklch(68% 0.15 150);
   --shadow-glass: 0 8px 24px oklch(0% 0 0 / 0.45), inset 0 1px 0 oklch(100% 0 0 / 0.05);
 }
@@ -624,7 +624,7 @@ body::before {
    ============================================ */
 .hero-slider {
   position: relative;
-  height: min(70vh, 600px);
+  height: clamp(220px, 58vw, 580px);
   overflow: hidden;
   background: var(--gradient-hero);
   border-bottom: 1px solid var(--site-border);
@@ -683,22 +683,20 @@ body::before {
 .hero-slide-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(10, 10, 10, 0.85) 0%,
-    rgba(10, 10, 10, 0.4) 50%,
-    rgba(10, 10, 10, 0.2) 100%
-  );
+  background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.32) 52%, rgba(0,0,0,0.12) 100%);
 }
 .hero-slide-content {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 10;
   height: 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  padding-bottom: clamp(3.75rem, 8vw, 5.5rem);
 }
 .hero-copy-panel {
   position: relative;
+  max-width: 34rem;
 }
 .hero-headline {
   --hero-accent: var(--accent);
@@ -1129,24 +1127,22 @@ body::before {
   .orb { display: none; }
 
   .hero-slider {
-    height: min(76vh, 620px);
-    min-height: 520px;
+    height: clamp(220px, 58vw, 360px);
+    min-height: 0;
   }
 
   .hero-slide-bg {
-    background-position: center top;
-    transform: scale(1.04);
+    background-position: center;
+    transform: scale(1.01);
   }
 
   .hero-slide-overlay {
-    background:
-      linear-gradient(180deg, rgba(3, 6, 24, 0.35) 0%, rgba(3, 6, 24, 0.9) 64%, #040820 100%),
-      linear-gradient(90deg, rgba(3, 6, 24, 0.95) 0%, rgba(3, 6, 24, 0.25) 100%);
+    background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.38) 52%, rgba(0,0,0,0.12) 100%);
   }
 
   .hero-slide-content {
     align-items: flex-end;
-    padding-bottom: 82px;
+    padding-bottom: 56px;
   }
 
   .hero-badge {
@@ -1156,8 +1152,8 @@ body::before {
   }
 
   .hero-slide-price {
-    margin: 12px 0 0;
-    font-size: 24px;
+    margin: 8px 0 0;
+    font-size: 20px;
   }
 
   .hero-discount-tag {
@@ -1165,15 +1161,16 @@ body::before {
   }
 
   .hero-slider-dots {
-    bottom: 18px;
+    bottom: 12px;
   }
 
   .hero-slider-arrow {
-    top: auto;
-    bottom: 14px;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.08);
+    top: 50%;
+    bottom: auto;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #111827;
   }
 
   .hero-slider-arrow.prev { left: 16px; }
@@ -1568,18 +1565,18 @@ body::before {
 
 [data-theme="light"] .site-footer {
   background:
-    radial-gradient(circle at 15% 0%, color-mix(in oklch, var(--gold) 14%, transparent), transparent 30%),
-    linear-gradient(135deg, oklch(13% 0.04 265), oklch(20% 0.06 270));
-  color: #fff;
+    radial-gradient(circle at 15% 0%, color-mix(in oklch, var(--gold) 10%, transparent), transparent 30%),
+    var(--bg-offset);
+  color: var(--foreground);
 }
 
 [data-theme="light"] .site-footer .text-white,
 [data-theme="light"] .site-footer .text-fog {
-  color: #fff;
+  color: var(--foreground);
 }
 
 [data-theme="light"] .site-footer .text-fog-muted {
-  color: oklch(86% 0.014 84 / 0.7);
+  color: var(--muted-foreground);
 }
 
 [data-theme="light"] .site-footer .bg-white\/\[0\.04\] {
@@ -1795,6 +1792,67 @@ body::before {
 
 .safe-area-pb {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.site-footer {
+  background:
+    radial-gradient(circle at 15% 0%, color-mix(in oklch, var(--gold) 9%, transparent), transparent 30%),
+    var(--bg-offset);
+  color: var(--text-primary);
+}
+
+.site-footer .text-\[var\(--text-primary\)\],
+.site-footer .text-\[var\(--text-secondary\)\],
+.site-footer .text-\[var\(--text-muted\)\] {
+  color: inherit;
+}
+
+.site-footer p,
+.site-footer span,
+.site-footer a {
+  color: var(--text-secondary);
+}
+
+.site-footer a:hover {
+  color: var(--gold);
+}
+
+.site-footer .footer-app-badge {
+  background: #111827;
+  color: #fff !important;
+}
+
+.site-footer .footer-app-badge svg,
+.site-footer .footer-app-badge span {
+  color: #fff !important;
+}
+
+[data-theme="dark"] .site-footer {
+  background:
+    radial-gradient(circle at 12% 0%, color-mix(in oklch, var(--gold) 12%, transparent), transparent 32%),
+    linear-gradient(135deg, var(--bg-offset), var(--background));
+  color: var(--foreground);
+}
+
+[data-theme="dark"] .site-footer p,
+[data-theme="dark"] .site-footer span,
+[data-theme="dark"] .site-footer a {
+  color: oklch(84% 0.018 78);
+}
+
+[data-theme="dark"] .site-footer .text-\[var\(--text-primary\)\] {
+  color: oklch(95% 0.012 78);
+}
+
+.homepage-promo-banner {
+  height: clamp(180px, 31vw, 390px);
+}
+
+@media (max-width: 640px) {
+  .homepage-promo-banner {
+    height: clamp(180px, 45vw, 260px);
+    border-radius: 22px;
+  }
 }
 
 /* ── Ambient background blobs (gold + electric drift) ─────────── */

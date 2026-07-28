@@ -504,13 +504,13 @@ export default function HomePage() {
       {promoBanners[0] && (
         <section className="py-6">
           <div className="max-w-7xl mx-auto px-4">
-            <Link href={promoBanners[0].href} className="block rounded-[28px] overflow-hidden card-premium border border-[var(--border-color)]">
+            <Link href={promoBanners[0].href} className="homepage-promo-banner block rounded-[28px] overflow-hidden card-premium border border-[var(--border-color)]">
               <Image
                 src={promoBanners[0].image}
                 alt={promoBanners[0].alt}
                 width={1600}
                 height={500}
-                className="w-full h-auto object-cover"
+                className="h-full w-full object-cover"
                 unoptimized
               />
             </Link>
@@ -553,13 +553,13 @@ export default function HomePage() {
       {promoBanners[1] && (
         <section className="py-6">
           <div className="max-w-7xl mx-auto px-4">
-            <Link href={promoBanners[1].href} className="block rounded-[28px] overflow-hidden card-premium border border-[var(--border-color)]">
+            <Link href={promoBanners[1].href} className="homepage-promo-banner block rounded-[28px] overflow-hidden card-premium border border-[var(--border-color)]">
               <Image
                 src={promoBanners[1].image}
                 alt={promoBanners[1].alt}
                 width={1600}
                 height={500}
-                className="w-full h-auto object-cover"
+                className="h-full w-full object-cover"
                 unoptimized
               />
             </Link>
