@@ -1402,6 +1402,16 @@ body::before {
   color: var(--foreground);
 }
 
+/* The admin dashboard's KPI/chart cards are intentionally always-dark (premium analytics look,
+   independent of site theme) — exempt them from the light-theme text-color flip above. */
+[data-theme="light"] .admin-dark-dashboard .text-white {
+  color: #F0EDE6;
+}
+[data-theme="light"] .admin-dark-dashboard .text-gray-200,
+[data-theme="light"] .admin-dark-dashboard .text-gray-300 {
+  color: #D1D5DB;
+}
+
 [data-theme="light"] .bg-electric.text-white,
 [data-theme="light"] .bg-red-500.text-white,
 [data-theme="light"] .bg-red-600.text-white,

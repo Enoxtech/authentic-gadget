@@ -18,7 +18,7 @@ interface CartItem extends Product {
   quantity: number;
 }
 
-interface Discount { code: string; amount: number; label?: string; }
+interface Discount { code: string; amount: number; label?: string; freeShipping?: boolean; }
 
 interface UpsellProduct {
   id: string;

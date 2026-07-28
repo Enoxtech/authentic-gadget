@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-api";
+import { requireAdminRole } from "@/lib/admin-api";
 import { parseProductPayload } from "@/lib/admin-products";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { logAdminAction } from "@/lib/audit-log";
 
 type ProductContext = { params: Promise<{ id: string }> };
 
@@ -11,8 +12,8 @@ async function getProductId(ctx: ProductContext) {
 }
 
 export async function GET(request: NextRequest, ctx: ProductContext) {
-  const unauthorized = await requireAdmin(request);
-  if (unauthorized) return unauthorized;
+  const { error } = await requireAdminRole(request, ["super_admin", "support", "product_manager"]);
+  if (error) return error;
 
   try {
     const id = await getProductId(ctx);
@@ -37,8 +38,8 @@ export async function GET(request: NextRequest, ctx: ProductContext) {
 }
 
 export async function PATCH(request: NextRequest, ctx: ProductContext) {
-  const unauthorized = await requireAdmin(request);
-  if (unauthorized) return unauthorized;
+  const { error, session } = await requireAdminRole(request, ["super_admin", "product_manager"]);
+  if (error) return error;
 
   try {
     const id = await getProductId(ctx);
@@ -49,16 +50,22 @@ export async function PATCH(request: NextRequest, ctx: ProductContext) {
     }
 
     const supabase = getSupabaseAdminClient();
-    const { data, error } = await supabase
+    const { data, error: dbError } = await supabase
       .from("products")
       .update({ ...parsed.payload, updated_at: new Date().toISOString() })
       .eq("id", id)
       .select("*")
       .single();
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (dbError) {
+      return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
+
+    await logAdminAction(request, session!, {
+      action: "update",
+      entityType: "product",
+      entityId: id,
+    });
 
     return NextResponse.json({ product: data });
   } catch (error) {
@@ -68,17 +75,23 @@ export async function PATCH(request: NextRequest, ctx: ProductContext) {
 }
 
 export async function DELETE(request: NextRequest, ctx: ProductContext) {
-  const unauthorized = await requireAdmin(request);
-  if (unauthorized) return unauthorized;
+  const { error, session } = await requireAdminRole(request, ["super_admin", "product_manager"]);
+  if (error) return error;
 
   try {
     const id = await getProductId(ctx);
     const supabase = getSupabaseAdminClient();
-    const { error } = await supabase.from("products").delete().eq("id", id);
+    const { error: dbError } = await supabase.from("products").delete().eq("id", id);
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (dbError) {
+      return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
+
+    await logAdminAction(request, session!, {
+      action: "delete",
+      entityType: "product",
+      entityId: id,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

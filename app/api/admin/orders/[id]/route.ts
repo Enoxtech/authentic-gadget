@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-api";
+import { requireAdminRole } from "@/lib/admin-api";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { logAdminAction } from "@/lib/audit-log";
+import { sendOrderStatusWhatsApp } from "@/lib/whatsapp-cloud";
 
 type OrderContext = { params: Promise<{ id: string }> };
 
@@ -13,8 +15,8 @@ async function getOrderId(ctx: OrderContext) {
 }
 
 export async function GET(request: NextRequest, ctx: OrderContext) {
-  const unauthorized = await requireAdmin(request);
-  if (unauthorized) return unauthorized;
+  const { error } = await requireAdminRole(request, ["super_admin", "support", "product_manager"]);
+  if (error) return error;
 
   try {
     const id = await getOrderId(ctx);
@@ -43,8 +45,8 @@ export async function GET(request: NextRequest, ctx: OrderContext) {
 }
 
 export async function PATCH(request: NextRequest, ctx: OrderContext) {
-  const unauthorized = await requireAdmin(request);
-  if (unauthorized) return unauthorized;
+  const { error, session } = await requireAdminRole(request, ["super_admin", "support"]);
+  if (error) return error;
 
   try {
     const id = await getOrderId(ctx);
@@ -75,15 +77,30 @@ export async function PATCH(request: NextRequest, ctx: OrderContext) {
     }
 
     const supabase = getSupabaseAdminClient();
-    const { data, error } = await supabase
+    const { data, error: dbError } = await supabase
       .from("orders")
       .update(update)
       .eq("id", id)
       .select("*")
       .single();
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (dbError) {
+      return NextResponse.json({ error: dbError.message }, { status: 500 });
+    }
+
+    await logAdminAction(request, session!, {
+      action: "update_status",
+      entityType: "order",
+      entityId: id,
+      metadata: update,
+    });
+
+    if (update.order_status && data.customer_phone) {
+      sendOrderStatusWhatsApp({
+        customerPhone: data.customer_phone,
+        orderId: data.id,
+        status: update.order_status,
+      }).catch(() => {});
     }
 
     return NextResponse.json({ order: data });

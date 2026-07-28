@@ -9,12 +9,15 @@ const baseUrl = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BASE_URL 
 const databaseUrl =
   process.env.DATABASE_URL || "postgresql://build:build@127.0.0.1:5432/build";
 
+function shouldUseSsl(value: string) {
+  return !value.includes("localhost") &&
+    !value.includes("127.0.0.1") &&
+    !value.includes(".railway.internal");
+}
+
 const pool = new Pool({
   connectionString: databaseUrl,
-  ssl:
-    databaseUrl.includes("railway.app") || databaseUrl.includes("rlwy.net")
-      ? { rejectUnauthorized: false }
-      : undefined,
+  ssl: shouldUseSsl(databaseUrl) ? { rejectUnauthorized: false } : false,
   max: 10,
 });
 

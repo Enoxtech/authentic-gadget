@@ -4,30 +4,41 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 types.setTypeParser(1700, (value) => Number(value));
 
 const TABLES = new Set([
+  "admin_users",
+  "audit_log",
   "banners",
+  "campaigns",
   "categories",
+  "coupons",
   "customers",
+  "delivery_areas",
   "newsletter_subscribers",
   "order_items",
   "orders",
   "products",
   "reviews",
+  "settings",
   "support_messages",
   "wishlists",
 ]);
 
 let pool: Pool | null = null;
 
+function shouldUseSsl(value: string) {
+  return !value.includes("localhost") &&
+    !value.includes("127.0.0.1") &&
+    !value.includes(".railway.internal");
+}
+
 function getPool() {
   if (pool) return pool;
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error("DATABASE_URL is not configured");
 
-  const internal = connectionString.includes(".railway.internal");
   pool = new Pool({
     connectionString,
     max: 10,
-    ssl: internal ? false : { rejectUnauthorized: false },
+    ssl: shouldUseSsl(connectionString) ? { rejectUnauthorized: false } : false,
   });
   return pool;
 }
@@ -189,7 +200,7 @@ class PostgresQueryBuilder implements PromiseLike<Result> {
       : scalar.map((column) => `t.${identifier(column)}`).join(", ");
 
     if (!relation) return { columns: base, join: "" };
-    if (this.table !== "wishlists" && this.table !== "order_items") {
+    if (this.table !== "wishlists" && this.table !== "order_items" && this.table !== "reviews") {
       throw new Error(`Unsupported relation selection on ${this.table}`);
     }
 

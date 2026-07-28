@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { decryptField, getSettings } from "@/lib/settings";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +15,8 @@ export async function POST(request: NextRequest) {
 
     const body = (await request.json()) as { orderId?: unknown };
     const orderId = typeof body.orderId === "string" ? body.orderId.trim() : "";
-    const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY;
+    const settings = await getSettings();
+    const paystackSecretKey = decryptField(settings?.paystack_secret_key_enc ?? null) || process.env.PAYSTACK_SECRET_KEY;
 
     if (!orderId) {
       return NextResponse.json({ error: "Order ID is required" }, { status: 400 });

@@ -1,25 +1,52 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { Package, ShoppingCart, Users, BarChart3, Settings, LogOut, LayoutDashboard, Megaphone, Star, Image as ImageIcon, Tag } from "lucide-react";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { Package, ShoppingCart, Users, BarChart3, Settings, LogOut, LayoutDashboard, Megaphone, Star, Image as ImageIcon, Tag, Truck, ShieldCheck, ScrollText } from "lucide-react";
 import Link from "next/link";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
+type AdminRole = "super_admin" | "support" | "product_manager";
+
+const ALL_ROLES: AdminRole[] = ["super_admin", "support", "product_manager"];
+
 const NAV_ITEMS = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard, href: "/admin/dashboard" },
-  { id: "orders", label: "Orders", icon: ShoppingCart, href: "/admin/orders" },
-  { id: "products", label: "Products", icon: Package, href: "/admin/products" },
-  { id: "categories", label: "Categories", icon: Tag, href: "/admin/categories" },
-  { id: "banners", label: "Banners", icon: ImageIcon, href: "/admin/banners" },
-  { id: "customers", label: "Customers", icon: Users, href: "/admin/customers" },
-  { id: "analytics", label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
-  { id: "campaigns", label: "Campaigns", icon: Megaphone, href: "/admin/campaigns" },
-  { id: "reviews", label: "Reviews", icon: Star, href: "/admin/reviews" },
-  { id: "settings", label: "Settings", icon: Settings, href: "/admin/settings" },
+  { id: "overview", label: "Overview", icon: LayoutDashboard, href: "/admin/dashboard", roles: ["super_admin"] as AdminRole[] },
+  { id: "orders", label: "Orders", icon: ShoppingCart, href: "/admin/orders", roles: ALL_ROLES },
+  { id: "products", label: "Products", icon: Package, href: "/admin/products", roles: ALL_ROLES },
+  { id: "categories", label: "Categories", icon: Tag, href: "/admin/categories", roles: ALL_ROLES },
+  { id: "banners", label: "Banners", icon: ImageIcon, href: "/admin/banners", roles: ["super_admin", "product_manager"] as AdminRole[] },
+  { id: "coupons", label: "Coupons", icon: Tag, href: "/admin/coupons", roles: ["super_admin", "product_manager"] as AdminRole[] },
+  { id: "delivery-areas", label: "Delivery Areas", icon: Truck, href: "/admin/delivery-areas", roles: ["super_admin", "product_manager"] as AdminRole[] },
+  { id: "customers", label: "Customers", icon: Users, href: "/admin/customers", roles: ["super_admin", "support"] as AdminRole[] },
+  { id: "analytics", label: "Analytics", icon: BarChart3, href: "/admin/analytics", roles: ["super_admin"] as AdminRole[] },
+  { id: "campaigns", label: "Campaigns", icon: Megaphone, href: "/admin/campaigns", roles: ["super_admin", "product_manager"] as AdminRole[] },
+  { id: "reviews", label: "Reviews", icon: Star, href: "/admin/reviews", roles: ["super_admin", "support"] as AdminRole[] },
+  { id: "team", label: "Admin Team", icon: ShieldCheck, href: "/admin/team", roles: ["super_admin"] as AdminRole[] },
+  { id: "audit-log", label: "Audit Log", icon: ScrollText, href: "/admin/audit-log", roles: ["super_admin"] as AdminRole[] },
+  { id: "settings", label: "Settings", icon: Settings, href: "/admin/settings", roles: ["super_admin"] as AdminRole[] },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [role, setRole] = useState<AdminRole | null>(null);
+
+  useEffect(() => {
+    if (pathname === "/admin/login") return;
+    fetch("/api/admin/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((me) => setRole(me?.role ?? null))
+      .catch(() => setRole(null));
+  }, [pathname]);
+
+  useEffect(() => {
+    if (pathname === "/admin/login" || role === null) return;
+    const navItem = NAV_ITEMS.find((n) => pathname === n.href || pathname.startsWith(`${n.href}/`));
+    if (navItem && !navItem.roles.includes(role)) {
+      router.replace("/admin/products");
+    }
+  }, [pathname, role, router]);
 
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
@@ -30,6 +57,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (pathname === "/admin/login") {
     return <>{children}</>;
   }
+
+  const visibleNavItems = role ? NAV_ITEMS.filter((n) => n.roles.includes(role)) : NAV_ITEMS;
 
   return (
     <div className="min-h-screen bg-fog lg:flex">
@@ -42,7 +71,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <p className="text-xs text-white/40 mt-0.5">Admin Panel</p>
         </div>
         <nav className="flex gap-2 overflow-x-auto p-3 lg:flex-1 lg:flex-col lg:space-y-1 lg:overflow-visible">
-          {NAV_ITEMS.map(({ id, label, icon: Icon, href }) => {
+          {visibleNavItems.map(({ id, label, icon: Icon, href }) => {
             const isActive = pathname === href || (href !== "/admin/dashboard" && pathname.startsWith(href));
             return (
               <Link

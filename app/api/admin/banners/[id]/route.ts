@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-api";
+import { requireAdminRole } from "@/lib/admin-api";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { logAdminAction } from "@/lib/audit-log";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const unauthorized = await requireAdmin(request);
-  if (unauthorized) return unauthorized;
+  const { error, session } = await requireAdminRole(request, ["super_admin", "product_manager"]);
+  if (error) return error;
 
   try {
     const { id } = await params;
@@ -20,8 +21,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const supabase = getSupabaseAdminClient();
-    const { data, error } = await supabase.from("banners").update(updates).eq("id", id).select("*").single();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const { data, error: dbError } = await supabase.from("banners").update(updates).eq("id", id).select("*").single();
+    if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
+
+    await logAdminAction(request, session!, { action: "update", entityType: "banner", entityId: id });
+
     return NextResponse.json({ banner: data });
   } catch (error) {
     console.error("Admin banner PATCH error:", error);
@@ -30,14 +34,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const unauthorized = await requireAdmin(request);
-  if (unauthorized) return unauthorized;
+  const { error, session } = await requireAdminRole(request, ["super_admin", "product_manager"]);
+  if (error) return error;
 
   try {
     const { id } = await params;
     const supabase = getSupabaseAdminClient();
-    const { error } = await supabase.from("banners").delete().eq("id", id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const { error: dbError } = await supabase.from("banners").delete().eq("id", id);
+    if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
+
+    await logAdminAction(request, session!, { action: "delete", entityType: "banner", entityId: id });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Admin banner DELETE error:", error);

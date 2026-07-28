@@ -1,8 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Mail, MapPin, MessageCircle, Phone, ShieldCheck, Truck, RotateCcw } from "lucide-react";
+import { Mail, MapPin, MessageCircle, Phone, ShieldCheck, Truck, RotateCcw, Clock } from "lucide-react";
+
+interface PublicSettings {
+  storeEmail: string;
+  storeAddress: string;
+  businessHoursWeekdays: string;
+  businessHoursSaturday: string;
+  businessHoursSunday: string;
+}
 
 const SUPPORT_CARDS = [
   {
@@ -32,6 +40,14 @@ export default function ContactPage() {
   });
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [notice, setNotice] = useState("");
+  const [settings, setSettings] = useState<PublicSettings | null>(null);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setSettings)
+      .catch(() => setSettings(null));
+  }, []);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -77,12 +93,23 @@ export default function ContactPage() {
                 </p>
                 <p className="flex items-center gap-3">
                   <Mail className="h-4 w-4 text-gold" />
-                  authenticgadgets@gmail.com
+                  {settings?.storeEmail || "authenticgadgets@gmail.com"}
                 </p>
                 <p className="flex items-center gap-3">
                   <MapPin className="h-4 w-4 text-gold" />
-                  Accra, Ghana
+                  {settings?.storeAddress || "Accra, Ghana"}
                 </p>
+              </div>
+
+              <div className="mt-6 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4">
+                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-gold">
+                  <Clock className="h-3.5 w-3.5" /> Business Hours
+                </p>
+                <div className="mt-3 space-y-1.5 text-sm text-fog-muted">
+                  <p className="flex justify-between"><span>Mon – Fri</span><span className="text-fog">{settings?.businessHoursWeekdays || "9:00 AM - 7:00 PM"}</span></p>
+                  <p className="flex justify-between"><span>Saturday</span><span className="text-fog">{settings?.businessHoursSaturday || "10:00 AM - 6:00 PM"}</span></p>
+                  <p className="flex justify-between"><span>Sunday</span><span className="text-fog">{settings?.businessHoursSunday || "Closed"}</span></p>
+                </div>
               </div>
 
               <Link

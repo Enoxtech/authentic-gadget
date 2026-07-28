@@ -9,13 +9,31 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is required");
 }
 
-const schema = await fs.readFile(new URL("../railway/schema.sql", import.meta.url), "utf8");
+async function readSchemaFiles() {
+  const schemaDir = new URL("../railway/", import.meta.url);
+  const files = await fs.readdir(schemaDir);
+  const orderedFiles = [
+    "schema.sql",
+    ...files.filter((file) => /^\d+_.+\.sql$/.test(file)).sort(),
+  ];
+  const uniqueFiles = [...new Set(orderedFiles)];
+  const chunks = await Promise.all(
+    uniqueFiles.map(async (file) => {
+      const sql = await fs.readFile(new URL(file, schemaDir), "utf8");
+      return `-- ${file}\n${sql}`;
+    })
+  );
+  return chunks.join("\n\n");
+}
+
+const schema = await readSchemaFiles();
 const exported = JSON.parse(await fs.readFile(exportPath, "utf8"));
+const shouldUseSsl = !process.env.DATABASE_URL.includes("localhost") &&
+  !process.env.DATABASE_URL.includes("127.0.0.1") &&
+  !process.env.DATABASE_URL.includes(".railway.internal");
 const database = new pg.Client({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL.includes(".railway.internal")
-    ? false
-    : { rejectUnauthorized: false },
+  ssl: shouldUseSsl ? { rejectUnauthorized: false } : false,
 });
 
 const order = [

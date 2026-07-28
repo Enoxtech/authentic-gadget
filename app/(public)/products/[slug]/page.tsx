@@ -33,6 +33,14 @@ interface Product {
   category: string | null;
 }
 
+interface Review {
+  id: string;
+  customer_name: string | null;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+}
+
 function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "md" }) {
   const s = size === "sm" ? "w-4 h-4" : "w-5 h-5";
   return (
@@ -54,6 +62,7 @@ export default function ProductDetailPage() {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const { addItem, openCart } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { addItem: trackRecentlyViewed } = useRecentlyViewed();
@@ -78,6 +87,13 @@ export default function ProductDetailPage() {
           price: loaded.price,
           image: loaded.images?.[0],
         });
+
+        try {
+          const reviewsRes = await fetch(`/api/reviews?productId=${encodeURIComponent(loaded.id)}`);
+          if (reviewsRes.ok) setReviews((await reviewsRes.json()) as Review[]);
+        } catch {
+          // Reviews are supplementary — ignore fetch failures here.
+        }
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Failed to load product");
       } finally {
@@ -409,6 +425,29 @@ export default function ProductDetailPage() {
 
                 <div className="text-xs text-fog-muted">
                   Based on analysis of {product.reviews_count} customer reviews · Updated daily
+                </div>
+              </div>
+            )}
+
+            {/* Customer Reviews */}
+            {reviews.length > 0 && (
+              <div className="card-dark rounded-2xl p-6 border border-white/[0.08]">
+                <h3 className="font-bold text-fog mb-4">Customer Reviews ({reviews.length})</h3>
+                <div className="space-y-4">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="pb-4 border-b border-white/[0.06] last:border-0 last:pb-0">
+                      <div className="flex items-center justify-between gap-3 mb-1.5">
+                        <p className="text-sm font-semibold text-fog">{review.customer_name || "Anonymous"}</p>
+                        <p className="text-xs text-fog-muted shrink-0">
+                          {new Date(review.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                        </p>
+                      </div>
+                      <StarRating rating={review.rating} />
+                      {review.comment && (
+                        <p className="mt-2 text-sm text-fog-muted leading-relaxed">{review.comment}</p>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

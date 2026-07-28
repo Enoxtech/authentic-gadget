@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { decryptField, getSettings } from "@/lib/settings";
 
 const PROVIDER_NETWORK_MAP: Record<string, string> = {
   mtn: "MTN",
@@ -33,7 +34,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const flutterwaveSecretKey = process.env.FLUTTERWAVE_SECRET_KEY;
+    const settings = await getSettings();
+    const flutterwaveSecretKey = decryptField(settings?.flutterwave_secret_key_enc ?? null) || process.env.FLUTTERWAVE_SECRET_KEY;
     if (!flutterwaveSecretKey) {
       return NextResponse.json(
         { error: "Flutterwave is not configured on this server" },
@@ -71,10 +73,12 @@ export async function POST(request: NextRequest) {
       tx_ref: txRef,
       amount: String(order.total),
       currency: "GHS",
+      country: "GH",
       phone_number: order.customer_phone.replace(/\D/g, ""),
       email: order.customer_email,
       first_name: nameParts[0] || "Customer",
       last_name: nameParts.slice(1).join(" "),
+      fullname: order.customer_name || "Customer",
       network,
       redirect_url: `${origin}/order-success?order=${encodeURIComponent(order.id)}&total=${encodeURIComponent(String(order.total))}&method=momo&provider=${provider}`,
       meta: {
@@ -84,7 +88,7 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    const response = await fetch("https://api.flutterwave.com/v3/charge", {
+    const response = await fetch("https://api.flutterwave.com/v3/charges?type=mobile_money_ghana", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${flutterwaveSecretKey}`,
@@ -95,6 +99,8 @@ export async function POST(request: NextRequest) {
     const data = (await response.json()) as {
       status?: string;
       message?: string;
+      meta?: { authorization?: { redirect?: string; mode?: string } };
+      data?: { link?: string; redirect_url?: string };
     };
 
     if (!response.ok || data.status !== "success") {
@@ -104,9 +110,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const redirectUrl =
+      data.meta?.authorization?.redirect ||
+      data.data?.link ||
+      data.data?.redirect_url ||
+      null;
+
+    await supabase
+      .from("orders")
+      .update({ payment_reference: txRef })
+      .eq("id", order.id);
+
     return NextResponse.json({
       success: true,
       txRef,
+      redirectUrl,
       note: "Payment request sent. Check your phone for the approval prompt.",
     });
   } catch (error) {

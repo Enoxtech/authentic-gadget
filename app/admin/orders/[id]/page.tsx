@@ -52,6 +52,7 @@ export default function OrderDetailPage() {
   const [items, setItems] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [canWrite, setCanWrite] = useState(false);
   const orderId = params.id as string;
 
   useEffect(() => {
@@ -60,6 +61,9 @@ export default function OrderDetailPage() {
       router2.push("/admin/login");
       return;
     }
+    fetch("/api/admin/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((me) => setCanWrite(me ? ["super_admin", "support"].includes(me.role) : false));
     loadOrder();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router2]);
@@ -215,6 +219,7 @@ export default function OrderDetailPage() {
           </div>
 
           {/* Status controls */}
+          {canWrite && (
           <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
             <h3 className="font-bold text-charcoal mb-4">Update Status</h3>
             <div className="space-y-3">
@@ -258,6 +263,7 @@ export default function OrderDetailPage() {
               </div>
             </div>
           </div>
+          )}
         </div>
 
         {/* Customer info sidebar */}

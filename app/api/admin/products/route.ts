@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-api";
+import { requireAdminRole } from "@/lib/admin-api";
 import { parseProductPayload } from "@/lib/admin-products";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { logAdminAction } from "@/lib/audit-log";
 
 export async function GET(request: NextRequest) {
-  const unauthorized = await requireAdmin(request);
-  if (unauthorized) return unauthorized;
+  const { error } = await requireAdminRole(request, ["super_admin", "support", "product_manager"]);
+  if (error) return error;
 
   try {
     const supabase = getSupabaseAdminClient();
@@ -29,8 +30,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const unauthorized = await requireAdmin(request);
-  if (unauthorized) return unauthorized;
+  const { error, session } = await requireAdminRole(request, ["super_admin", "product_manager"]);
+  if (error) return error;
 
   try {
     const body = (await request.json()) as Record<string, unknown>;
@@ -40,15 +41,22 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getSupabaseAdminClient();
-    const { data, error } = await supabase
+    const { data, error: dbError } = await supabase
       .from("products")
       .insert(parsed.payload)
       .select("*")
       .single();
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (dbError) {
+      return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
+
+    await logAdminAction(request, session!, {
+      action: "create",
+      entityType: "product",
+      entityId: data.id,
+      metadata: { name: data.name },
+    });
 
     return NextResponse.json({ product: data }, { status: 201 });
   } catch (error) {

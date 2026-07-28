@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase-server";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { getSettings } from "@/lib/settings";
+import { notifyAdminOfNewOrder } from "@/lib/order-notify";
 
 interface SubmittedItem {
   product_id: string;
@@ -129,8 +131,45 @@ export async function POST(request: NextRequest) {
       (sum, item) => sum + item.price * item.quantity,
       0
     );
-    const shipping = 0;
-    const total = subtotal + shipping;
+
+    // Coupon and delivery area are re-validated server-side — never trust client-sent discount/shipping amounts.
+    const couponCode = readString(body.coupon_code).toUpperCase();
+    const deliveryAreaId = readString(body.delivery_area_id);
+
+    let discount = 0;
+    let appliedCoupon: { id: string; usage_count: number; type: string } | null = null;
+    if (couponCode) {
+      const { data: coupon } = await supabase.from("coupons").select("*").eq("code", couponCode).maybeSingle();
+      const validCoupon =
+        coupon &&
+        coupon.active &&
+        (!coupon.expires_at || new Date(coupon.expires_at).getTime() >= Date.now()) &&
+        (coupon.usage_limit === null || coupon.usage_count < coupon.usage_limit) &&
+        (!coupon.min_order || subtotal >= Number(coupon.min_order));
+
+      if (validCoupon) {
+        if (coupon.type === "percent") discount = Math.round(subtotal * Number(coupon.value)) / 100;
+        else if (coupon.type === "fixed") discount = Math.min(Number(coupon.value), subtotal);
+        appliedCoupon = { id: coupon.id, usage_count: coupon.usage_count, type: coupon.type };
+      }
+    }
+
+    let shipping = 0;
+    if (deliveryAreaId) {
+      const { data: area } = await supabase
+        .from("delivery_areas")
+        .select("fee, enabled")
+        .eq("id", deliveryAreaId)
+        .maybeSingle();
+      if (area?.enabled) shipping = Number(area.fee);
+    }
+    if (appliedCoupon?.type === "shipping") shipping = 0;
+
+    const settings = await getSettings();
+    const vatPercent = settings ? Number(settings.vat_percent) : 0;
+    const tax = vatPercent > 0 ? Math.round((subtotal - discount) * vatPercent) / 100 : 0;
+
+    const total = Math.max(0, subtotal - discount + tax + shipping);
     const requestedId = readString(body.id);
     const orderId = /^AG_[A-Za-z0-9_-]{8,80}$/.test(requestedId)
       ? requestedId
@@ -162,6 +201,7 @@ export async function POST(request: NextRequest) {
       order_note: orderNote || null,
       subtotal,
       shipping,
+      tax,
       total,
       payment_method: paymentMethod,
       payment_status: "pending",
@@ -193,8 +233,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (appliedCoupon) {
+      await supabase
+        .from("coupons")
+        .update({ usage_count: appliedCoupon.usage_count + 1 })
+        .eq("id", appliedCoupon.id);
+    }
+
+    notifyAdminOfNewOrder({
+      orderId,
+      customerName,
+      customerEmail,
+      total,
+      itemCount: orderItems.length,
+    }).catch(() => {});
+
     return NextResponse.json(
-      { success: true, orderId, subtotal, shipping, total },
+      { success: true, orderId, subtotal, shipping, discount, tax, total },
       { status: 201 }
     );
   } catch (error) {

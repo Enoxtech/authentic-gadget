@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-api";
+import { requireAdminRole } from "@/lib/admin-api";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 interface OrderRow {
@@ -64,8 +64,8 @@ function buildStatusBreakdown(orders: OrderRow[]) {
 }
 
 export async function GET(request: NextRequest) {
-  const unauthorized = await requireAdmin(request);
-  if (unauthorized) return unauthorized;
+  const { error } = await requireAdminRole(request, ["super_admin"]);
+  if (error) return error;
 
   try {
     const supabase = getSupabaseAdminClient();

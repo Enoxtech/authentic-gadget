@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 import { Check, ArrowRight, ArrowLeft, ShoppingBag, Loader2, Smartphone, Truck } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
+
+interface DeliveryArea {
+  id: string;
+  name: string;
+  fee: number;
+  estimated_days: string | null;
+}
 
 const STEPS = [
   { id: "info", label: "Information", icon: "📋" },
@@ -37,8 +45,29 @@ export default function CheckoutPage() {
   const [orderId, setOrderId] = useState("");
   const [confirmedTotal, setConfirmedTotal] = useState(0);
   const [error, setError] = useState("");
+  const [deliveryAreas, setDeliveryAreas] = useState<DeliveryArea[]>([]);
+  const [deliveryAreaId, setDeliveryAreaId] = useState("");
+  const [vatPercent, setVatPercent] = useState(0);
 
-  const discountedTotal = discount ? Math.max(0, total - discount.amount) : total;
+  useEffect(() => {
+    fetch("/api/delivery-areas")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((areas: DeliveryArea[]) => {
+        setDeliveryAreas(areas);
+        if (areas.length > 0) setDeliveryAreaId((current) => current || areas[0].id);
+      })
+      .catch(() => setDeliveryAreas([]));
+    fetch("/api/settings")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s) => setVatPercent(s?.vatPercent || 0))
+      .catch(() => setVatPercent(0));
+  }, []);
+
+  const selectedArea = deliveryAreas.find((a) => a.id === deliveryAreaId) || null;
+  const deliveryFee = discount?.freeShipping ? 0 : selectedArea?.fee || 0;
+  const subtotalAfterDiscount = discount ? Math.max(0, total - discount.amount) : total;
+  const taxAmount = vatPercent > 0 ? Math.round(subtotalAfterDiscount * vatPercent) / 100 : 0;
+  const discountedTotal = subtotalAfterDiscount + taxAmount + deliveryFee;
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
 
   const handleNext = () => {
@@ -66,8 +95,10 @@ export default function CheckoutPage() {
       shipping_city: formData.city,
       shipping_region: formData.state,
       subtotal: total,
-      shipping: 0,
+      shipping: deliveryFee,
       total: discountedTotal,
+      coupon_code: discount?.code || undefined,
+      delivery_area_id: deliveryAreaId || undefined,
       payment_method: paymentMethod === "cod" ? "cod" : paymentMethod,
       items: items.map(item => ({
         product_id: item.id,
@@ -132,10 +163,15 @@ export default function CheckoutPage() {
             provider: momoProvider,
           }),
         });
-        const momoData = (await momoRes.json()) as { error?: string };
+        const momoData = (await momoRes.json()) as { error?: string; redirectUrl?: string | null };
         if (!momoRes.ok) throw new Error(momoData.error || "MoMo payment initiation failed");
 
         setOrderId(orderData.orderId);
+        if (momoData.redirectUrl) {
+          window.location.href = momoData.redirectUrl;
+          return;
+        }
+
         clearCart();
         // Redirect to order success page — Flutterwave will have sent a USSD prompt
         // Customer confirms on their phone, Flutterwave webhook updates payment status
@@ -190,12 +226,12 @@ export default function CheckoutPage() {
     const isCod = paymentMethod === "cod";
     const finalTotal = confirmedTotal || discountedTotal;
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0a0a" }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#040820" }}>
         <div className="text-center max-w-md px-4">
           <div className="mb-6">
             <div
               className="w-24 h-24 rounded-full mx-auto flex items-center justify-center"
-              style={{ background: isCod ? "linear-gradient(135deg, #7c3aed, #06b6d4)" : "linear-gradient(135deg, #22c55e, #4ade80)" }}
+              style={{ background: isCod ? "linear-gradient(135deg, #D4A843, #19AFFF)" : "linear-gradient(135deg, #22c55e, #4ade80)" }}
             >
               {isCod ? <Truck className="w-12 h-12 text-white" /> : <Check className="w-12 h-12 text-white" />}
             </div>
@@ -229,11 +265,11 @@ export default function CheckoutPage() {
           </div>
 
           <div
-            className="p-4 rounded-2xl mb-8"
+            className="p-4 rounded-[28px] mb-8"
             style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
           >
             <p className="text-xs text-white/40 mb-2">Order total</p>
-            <p className="text-3xl font-bold" style={{ color: "#a78bfa" }}>
+            <p className="text-3xl font-bold" style={{ color: "#D4A843" }}>
               {formatPrice(finalTotal)}
             </p>
             {isCod && (
@@ -245,7 +281,7 @@ export default function CheckoutPage() {
           <Link
             href="/products"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold"
-            style={{ background: "linear-gradient(135deg, #7c3aed, #06b6d4)" }}
+            style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)" }}
           >
             Continue Shopping <ArrowRight className="w-4 h-4" />
           </Link>
@@ -255,15 +291,16 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#0a0a0a" }}>
+    <div className="min-h-screen" style={{ background: "#040820" }}>
       {/* Header */}
       <div
         className="border-b border-white/10"
-        style={{ background: "rgba(10,10,10,0.8)", backdropFilter: "blur(20px)" }}
+        style={{ background: "rgba(4,8,32,0.8)", backdropFilter: "blur(20px)" }}
       >
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-lg font-bold text-white">
-            🏪 Authentic Gadget
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/logo-mark.png" alt="Authentic Gadget" width={28} height={28} className="h-7 w-7 object-contain" style={{ filter: "brightness(0) invert(1)" }} />
+            <span className="text-lg font-bold text-white">Authentic Gadget</span>
           </Link>
           <div className="flex items-center gap-2 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
             <ShoppingBag className="w-4 h-4" />
@@ -281,7 +318,7 @@ export default function CheckoutPage() {
                 <div
                   className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
                     i === step
-                      ? "bg-violet-600 text-white"
+                      ? "bg-electric text-white"
                       : i < step
                       ? "bg-green-600 text-white"
                       : "bg-white/10 text-white/40"
@@ -306,7 +343,7 @@ export default function CheckoutPage() {
           {/* Left: Form */}
           <div className="lg:col-span-2">
             <div
-              className={`rounded-2xl p-6 transition-all duration-300 ${
+              className={`rounded-[28px] p-6 transition-all duration-300 ${
                 isAnimating ? "opacity-50 scale-[0.99]" : "opacity-100 scale-100"
               }`}
               style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
@@ -383,6 +420,32 @@ export default function CheckoutPage() {
                         />
                       </div>
                     </div>
+
+                    {deliveryAreas.length > 0 && (
+                      <div>
+                        <label className="text-xs text-white/50 mb-1.5 block">Delivery Area</label>
+                        <div className="space-y-2">
+                          {deliveryAreas.map((area) => (
+                            <button
+                              key={area.id}
+                              type="button"
+                              onClick={() => setDeliveryAreaId(area.id)}
+                              className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-left transition-all"
+                              style={{
+                                background: deliveryAreaId === area.id ? "rgba(212,168,67,0.12)" : "rgba(255,255,255,0.04)",
+                                border: deliveryAreaId === area.id ? "1px solid #D4A843" : "1px solid rgba(255,255,255,0.08)",
+                              }}
+                            >
+                              <div>
+                                <p className="text-sm font-medium text-white">{area.name}</p>
+                                {area.estimated_days && <p className="text-xs text-white/40">{area.estimated_days}</p>}
+                              </div>
+                              <p className="text-sm font-bold" style={{ color: "#D4A843" }}>{formatPrice(area.fee)}</p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -402,7 +465,7 @@ export default function CheckoutPage() {
                             paymentMethod === id ? "rgba(124,58,237,0.15)" : "rgba(255,255,255,0.04)",
                           border:
                             paymentMethod === id
-                              ? "2px solid #7c3aed"
+                              ? "2px solid #D4A843"
                               : "1px solid rgba(255,255,255,0.08)",
                         }}
                       >
@@ -411,7 +474,7 @@ export default function CheckoutPage() {
                           style={{
                             background:
                               paymentMethod === id
-                                ? "linear-gradient(135deg, #7c3aed, #06b6d4)"
+                                ? "linear-gradient(135deg, #D4A843, #19AFFF)"
                                 : "rgba(255,255,255,0.1)",
                           }}
                         >
@@ -424,7 +487,7 @@ export default function CheckoutPage() {
                         {paymentMethod === id && (
                           <div
                             className="w-5 h-5 rounded-full flex items-center justify-center"
-                            style={{ background: "#7c3aed" }}
+                            style={{ background: "#D4A843" }}
                           >
                             <Check className="w-3 h-3 text-white" />
                           </div>
@@ -434,7 +497,7 @@ export default function CheckoutPage() {
 
                     {/* MoMo sub-step: Provider selection */}
                     {paymentMethod === "momo" && (
-                      <div className="mt-3 pl-4 border-l-2 border-violet-500/30 space-y-2">
+                      <div className="mt-3 pl-4 border-l-2 border-gold/30 space-y-2">
                         <p className="text-xs text-white/40 mb-2">Select your network:</p>
                         <div className="grid grid-cols-3 gap-2">
                           {MOMO_PROVIDERS.map(p => (
@@ -534,7 +597,7 @@ export default function CheckoutPage() {
                       <Link
                         href="/products"
                         className="text-sm font-semibold"
-                        style={{ color: "#a78bfa" }}
+                        style={{ color: "#D4A843" }}
                       >
                         Continue Shopping →
                       </Link>
@@ -555,13 +618,21 @@ export default function CheckoutPage() {
                         <span style={{ color: "#22c55e" }}>-{formatPrice(discount.amount)}</span>
                       </div>
                     )}
+                    {taxAmount > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span style={{ color: "rgba(255,255,255,0.5)" }}>VAT ({vatPercent}%)</span>
+                        <span className="text-white">{formatPrice(taxAmount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm">
-                      <span style={{ color: "rgba(255,255,255,0.5)" }}>Delivery</span>
-                      <span style={{ color: "#22c55e" }}>Calculated next</span>
+                      <span style={{ color: "rgba(255,255,255,0.5)" }}>Delivery{selectedArea ? ` (${selectedArea.name})` : ""}</span>
+                      <span style={{ color: deliveryFee === 0 ? "#22c55e" : "white" }}>
+                        {deliveryFee === 0 ? "Free" : formatPrice(deliveryFee)}
+                      </span>
                     </div>
                     <div className="flex justify-between text-lg font-bold pt-2 border-t border-white/10">
                       <span className="text-white">Total</span>
-                      <span style={{ color: "#a78bfa" }}>{formatPrice(discountedTotal)}</span>
+                      <span style={{ color: "#D4A843" }}>{formatPrice(discountedTotal)}</span>
                     </div>
                   </div>
                 </div>
@@ -598,7 +669,7 @@ export default function CheckoutPage() {
                   disabled={step === 0 && !isStep0Valid}
                   className="flex items-center gap-2 px-8 py-3 rounded-xl text-white font-bold transition-all"
                   style={{
-                    background: "linear-gradient(135deg, #7c3aed, #06b6d4)",
+                    background: "linear-gradient(135deg, #D4A843, #19AFFF)",
                     opacity: step === 0 && !isStep0Valid ? 0.5 : 1,
                     cursor: step === 0 && !isStep0Valid ? "not-allowed" : "pointer",
                   }}
@@ -612,7 +683,7 @@ export default function CheckoutPage() {
                   className="flex items-center gap-2 px-8 py-3 rounded-xl text-white font-bold transition-all disabled:opacity-60"
                   style={{
                     background: paymentMethod === "cod"
-                      ? "linear-gradient(135deg, #7c3aed, #06b6d4)"
+                      ? "linear-gradient(135deg, #D4A843, #19AFFF)"
                       : "linear-gradient(135deg, #22c55e, #4ade80)",
                     boxShadow: paymentMethod === "cod"
                       ? "0 8px 32px rgba(124,58,237,0.3)"
@@ -635,7 +706,7 @@ export default function CheckoutPage() {
           {/* Right: Sticky Order Summary */}
           <div className="lg:col-span-1">
             <div
-              className="sticky top-24 rounded-2xl overflow-hidden"
+              className="sticky top-24 rounded-[28px] overflow-hidden"
               style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
             >
               <div className="p-5 border-b border-white/10">
@@ -680,13 +751,21 @@ export default function CheckoutPage() {
                     <span style={{ color: "#22c55e" }}>-{formatPrice(discount.amount)}</span>
                   </div>
                 )}
+                {taxAmount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span style={{ color: "rgba(255,255,255,0.5)" }}>VAT ({vatPercent}%)</span>
+                    <span className="text-white">{formatPrice(taxAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span style={{ color: "rgba(255,255,255,0.5)" }}>Delivery</span>
-                  <span style={{ color: "#22c55e" }}>Free</span>
+                  <span style={{ color: deliveryFee === 0 ? "#22c55e" : "white" }}>
+                    {deliveryFee === 0 ? "Free" : formatPrice(deliveryFee)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-lg font-bold pt-2 border-t border-white/10">
                   <span className="text-white">Total</span>
-                  <span style={{ color: "#a78bfa" }}>{formatPrice(discountedTotal)}</span>
+                  <span style={{ color: "#D4A843" }}>{formatPrice(discountedTotal)}</span>
                 </div>
               </div>
             </div>

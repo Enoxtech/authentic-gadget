@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Lock, Eye, EyeOff, LayoutDashboard, ShieldCheck } from "lucide-react";
+import Image from "next/image";
+import { Lock, Eye, EyeOff, LayoutDashboard } from "lucide-react";
 
 export default function AdminLoginPage() {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,7 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
       const data = await res.json();
 
@@ -67,7 +69,7 @@ export default function AdminLoginPage() {
           width: "400px",
           height: "400px",
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(25,175,255,0.1) 0%, transparent 70%)",
           bottom: "-80px",
           right: "-100px",
           filter: "blur(60px)",
@@ -92,7 +94,7 @@ export default function AdminLoginPage() {
               marginBottom: "16px",
             }}
           >
-            <ShieldCheck size={32} color="#D4A843" />
+            <Image src="/logo-mark.png" alt="" width={36} height={36} style={{ filter: "brightness(0) invert(1)" }} />
           </div>
           <h1
             style={{
@@ -129,13 +131,13 @@ export default function AdminLoginPage() {
                 width: "40px",
                 height: "40px",
                 borderRadius: "12px",
-                background: "rgba(59,130,246,0.1)",
+                background: "rgba(25,175,255,0.1)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Lock size={20} color="#3B82F6" />
+              <Lock size={20} color="#19AFFF" />
             </div>
             <div>
               <h2 style={{ fontWeight: "700", fontSize: "18px", color: "#F0EDE6", margin: 0 }}>Sign In</h2>
@@ -174,6 +176,46 @@ export default function AdminLoginPage() {
 
           {/* Form */}
           <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: "16px" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  color: "#C0B8A9",
+                  marginBottom: "8px",
+                }}
+              >
+                Email <span style={{ opacity: 0.5 }}>(leave blank for master login)</span>
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@authenticgad.com"
+                style={{
+                  width: "100%",
+                  padding: "14px 16px",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(255,255,255,0.04)",
+                  color: "#F0EDE6",
+                  fontSize: "14px",
+                  outline: "none",
+                  transition: "border-color 0.2s, box-shadow 0.2s",
+                  boxSizing: "border-box",
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "rgba(212,168,67,0.4)";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(212,168,67,0.08)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "rgba(255,255,255,0.08)";
+                  e.target.style.boxShadow = "none";
+                }}
+              />
+            </div>
+
             <div style={{ marginBottom: "16px" }}>
               <label
                 style={{

@@ -31,6 +31,7 @@ export default function AdminCategoriesPage() {
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [canWrite, setCanWrite] = useState(false);
 
   useEffect(() => {
     const adminSession = document.cookie.includes("admin_session_client");
@@ -38,6 +39,9 @@ export default function AdminCategoriesPage() {
       router.push("/admin/login");
       return;
     }
+    fetch("/api/admin/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((me) => setCanWrite(me ? ["super_admin", "product_manager"].includes(me.role) : false));
     loadCategories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
@@ -112,9 +116,11 @@ export default function AdminCategoriesPage() {
           <h1 className="text-2xl font-bold text-charcoal">Categories</h1>
           <p className="text-sm text-charcoal/50">{categories.length} categories</p>
         </div>
-        <button onClick={() => startEdit()} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-electric hover:bg-electric/90 transition-colors">
-          <Plus className="h-4 w-4" /> Add Category
-        </button>
+        {canWrite && (
+          <button onClick={() => startEdit()} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-electric hover:bg-electric/90 transition-colors">
+            <Plus className="h-4 w-4" /> Add Category
+          </button>
+        )}
       </div>
 
       {error && <p className="text-sm text-red-600 bg-red-50 rounded-xl p-3">{error}</p>}
@@ -145,16 +151,18 @@ export default function AdminCategoriesPage() {
                     <p className="font-semibold text-sm text-charcoal">{cat.name}</p>
                     <p className="text-xs text-charcoal/40">/{cat.slug} · {cat.product_count} product{cat.product_count === 1 ? "" : "s"}</p>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => startEdit(cat)} className="p-2 rounded-lg hover:bg-fog text-charcoal/50 hover:text-electric transition-colors">
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => remove(cat)} className="p-2 rounded-lg hover:bg-red-50 text-charcoal/50 hover:text-red-500 transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {canWrite && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button onClick={() => startEdit(cat)} className="p-2 rounded-lg hover:bg-fog text-charcoal/50 hover:text-electric transition-colors">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => remove(cat)} className="p-2 rounded-lg hover:bg-red-50 text-charcoal/50 hover:text-red-500 transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
-                {editingId === cat.id && (
+                {editingId === cat.id && canWrite && (
                   <div className="p-4 border-t border-fog">
                     <CategoryForm form={form} setForm={setForm} onCancel={() => setEditingId(null)} onSave={save} saving={saving} inputClass={inputClass} />
                   </div>

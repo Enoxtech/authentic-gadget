@@ -6,21 +6,49 @@ import { X, ShoppingCart, Trash2, Heart } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import ExitIntentModal from "./ExitIntentModal";
+import { formatPrice } from "@/lib/utils";
 
-const FREE_SHIPPING_THRESHOLD = 50000;
-const COUPONS: Record<string, { discount: number; label: string }> = {
-  "WELCOME10": { discount: 0.10, label: "10% off" },
-  "FIRST50": { discount: 0.15, label: "15% off" },
-  "GADGET20": { discount: 0.20, label: "20% off" },
-};
+const FREE_SHIPPING_THRESHOLD = 2000;
 
 export default function CartDrawer() {
   const { items, removeItem, updateQuantity, total, isOpen, closeCart, discount, setDiscount, showExitModal, setShowExitModal, upsellProducts, addItem } = useCart();
   const [animatedTotal, setAnimatedTotal] = useState(total);
   const [couponInput, setCouponInput] = useState("");
+  const [couponError, setCouponError] = useState("");
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [clearConfirm, setClearConfirm] = useState(false);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const cartTotal = discount ? Math.max(0, total - discount.amount) : total;
+
+  async function applyCoupon() {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+    setApplyingCoupon(true);
+    setCouponError("");
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, subtotal: total }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setCouponError(data.error || "Invalid coupon code");
+        return;
+      }
+      setDiscount({
+        code: data.code,
+        amount: data.discount,
+        label: data.freeShipping ? "Free delivery" : data.type === "percent" ? `${data.value}% off` : "Discount applied",
+        freeShipping: data.freeShipping,
+      });
+      setCouponInput("");
+    } catch {
+      setCouponError("Couldn't apply coupon. Please try again.");
+    } finally {
+      setApplyingCoupon(false);
+    }
+  }
 
   // Animate subtotal on change
   useEffect(() => {
@@ -96,32 +124,27 @@ export default function CartDrawer() {
                   <input
                     type="text"
                     value={couponInput}
-                    onChange={e => setCouponInput(e.target.value.toUpperCase())}
+                    onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError(''); }}
                     placeholder="Enter coupon code"
-                    className="flex-1 px-4 py-2.5 rounded-xl text-sm text-white placeholder-white/40 outline-none"
+                    disabled={applyingCoupon}
+                    className="flex-1 px-4 py-2.5 rounded-xl text-sm text-white placeholder-white/40 outline-none disabled:opacity-50"
                     style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontSize: '12px' }}
                     onFocus={e => (e.currentTarget.style.borderColor = 'rgba(167,139,250,0.4)')}
                     onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)')}
-                    onKeyDown={e => { if (e.key === 'Enter') { e.currentTarget.blur(); } }}
+                    onKeyDown={e => { if (e.key === 'Enter') applyCoupon(); }}
                   />
                   <button
-                    onClick={() => {
-                      const code = couponInput.trim().toUpperCase();
-                      const match = COUPONS[code];
-                      if (match) {
-                        const discountAmount = total * match.discount;
-                        setDiscount({ code, amount: discountAmount, label: match.label });
-                        setCouponInput('');
-                      } else {
-                        setCouponInput('');
-                      }
-                    }}
-                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-white shrink-0"
+                    onClick={applyCoupon}
+                    disabled={applyingCoupon || !couponInput.trim()}
+                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-white shrink-0 disabled:opacity-50"
                     style={{ background: 'rgba(167,139,250,0.3)', border: '1px solid rgba(167,139,250,0.3)' }}
                   >
-                    Apply
+                    {applyingCoupon ? "Checking…" : "Apply"}
                   </button>
                 </div>
+                {couponError && (
+                  <p className="mt-2 text-xs" style={{ color: '#f87171' }}>{couponError}</p>
+                )}
                 {discount && (
                   <div className="mt-2 flex items-center gap-2 text-xs" style={{ color: '#22c55e' }}>
                     <span>✓</span>
@@ -131,21 +154,13 @@ export default function CartDrawer() {
                     </button>
                   </div>
                 )}
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {Object.keys(COUPONS).map(code => (
-                    <button key={code} onClick={() => setCouponInput(code)}
-                      className="text-[10px] px-2 py-1 rounded-md" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>
-                      {code}
-                    </button>
-                  ))}
-                </div>
               </li>
 
               {/* Free shipping progress */}
               <li className="mb-4">
                 <div className="flex items-center justify-between text-xs mb-2" style={{ color: 'rgba(248,249,251,0.6)' }}>
                   <span>Free shipping progress</span>
-                  <span style={{ color: '#a78bfa' }}>₵{Math.max(0, FREE_SHIPPING_THRESHOLD - cartTotal).toLocaleString()} away</span>
+                  <span style={{ color: '#a78bfa' }}>{formatPrice(Math.max(0, FREE_SHIPPING_THRESHOLD - cartTotal))} away</span>
                 </div>
                 <div className="h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }}>
                   <div
@@ -213,7 +228,7 @@ export default function CartDrawer() {
                         </button>
                       </div>
                       <p className="text-sm font-bold text-electric">
-                        ₵{item.price.toLocaleString()}
+                        {formatPrice(item.price)}
                       </p>
                     </div>
                   </div>
@@ -254,7 +269,7 @@ export default function CartDrawer() {
                         <p className="text-xs" style={{ color: 'rgba(167,139,250,0.6)' }}>Matches perfectly with your order</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold text-white">${upsell.price.toLocaleString()}</p>
+                        <p className="text-sm font-bold text-white">{formatPrice(upsell.price)}</p>
                         <button
                           onClick={() => addItem({ id: upsell.id, name: upsell.name, price: upsell.price, image: upsell.image, slug: upsell.slug })}
                           className="text-xs px-2 py-1 rounded-lg mt-1"
@@ -277,12 +292,12 @@ export default function CartDrawer() {
             {discount && (
               <div className="flex items-center justify-between text-sm">
                 <span style={{ color: '#22c55e' }}>Discount ({discount.code})</span>
-                <span style={{ color: '#22c55e' }}>-${discount.amount.toLocaleString()}</span>
+                <span style={{ color: '#22c55e' }}>-{formatPrice(discount.amount)}</span>
               </div>
             )}
             <div className="flex items-center justify-between">
               <span className="text-white/60">Subtotal</span>
-              <span className="text-xl font-bold">${animatedTotal.toLocaleString()}</span>
+              <span className="text-xl font-bold">{formatPrice(animatedTotal)}</span>
             </div>
             <p className="text-xs text-white/30">Shipping calculated at checkout</p>
             <div className="space-y-2">

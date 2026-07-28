@@ -26,6 +26,7 @@ export default function ProductsPage() {
   const [category, setCategory] = useState("All");
   const [categoryOptions, setCategoryOptions] = useState<string[]>(["All"]);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [canWrite, setCanWrite] = useState(false);
 
   useEffect(() => {
     const adminSession = document.cookie.includes("admin_session_client");
@@ -33,6 +34,9 @@ export default function ProductsPage() {
       router.push("/admin/login");
       return;
     }
+    fetch("/api/admin/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((me) => setCanWrite(me ? ["super_admin", "product_manager"].includes(me.role) : false));
     loadProducts();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
@@ -91,13 +95,15 @@ export default function ProductsPage() {
           <h2 className="text-2xl font-bold text-charcoal">Products</h2>
           <p className="text-sm text-charcoal/50">{products.length} products</p>
         </div>
-        <Link
-          href="/admin/products/new"
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-electric text-white text-sm font-semibold rounded-xl hover:bg-electric/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Product
-        </Link>
+        {canWrite && (
+          <Link
+            href="/admin/products/new"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-electric text-white text-sm font-semibold rounded-xl hover:bg-electric/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Product
+          </Link>
+        )}
       </div>
 
       {/* Filters */}
@@ -142,7 +148,7 @@ export default function ProductsPage() {
         <div className="bg-white rounded-[28px] p-12 text-center card-premium border border-[var(--border-color)]">
           <Package className="w-12 h-12 text-charcoal/20 mx-auto mb-3" />
           <p className="text-charcoal/50">No products found</p>
-          <Link href="/admin/products/new" className="mt-3 inline-block text-electric underline text-sm">Add your first product</Link>
+          {canWrite && <Link href="/admin/products/new" className="mt-3 inline-block text-electric underline text-sm">Add your first product</Link>}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -163,21 +169,23 @@ export default function ProductsPage() {
               <p className="font-bold text-electric mb-2 font-label">{formatPrice(p.price || 0)}</p>
               <div className="flex items-center justify-between">
                 <StockBadge stock={p.stock ?? 0} />
-                <div className="flex items-center gap-1">
-                  <Link
-                    href={`/admin/products/${p.id}/edit`}
-                    className="p-1.5 hover:bg-fog rounded-lg text-charcoal/40 hover:text-electric transition-colors"
-                  >
-                    <Edit className="w-3.5 h-3.5" />
-                  </Link>
-                  <button
-                    onClick={() => deleteProduct(p.id, p.name)}
-                    disabled={deleting === p.id}
-                    className="p-1.5 hover:bg-red-50 rounded-lg text-charcoal/40 hover:text-red-500 transition-colors disabled:opacity-50"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                {canWrite && (
+                  <div className="flex items-center gap-1">
+                    <Link
+                      href={`/admin/products/${p.id}/edit`}
+                      className="p-1.5 hover:bg-fog rounded-lg text-charcoal/40 hover:text-electric transition-colors"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </Link>
+                    <button
+                      onClick={() => deleteProduct(p.id, p.name)}
+                      disabled={deleting === p.id}
+                      className="p-1.5 hover:bg-red-50 rounded-lg text-charcoal/40 hover:text-red-500 transition-colors disabled:opacity-50"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
