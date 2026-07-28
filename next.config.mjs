@@ -5,7 +5,7 @@ const projectRoot = dirname(fileURLToPath(import.meta.url));
 const isDev = process.env.NODE_ENV !== 'production';
 const railwayBackendUrl = process.env.RAILWAY_BACKEND_URL?.replace(/\/+$/, '');
 const shouldProxyApiToRailway = Boolean(railwayBackendUrl && !process.env.RAILWAY_SERVICE_ID);
-const backendConnectSource = railwayBackendUrl ? ` ${railwayBackendUrl}` : '';
+const backendConnectSource = shouldProxyApiToRailway ? ` ${railwayBackendUrl}` : '';
 
 const contentSecurityPolicy = [
   "default-src 'self'",
