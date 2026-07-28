@@ -6,12 +6,15 @@ const isDev = process.env.NODE_ENV !== 'production';
 const railwayBackendUrl = process.env.RAILWAY_BACKEND_URL?.replace(/\/+$/, '');
 const shouldProxyApiToRailway = Boolean(railwayBackendUrl && !process.env.RAILWAY_SERVICE_ID);
 const backendConnectSource = shouldProxyApiToRailway ? ` ${railwayBackendUrl}` : '';
+const cloudflareR2PublicUrl = process.env.CLOUDFLARE_R2_PUBLIC_URL?.replace(/\/+$/, '');
+const cloudflareR2PublicHost = cloudflareR2PublicUrl ? new URL(cloudflareR2PublicUrl).hostname : '';
+const cloudflareImageSource = cloudflareR2PublicUrl ? ` ${cloudflareR2PublicUrl}` : '';
 
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://js.paystack.co https://checkout.paystack.com https://checkout.flutterwave.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co",
+  `img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co${cloudflareImageSource}`,
   "font-src 'self' data:",
   `connect-src 'self'${backendConnectSource} https://*.supabase.co https://api.paystack.co https://api.flutterwave.com https://checkout.flutterwave.com`,
   "frame-src https://checkout.paystack.com https://checkout.flutterwave.com",
@@ -65,6 +68,7 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: '*.supabase.co' },
+      ...(cloudflareR2PublicHost ? [{ protocol: 'https', hostname: cloudflareR2PublicHost }] : []),
     ],
   },
   async headers() {

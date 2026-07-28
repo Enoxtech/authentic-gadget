@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, X, Plus } from "lucide-react";
+import ImageUploadButton from "@/components/admin/ImageUploadButton";
 
 interface Category {
   id: string;
@@ -75,6 +76,13 @@ export default function NewProductPage() {
 
   function removeFeature(index: number) {
     setForm((prev) => ({ ...prev, features: prev.features.filter((_, i) => i !== index) }));
+  }
+
+  function appendImageUrl(url: string) {
+    setForm((prev) => ({
+      ...prev,
+      images: prev.images ? `${prev.images.trim()}\n${url}` : url,
+    }));
   }
 
   function validate() {
@@ -217,7 +225,10 @@ export default function NewProductPage() {
 
         {/* Images */}
         <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
-          <h3 className="font-semibold text-charcoal mb-4">Images</h3>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+            <h3 className="font-semibold text-charcoal">Images</h3>
+            <ImageUploadButton folder="products" onUploaded={appendImageUrl} />
+          </div>
           <div>
             <label className="block text-sm font-medium text-charcoal mb-1.5">Image URLs (one per line)</label>
             <textarea

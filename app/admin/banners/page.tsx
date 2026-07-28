@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUp, ArrowDown, Eye, EyeOff, Trash2, Plus, Save, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ImageUploadButton from "@/components/admin/ImageUploadButton";
 
 type Placement = "hero" | "promo";
 
@@ -247,7 +248,15 @@ function BannerForm({ form, setForm, onCancel, onSave, saving, inputClass, input
   return (
     <div className="p-4 border-t border-fog space-y-3">
       <div className="grid sm:grid-cols-2 gap-3">
-        <input placeholder="Image URL" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} className={inputClass} style={inputStyle} />
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <input placeholder="Image URL" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} className={inputClass} style={inputStyle} />
+          <ImageUploadButton
+            folder="banners"
+            label="Upload"
+            className="sm:w-auto"
+            onUploaded={(url) => setForm({ ...form, image: url })}
+          />
+        </div>
         <input placeholder="CTA link (/products/...)" value={form.cta_href} onChange={(e) => setForm({ ...form, cta_href: e.target.value })} className={inputClass} style={inputStyle} />
       </div>
       <input
