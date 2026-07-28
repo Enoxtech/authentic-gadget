@@ -15,8 +15,21 @@ function shouldUseSsl(value: string) {
     !value.includes(".railway.internal");
 }
 
+function normalizeConnectionString(value: string) {
+  try {
+    const url = new URL(value);
+    url.searchParams.delete("sslmode");
+    url.searchParams.delete("sslcert");
+    url.searchParams.delete("sslkey");
+    url.searchParams.delete("sslrootcert");
+    return url.toString();
+  } catch {
+    return value;
+  }
+}
+
 const pool = new Pool({
-  connectionString: databaseUrl,
+  connectionString: normalizeConnectionString(databaseUrl),
   ssl: shouldUseSsl(databaseUrl) ? { rejectUnauthorized: false } : false,
   max: 10,
 });

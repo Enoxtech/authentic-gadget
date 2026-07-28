@@ -46,6 +46,19 @@ function shouldUseSsl(value) {
     !value.includes(".railway.internal");
 }
 
+function normalizeConnectionString(value) {
+  try {
+    const url = new URL(value);
+    url.searchParams.delete("sslmode");
+    url.searchParams.delete("sslcert");
+    url.searchParams.delete("sslkey");
+    url.searchParams.delete("sslrootcert");
+    return url.toString();
+  } catch {
+    return value;
+  }
+}
+
 function identifier(value) {
   if (!/^[a-z_][a-z0-9_]*$/i.test(value)) {
     throw new Error(`Invalid database identifier: ${value}`);
@@ -72,7 +85,7 @@ async function readSchemaFiles() {
 
 function createClient(connectionString) {
   return new Client({
-    connectionString,
+    connectionString: normalizeConnectionString(connectionString),
     ssl: shouldUseSsl(connectionString) ? { rejectUnauthorized: false } : false,
   });
 }

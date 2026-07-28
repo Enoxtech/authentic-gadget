@@ -31,8 +31,22 @@ const exported = JSON.parse(await fs.readFile(exportPath, "utf8"));
 const shouldUseSsl = !process.env.DATABASE_URL.includes("localhost") &&
   !process.env.DATABASE_URL.includes("127.0.0.1") &&
   !process.env.DATABASE_URL.includes(".railway.internal");
+
+function normalizeConnectionString(value) {
+  try {
+    const url = new URL(value);
+    url.searchParams.delete("sslmode");
+    url.searchParams.delete("sslcert");
+    url.searchParams.delete("sslkey");
+    url.searchParams.delete("sslrootcert");
+    return url.toString();
+  } catch {
+    return value;
+  }
+}
+
 const database = new pg.Client({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: normalizeConnectionString(process.env.DATABASE_URL),
   ssl: shouldUseSsl ? { rejectUnauthorized: false } : false,
 });
 

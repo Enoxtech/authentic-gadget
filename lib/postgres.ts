@@ -30,13 +30,26 @@ function shouldUseSsl(value: string) {
     !value.includes(".railway.internal");
 }
 
+function normalizeConnectionString(value: string) {
+  try {
+    const url = new URL(value);
+    url.searchParams.delete("sslmode");
+    url.searchParams.delete("sslcert");
+    url.searchParams.delete("sslkey");
+    url.searchParams.delete("sslrootcert");
+    return url.toString();
+  } catch {
+    return value;
+  }
+}
+
 function getPool() {
   if (pool) return pool;
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error("DATABASE_URL is not configured");
 
   pool = new Pool({
-    connectionString,
+    connectionString: normalizeConnectionString(connectionString),
     max: 10,
     ssl: shouldUseSsl(connectionString) ? { rejectUnauthorized: false } : false,
   });

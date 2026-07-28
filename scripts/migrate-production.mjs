@@ -12,6 +12,19 @@ function shouldUseSsl(value) {
     !value.includes(".railway.internal");
 }
 
+function normalizeConnectionString(value) {
+  try {
+    const url = new URL(value);
+    url.searchParams.delete("sslmode");
+    url.searchParams.delete("sslcert");
+    url.searchParams.delete("sslkey");
+    url.searchParams.delete("sslrootcert");
+    return url.toString();
+  } catch {
+    return value;
+  }
+}
+
 async function readSchemaFiles() {
   const schemaDir = new URL("../railway/", import.meta.url);
   const files = await readdir(schemaDir);
@@ -32,7 +45,7 @@ async function readSchemaFiles() {
 }
 
 const pool = new Pool({
-  connectionString,
+  connectionString: normalizeConnectionString(connectionString),
   ssl: shouldUseSsl(connectionString) ? { rejectUnauthorized: false } : false,
   max: 1,
 });
