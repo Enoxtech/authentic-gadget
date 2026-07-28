@@ -17,6 +17,7 @@ function OrderSuccessContent() {
   const isMomo = method === "momo";
   const isCod = method === "cod" || !method;
   const isCard = method === "card";
+  const isBankTransfer = method === "bank_transfer";
 
   const PROVIDER_LABELS: Record<string, string> = {
     mtn: "MTN MoMo",
@@ -28,7 +29,9 @@ function OrderSuccessContent() {
     ? (PROVIDER_LABELS[provider] || "Mobile Money")
     : isCard
       ? "Card Payment"
-      : "Pay on Delivery";
+      : isBankTransfer
+        ? "Manual Bank Transfer"
+        : "Pay on Delivery";
 
   // Clear the cart after a successful order
   const { clearCart } = useCart();
@@ -72,8 +75,8 @@ function OrderSuccessContent() {
             </div>
             <div className="flex justify-between">
               <span className="text-charcoal/60">Payment Status</span>
-              <span className={`font-medium ${isCod ? "text-amber-500" : "text-green-600"}`}>
-                {isCod ? "Pay on Delivery" : "Pending Confirmation"}
+              <span className={`font-medium ${isCod || isBankTransfer ? "text-amber-500" : "text-green-600"}`}>
+                {isCod ? "Pay on Delivery" : isBankTransfer ? "Awaiting Transfer Verification" : "Pending Confirmation"}
               </span>
             </div>
             <div className="flex justify-between">
@@ -94,6 +97,12 @@ function OrderSuccessContent() {
           <p className="text-sm text-charcoal/50 mb-4 bg-amber-50 rounded-xl p-3">
             💡 Please have <strong>{formatPrice(Number(total))}</strong> ready when our delivery agent arrives.
             Do not make payment before receiving your order.
+          </p>
+        )}
+
+        {isBankTransfer && (
+          <p className="text-sm text-charcoal/50 mb-4 bg-amber-50 rounded-xl p-3">
+            Use your order ID as your bank transfer reference. Your order will be processed after admin verifies the transfer.
           </p>
         )}
 

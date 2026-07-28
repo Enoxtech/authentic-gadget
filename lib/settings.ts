@@ -25,6 +25,12 @@ export interface SettingsRow {
   admin_email: string | null;
   resend_api_key_enc: string | null;
   resend_from_email: string | null;
+  bank_transfer_enabled: boolean | null;
+  bank_name: string | null;
+  bank_account_name: string | null;
+  bank_account_number: string | null;
+  bank_branch: string | null;
+  bank_transfer_note: string | null;
   updated_at: string;
 }
 
@@ -68,6 +74,12 @@ export function toAdminView(row: SettingsRow) {
     adminEmail: row.admin_email || "",
     resendApiKeySet: Boolean(row.resend_api_key_enc),
     resendFromEmail: row.resend_from_email || "",
+    bankTransferEnabled: Boolean(row.bank_transfer_enabled),
+    bankName: row.bank_name || "",
+    bankAccountName: row.bank_account_name || "",
+    bankAccountNumber: row.bank_account_number || "",
+    bankBranch: row.bank_branch || "",
+    bankTransferNote: row.bank_transfer_note || "",
   };
 }
 
@@ -82,6 +94,14 @@ export function toPublicView(row: SettingsRow) {
     businessHoursSaturday: row.business_hours_saturday,
     businessHoursSunday: row.business_hours_sunday,
     vatPercent: Number(row.vat_percent),
+    bankTransfer: {
+      enabled: Boolean(row.bank_transfer_enabled),
+      bankName: row.bank_name || "",
+      accountName: row.bank_account_name || "",
+      accountNumber: row.bank_account_number || "",
+      branch: row.bank_branch || "",
+      note: row.bank_transfer_note || "",
+    },
   };
 }
 
@@ -102,6 +122,11 @@ const PLAIN_FIELDS: Record<string, string> = {
   gmailUser: "gmail_user",
   adminEmail: "admin_email",
   resendFromEmail: "resend_from_email",
+  bankName: "bank_name",
+  bankAccountName: "bank_account_name",
+  bankAccountNumber: "bank_account_number",
+  bankBranch: "bank_branch",
+  bankTransferNote: "bank_transfer_note",
 };
 
 const SECRET_FIELDS: Record<string, string> = {
@@ -123,6 +148,10 @@ export function buildSettingsUpdate(body: Record<string, unknown>): Record<strin
   if ("vatPercent" in body) {
     const v = Number(body.vatPercent);
     if (Number.isFinite(v) && v >= 0 && v <= 100) updates.vat_percent = v;
+  }
+
+  if ("bankTransferEnabled" in body) {
+    updates.bank_transfer_enabled = Boolean(body.bankTransferEnabled);
   }
 
   for (const [key, column] of Object.entries(SECRET_FIELDS)) {

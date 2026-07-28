@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import TrustBadges from "@/components/ui/TrustBadges";
 import DeliveryBadges from "@/components/ui/DeliveryBadges";
+import RecentlyViewed from "@/components/ui/RecentlyViewed";
 import HeroSlider from "../components/ui/HeroSlider";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
@@ -131,6 +132,24 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   tablets: Tablet,
 };
 
+const CUSTOMER_REVIEWS = [
+  {
+    name: "Patricia Gilbert",
+    role: "Verified Buyer",
+    quote: "Authentic Gadget made my phone upgrade easy. The delivery was quick, the packaging was clean, and the product was exactly as described.",
+  },
+  {
+    name: "David Okafor",
+    role: "Verified Buyer",
+    quote: "The team confirmed my order fast and kept me updated. I like that the prices are clear and the checkout gives different payment options.",
+  },
+  {
+    name: "Amaka Johnson",
+    role: "Verified Buyer",
+    quote: "I ordered accessories and everything arrived in good condition. The site is simple to use and support responded when I had a question.",
+  },
+];
+
 function ProductTile({
   product, wishlisted, added, onToggleWishlist, onQuickView, onAddToCart,
 }: {
@@ -224,6 +243,43 @@ function ProductTile({
         </div>
       </div>
     </Link>
+  );
+}
+
+function CustomerReviews() {
+  return (
+    <section className="py-14">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-end justify-between gap-4 mb-8">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-gold">Customer Reviews</p>
+            <h2 className="mt-2 font-display text-xl md:text-2xl font-bold text-fog">Trusted by gadget buyers</h2>
+          </div>
+          <Link href="/products" className="hidden sm:inline-flex text-sm font-medium text-gold hover:text-gold-light transition-colors">
+            Shop verified products -&gt;
+          </Link>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {CUSTOMER_REVIEWS.map((review) => (
+            <article
+              key={review.name}
+              className="rounded-[28px] border border-[var(--border-color)] bg-[var(--surface-glass)] p-5 card-premium"
+            >
+              <div className="mb-4 flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star key={star} className="h-4 w-4 fill-gold text-gold" />
+                ))}
+              </div>
+              <p className="text-sm leading-7 text-fog-muted">&ldquo;{review.quote}&rdquo;</p>
+              <div className="mt-5 border-t border-[var(--border-color)] pt-4">
+                <p className="text-sm font-bold text-fog">{review.name}</p>
+                <p className="text-xs uppercase tracking-widest text-fog-muted">{review.role}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -444,14 +500,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Promo banners — admin-manageable via /admin/banners (placement: promo) */}
-      {promoBanners.map((banner) => (
-        <section key={banner.id} className="py-6">
+      {/* Promo banner 1 — admin-manageable via /admin/banners (placement: promo) */}
+      {promoBanners[0] && (
+        <section className="py-6">
           <div className="max-w-7xl mx-auto px-4">
-            <Link href={banner.href} className="block rounded-[28px] overflow-hidden card-premium border border-[var(--border-color)]">
+            <Link href={promoBanners[0].href} className="block rounded-[28px] overflow-hidden card-premium border border-[var(--border-color)]">
               <Image
-                src={banner.image}
-                alt={banner.alt}
+                src={promoBanners[0].image}
+                alt={promoBanners[0].alt}
                 width={1600}
                 height={500}
                 className="w-full h-auto object-cover"
@@ -460,7 +516,7 @@ export default function HomePage() {
             </Link>
           </div>
         </section>
-      ))}
+      )}
 
       {/* New Arrivals — shown after both banners */}
       <section className="py-6">
@@ -492,6 +548,27 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Promo banner 2 — separated from the first banner by product listings */}
+      {promoBanners[1] && (
+        <section className="py-6">
+          <div className="max-w-7xl mx-auto px-4">
+            <Link href={promoBanners[1].href} className="block rounded-[28px] overflow-hidden card-premium border border-[var(--border-color)]">
+              <Image
+                src={promoBanners[1].image}
+                alt={promoBanners[1].alt}
+                width={1600}
+                height={500}
+                className="w-full h-auto object-cover"
+                unoptimized
+              />
+            </Link>
+          </div>
+        </section>
+      )}
+
+      <CustomerReviews />
+      <RecentlyViewed />
 
       {/* Newsletter */}
       <section className="py-20 relative overflow-hidden">

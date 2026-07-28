@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
-import { Check, ArrowRight, ArrowLeft, ShoppingBag, Loader2, Smartphone, Truck } from "lucide-react";
+import { Check, ArrowRight, ArrowLeft, ShoppingBag, Loader2, Smartphone, Truck, Landmark } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 
 interface DeliveryArea {
@@ -13,6 +13,15 @@ interface DeliveryArea {
   name: string;
   fee: number;
   estimated_days: string | null;
+}
+
+interface BankTransferSettings {
+  enabled: boolean;
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
+  branch: string;
+  note: string;
 }
 
 const STEPS = [
@@ -48,6 +57,7 @@ export default function CheckoutPage() {
   const [deliveryAreas, setDeliveryAreas] = useState<DeliveryArea[]>([]);
   const [deliveryAreaId, setDeliveryAreaId] = useState("");
   const [vatPercent, setVatPercent] = useState(0);
+  const [bankTransfer, setBankTransfer] = useState<BankTransferSettings | null>(null);
 
   useEffect(() => {
     fetch("/api/delivery-areas")
@@ -59,7 +69,13 @@ export default function CheckoutPage() {
       .catch(() => setDeliveryAreas([]));
     fetch("/api/settings")
       .then((r) => (r.ok ? r.json() : null))
-      .then((s) => setVatPercent(s?.vatPercent || 0))
+      .then((s) => {
+        setVatPercent(s?.vatPercent || 0);
+        const transfer = s?.bankTransfer as BankTransferSettings | undefined;
+        if (transfer?.enabled && transfer.bankName && transfer.accountNumber) {
+          setBankTransfer(transfer);
+        }
+      })
       .catch(() => setVatPercent(0));
   }, []);
 
@@ -69,6 +85,12 @@ export default function CheckoutPage() {
   const taxAmount = vatPercent > 0 ? Math.round(subtotalAfterDiscount * vatPercent) / 100 : 0;
   const discountedTotal = subtotalAfterDiscount + taxAmount + deliveryFee;
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
+  const paymentMethods = bankTransfer
+    ? [
+        ...PAYMENT_METHODS,
+        { id: "bank_transfer", label: "Manual Bank Transfer", icon: Landmark, desc: "Transfer to our bank account and verify after payment" },
+      ]
+    : PAYMENT_METHODS;
 
   const handleNext = () => {
     setIsAnimating(true);
@@ -131,6 +153,34 @@ export default function CheckoutPage() {
     }
 
     // ─── Mobile Money ───
+    if (paymentMethod === "bank_transfer") {
+      if (!bankTransfer) {
+        setError("Bank transfer is not available right now. Please choose another payment method.");
+        setIsProcessing(false);
+        return;
+      }
+      try {
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...orderPayload, payment_method: "bank_transfer" }),
+        });
+        const data = (await res.json()) as { error?: string; orderId?: string; total?: number };
+        if (!res.ok || !data.orderId || !data.total) {
+          throw new Error(data.error || "Order creation failed");
+        }
+        setOrderId(data.orderId);
+        setConfirmedTotal(data.total);
+        clearCart();
+        setOrderPlaced(true);
+      } catch (error: unknown) {
+        setError(error instanceof Error ? error.message : "Failed to place order. Please try again.");
+      } finally {
+        setIsProcessing(false);
+      }
+      return;
+    }
+
     if (paymentMethod === "momo") {
       if (!formData.phone) {
         setError("Please enter your phone number for MoMo payment.");
@@ -224,6 +274,7 @@ export default function CheckoutPage() {
   // Order success animation
   if (orderPlaced) {
     const isCod = paymentMethod === "cod";
+    const isBankTransfer = paymentMethod === "bank_transfer";
     const finalTotal = confirmedTotal || discountedTotal;
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "#040820" }}>
@@ -245,6 +296,11 @@ export default function CheckoutPage() {
             <p className="text-sm text-white/40 mb-8">
               Your order <span className="font-mono text-white/60">#{orderId}</span> has been received.
               Please have <span className="font-bold text-white">{formatPrice(finalTotal)}</span> ready when our delivery agent arrives.
+            </p>
+          ) : isBankTransfer ? (
+            <p className="text-sm text-white/40 mb-8">
+              Your order <span className="font-mono text-white/60">#{orderId}</span> has been received.
+              Transfer <span className="font-bold text-white">{formatPrice(finalTotal)}</span> and use your order ID as the payment reference.
             </p>
           ) : (
             <p className="text-sm text-white/40 mb-8">
@@ -278,6 +334,29 @@ export default function CheckoutPage() {
               </p>
             )}
           </div>
+          {isBankTransfer && bankTransfer && (
+            <div
+              className="p-4 rounded-[24px] mb-8 text-left space-y-2"
+              style={{ background: "rgba(212,168,67,0.10)", border: "1px solid rgba(212,168,67,0.25)" }}
+            >
+              <p className="text-sm font-bold text-white">Bank transfer details</p>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <span className="text-white/40">Bank</span>
+                <span className="text-white font-semibold text-right">{bankTransfer.bankName}</span>
+                <span className="text-white/40">Account Name</span>
+                <span className="text-white font-semibold text-right">{bankTransfer.accountName || "Authentic Gadget"}</span>
+                <span className="text-white/40">Account Number</span>
+                <span className="text-white font-semibold text-right font-mono">{bankTransfer.accountNumber}</span>
+                {bankTransfer.branch && (
+                  <>
+                    <span className="text-white/40">Branch</span>
+                    <span className="text-white font-semibold text-right">{bankTransfer.branch}</span>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-white/50">{bankTransfer.note || "After payment, contact support with your order ID and transfer receipt for verification."}</p>
+            </div>
+          )}
           <Link
             href="/products"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold"
@@ -455,7 +534,7 @@ export default function CheckoutPage() {
                 <div>
                   <h2 className="text-xl font-bold text-white mb-6">Payment Method</h2>
                   <div className="space-y-3">
-                    {PAYMENT_METHODS.map(({ id, label, icon: Icon, desc }) => (
+                    {paymentMethods.map(({ id, label, icon: Icon, desc }) => (
                       <button
                         key={id}
                         onClick={() => { setPaymentMethod(id); setError(""); }}
@@ -515,6 +594,24 @@ export default function CheckoutPage() {
                             </button>
                           ))}
                         </div>
+                      </div>
+                    )}
+
+                    {paymentMethod === "bank_transfer" && bankTransfer && (
+                      <div
+                        className="mt-3 p-4 rounded-xl space-y-2"
+                        style={{ background: "rgba(212,168,67,0.10)", border: "1px solid rgba(212,168,67,0.25)" }}
+                      >
+                        <p className="text-sm font-semibold text-white">Transfer after placing your order</p>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <span className="text-white/40">Bank</span>
+                          <span className="text-white text-right font-semibold">{bankTransfer.bankName}</span>
+                          <span className="text-white/40">Account Name</span>
+                          <span className="text-white text-right font-semibold">{bankTransfer.accountName || "Authentic Gadget"}</span>
+                          <span className="text-white/40">Account Number</span>
+                          <span className="text-white text-right font-semibold font-mono">{bankTransfer.accountNumber}</span>
+                        </div>
+                        <p className="text-xs text-white/50">{bankTransfer.note || "Use your order ID as transfer reference and contact support after payment."}</p>
                       </div>
                     )}
                   </div>
@@ -695,6 +792,8 @@ export default function CheckoutPage() {
                     <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
                   ) : paymentMethod === "cod" ? (
                     <>Confirm Order → {discountedTotal > 0 ? formatPrice(discountedTotal) : ""}</>
+                  ) : paymentMethod === "bank_transfer" ? (
+                    <>Confirm Bank Transfer → {discountedTotal > 0 ? formatPrice(discountedTotal) : ""}</>
                   ) : (
                     <>{paymentMethod === "momo" ? "Pay with MoMo →" : "Pay Now →"} {discountedTotal > 0 ? formatPrice(discountedTotal) : ""}</>
                   )}

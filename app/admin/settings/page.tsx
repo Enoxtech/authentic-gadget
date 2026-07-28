@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Store, Phone, Clock, MessageCircle, CreditCard, Mail, Percent } from "lucide-react";
+import { Save, Store, Phone, Clock, MessageCircle, CreditCard, Mail, Percent, Landmark } from "lucide-react";
 
 interface SettingsView {
   storeName: string;
@@ -27,6 +27,12 @@ interface SettingsView {
   adminEmail: string;
   resendApiKeySet: boolean;
   resendFromEmail: string;
+  bankTransferEnabled: boolean;
+  bankName: string;
+  bankAccountName: string;
+  bankAccountNumber: string;
+  bankBranch: string;
+  bankTransferNote: string;
 }
 
 const inputCls = "w-full rounded-xl px-3.5 py-2.5 text-sm bg-fog text-charcoal border-0 focus:outline-none focus:ring-2 focus:ring-electric/30 placeholder:text-charcoal/30";
@@ -67,6 +73,14 @@ export default function AdminSettingsPage() {
     whatsappOrderTemplateName: "", whatsappTemplateLanguage: "en_US",
   });
   const [payment, setPayment] = useState({ paystackPublicKey: "", paystackSecretKey: "", flutterwavePublicKey: "", flutterwaveSecretKey: "" });
+  const [bankTransfer, setBankTransfer] = useState({
+    bankTransferEnabled: false,
+    bankName: "",
+    bankAccountName: "",
+    bankAccountNumber: "",
+    bankBranch: "",
+    bankTransferNote: "",
+  });
   const [email, setEmail] = useState({ gmailUser: "", gmailAppPassword: "", adminEmail: "", resendApiKey: "", resendFromEmail: "" });
 
   const [storeInfoSaved, setStoreInfoSaved] = useState(false);
@@ -74,6 +88,7 @@ export default function AdminSettingsPage() {
   const [taxSaved, setTaxSaved] = useState(false);
   const [whatsappSaved, setWhatsappSaved] = useState(false);
   const [paymentSaved, setPaymentSaved] = useState(false);
+  const [bankTransferSaved, setBankTransferSaved] = useState(false);
   const [emailSaved, setEmailSaved] = useState(false);
 
   useEffect(() => {
@@ -104,6 +119,14 @@ export default function AdminSettingsPage() {
               whatsappOrderTemplateName: data.whatsappOrderTemplateName, whatsappTemplateLanguage: data.whatsappTemplateLanguage,
             });
             setPayment({ paystackPublicKey: data.paystackPublicKey, paystackSecretKey: "", flutterwavePublicKey: data.flutterwavePublicKey, flutterwaveSecretKey: "" });
+            setBankTransfer({
+              bankTransferEnabled: data.bankTransferEnabled,
+              bankName: data.bankName,
+              bankAccountName: data.bankAccountName,
+              bankAccountNumber: data.bankAccountNumber,
+              bankBranch: data.bankBranch,
+              bankTransferNote: data.bankTransferNote,
+            });
             setEmail({ gmailUser: data.gmailUser, gmailAppPassword: "", adminEmail: data.adminEmail, resendApiKey: "", resendFromEmail: data.resendFromEmail });
           });
       });
@@ -343,6 +366,55 @@ export default function AdminSettingsPage() {
             }}
             saved={paymentSaved} label="Save Payment Keys" savedLabel="Payment Keys Saved!"
           />
+        </div>
+      </div>
+
+      {/* Manual Bank Transfer */}
+      <div className={sectionCard}>
+        <div className={sectionHeader}>
+          <Landmark className="h-4 w-4 text-blue-600" />
+          <h2 className="font-bold text-charcoal text-sm">Manual Bank Transfer</h2>
+          <StatusPill active={bankTransfer.bankTransferEnabled && Boolean(bankTransfer.bankName && bankTransfer.bankAccountNumber)} />
+        </div>
+        <div className="p-5 space-y-4">
+          <p className="text-xs text-charcoal/50">
+            When enabled, customers can place an order, see these bank details, transfer manually, and admin can mark payment as paid after verification.
+          </p>
+          <label className="flex items-center justify-between gap-3 rounded-xl bg-fog px-3.5 py-3 text-sm font-semibold text-charcoal">
+            Enable bank transfer at checkout
+            <input
+              type="checkbox"
+              checked={bankTransfer.bankTransferEnabled}
+              onChange={(e) => setBankTransfer((b) => ({ ...b, bankTransferEnabled: e.target.checked }))}
+              className="h-4 w-4"
+            />
+          </label>
+          <div>
+            <label className={labelCls}>Bank Name</label>
+            <input value={bankTransfer.bankName} onChange={(e) => setBankTransfer((b) => ({ ...b, bankName: e.target.value }))} className={inputCls} placeholder="e.g. GCB Bank" />
+          </div>
+          <div>
+            <label className={labelCls}>Account Name</label>
+            <input value={bankTransfer.bankAccountName} onChange={(e) => setBankTransfer((b) => ({ ...b, bankAccountName: e.target.value }))} className={inputCls} placeholder="Authentic Gadget" />
+          </div>
+          <div>
+            <label className={labelCls}>Account Number</label>
+            <input value={bankTransfer.bankAccountNumber} onChange={(e) => setBankTransfer((b) => ({ ...b, bankAccountNumber: e.target.value }))} className={inputCls} placeholder="0000000000" />
+          </div>
+          <div>
+            <label className={labelCls}>Branch / Sort Code (optional)</label>
+            <input value={bankTransfer.bankBranch} onChange={(e) => setBankTransfer((b) => ({ ...b, bankBranch: e.target.value }))} className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>Customer Instruction Note</label>
+            <textarea
+              value={bankTransfer.bankTransferNote}
+              onChange={(e) => setBankTransfer((b) => ({ ...b, bankTransferNote: e.target.value }))}
+              className={`${inputCls} min-h-24 resize-y`}
+              placeholder="Use your order ID as transfer reference, then contact support for verification."
+            />
+          </div>
+          <SaveButton onClick={() => save(bankTransfer, () => flash(setBankTransferSaved))} saved={bankTransferSaved} label="Save Bank Transfer" savedLabel="Bank Transfer Saved!" />
         </div>
       </div>
 

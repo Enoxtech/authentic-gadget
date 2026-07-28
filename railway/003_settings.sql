@@ -29,6 +29,13 @@ CREATE TABLE IF NOT EXISTS settings (
   resend_api_key_enc text,
   resend_from_email text,
 
+  bank_transfer_enabled boolean NOT NULL DEFAULT false,
+  bank_name text,
+  bank_account_name text,
+  bank_account_number text,
+  bank_branch text,
+  bank_transfer_note text,
+
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 

@@ -53,6 +53,19 @@ function createOrderId() {
   return `AG_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
 }
 
+function normalizePaymentMethod(value: string) {
+  const method = value || "cod";
+  if (
+    method === "cod" ||
+    method === "card" ||
+    method === "bank_transfer" ||
+    /^momo_(mtn|vodafone|airteltigo)$/.test(method)
+  ) {
+    return method;
+  }
+  return "";
+}
+
 export async function POST(request: NextRequest) {
   try {
     const limit = rateLimit(request, "order-create", { max: 10, windowMs: 60_000 });
@@ -71,12 +84,12 @@ export async function POST(request: NextRequest) {
     const shippingCity = readString(body.shipping_city);
     const shippingRegion = readString(body.shipping_region);
     const orderNote = readString(body.order_note);
-    const paymentMethod = readString(body.payment_method) || "cod";
+    const paymentMethod = normalizePaymentMethod(readString(body.payment_method));
     const items = readItems(body.items);
 
-    if (!customerName || !customerEmail || !shippingAddress || !items) {
+    if (!customerName || !customerEmail || !shippingAddress || !items || !paymentMethod) {
       return NextResponse.json(
-        { error: "Name, email, delivery address, and valid items are required" },
+        { error: "Name, email, delivery address, payment method, and valid items are required" },
         { status: 400 }
       );
     }
@@ -167,6 +180,12 @@ export async function POST(request: NextRequest) {
 
     const settings = await getSettings();
     const vatPercent = settings ? Number(settings.vat_percent) : 0;
+    if (
+      paymentMethod === "bank_transfer" &&
+      (!settings?.bank_transfer_enabled || !settings.bank_name || !settings.bank_account_number)
+    ) {
+      return NextResponse.json({ error: "Bank transfer is not available" }, { status: 400 });
+    }
     const tax = vatPercent > 0 ? Math.round((subtotal - discount) * vatPercent) / 100 : 0;
 
     const total = Math.max(0, subtotal - discount + tax + shipping);

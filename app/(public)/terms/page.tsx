@@ -13,7 +13,8 @@ export default function TermsPage() {
           </p>
           <p>
             Orders may be paid by supported online payment channels or cash on delivery
-            where available. Online payment status is confirmed through provider webhooks.
+            where available. Manual bank transfer orders remain pending until payment is
+            verified by admin. Online payment status is confirmed through provider webhooks.
           </p>
           <p>
             Returns and warranty handling depend on product condition, supplier terms,

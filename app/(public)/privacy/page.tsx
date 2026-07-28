@@ -17,6 +17,10 @@ export default function PrivacyPage() {
             and payment status so orders can be fulfilled and tracked.
           </p>
           <p>
+            Product and banner images may be stored with Cloudflare R2 so they can be
+            delivered quickly and reliably across the storefront.
+          </p>
+          <p>
             Customer account access is managed through Supabase authentication. Keep
             your password private and contact support if you suspect unauthorized access.
           </p>
