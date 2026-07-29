@@ -1,80 +1,82 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { Check, Eye, EyeOff, MailCheck, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, MailCheck, UserPlus } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
 export default function RegisterPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [confirmationSent, setConfirmationSent] = useState(false);
   const [error, setError] = useState("");
 
-  const passwordStrong =
-    password.length >= 8 && /[A-Za-z]/.test(password) && /\d/.test(password);
-  const passwordsMatch = password === confirmPassword && password.length > 0;
+  function update(field: keyof typeof form, value: string) {
+    setForm((current) => ({ ...current, [field]: value }));
+  }
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError("");
 
-    if (!name.trim() || !email.trim() || !password || !confirmPassword) {
-      setError("Please fill in all required fields");
+    if (!form.name.trim() || !form.email.trim() || !form.password) {
+      setError("Name, email, and password are required.");
       return;
     }
-    if (!passwordStrong) {
-      setError("Password must be at least 8 characters and include a letter and number");
-      return;
-    }
-    if (!passwordsMatch) {
-      setError("Passwords do not match");
+
+    if (form.password.length < 8 || !/[A-Za-z]/.test(form.password) || !/\d/.test(form.password)) {
+      setError("Password must be at least 8 characters and include a letter and number.");
       return;
     }
 
     setLoading(true);
     const { error: signUpError } = await authClient.signUp.email({
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      password,
-      phone: phone.trim() || undefined,
+      name: form.name.trim(),
+      email: form.email.trim().toLowerCase(),
+      password: form.password,
+      phone: form.phone.trim() || undefined,
       callbackURL: "/account",
     });
 
+    setLoading(false);
+
     if (signUpError) {
-      setError(signUpError.message || "Unable to create account");
-      setLoading(false);
+      setError(signUpError.message || "Unable to create account.");
       return;
     }
 
     setConfirmationSent(true);
-    setLoading(false);
-  };
+  }
+
+  const fieldClass =
+    "w-full px-4 py-3 rounded-[14px] bg-[var(--surface)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] font-display";
+  const labelClass = "block text-xs font-label uppercase tracking-wide text-[var(--text-muted)] mb-1.5";
 
   if (confirmationSent) {
     return (
-      <div className="w-full min-w-0 max-w-md">
-        <div className="bg-white rounded-3xl shadow-card p-8 text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-green-50 mb-4">
-            <MailCheck className="w-7 h-7 text-green-600" />
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="h-16 w-16 rounded-[22px] bg-[var(--surface-raised)] border border-[var(--border-color)] flex items-center justify-center mx-auto mb-3">
+            <Image src="/logo-mark.png" alt="Authentic Gadget" width={38} height={38} className="object-contain" />
           </div>
-          <h1 className="font-display text-2xl font-bold text-charcoal">
-            Check your email
-          </h1>
-          <p className="text-charcoal/50 text-sm mt-2">
-            We sent a confirmation link to <strong>{email}</strong>. Confirm it
-            to finish creating your account.
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] font-display">Check your email</h1>
+          <p className="text-sm text-[var(--text-muted)] font-display mt-1">
+            We sent a confirmation link to {form.email}.
+          </p>
+        </div>
+
+        <div className="p-6 rounded-[28px] glass border border-[var(--border-color)] text-center">
+          <MailCheck className="h-10 w-10 mx-auto mb-3 text-green-600" />
+          <p className="text-sm text-[var(--text-secondary)] font-display">
+            Confirm your email, then sign in to track your orders and profile.
           </p>
           <Link
             href="/login"
-            className="mt-6 block w-full py-4 bg-electric text-white font-semibold rounded-2xl hover:bg-electric/90 transition-colors"
+            className="mt-5 flex items-center justify-center py-3 rounded-[44px] bg-electric text-white text-sm font-bold font-display transition-all hover:opacity-90"
           >
-            Go to sign in
+            Go to Sign In
           </Link>
         </div>
       </div>
@@ -82,158 +84,106 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="w-full min-w-0 max-w-md">
-      <div className="bg-white rounded-3xl shadow-card p-6 sm:p-8">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-electric/10 mb-4">
-            <ShieldCheck className="w-7 h-7 text-electric" />
-          </div>
-          <h1 className="font-display text-2xl font-bold text-charcoal">
-            Create Account
-          </h1>
-          <p className="text-charcoal/50 text-sm mt-1">
-            Join Authentic Gadget and track your orders
-          </p>
+    <div className="w-full max-w-sm">
+      <div className="text-center mb-8">
+        <div className="h-16 w-16 rounded-[22px] bg-[var(--surface-raised)] border border-[var(--border-color)] flex items-center justify-center mx-auto mb-3">
+          <Image src="/logo-mark.png" alt="Authentic Gadget" width={38} height={38} className="object-contain" />
         </div>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)] font-display">Create an Account</h1>
+        <p className="text-sm text-[var(--text-muted)] font-display mt-1">Track orders and check out faster</p>
+      </div>
 
+      <div className="p-6 rounded-[28px] glass border border-[var(--border-color)]">
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm">
+          <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700 font-display">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <label className="block text-sm font-medium text-charcoal">
-            Full Name
+          <div>
+            <label className={labelClass}>Full Name</label>
             <input
-              type="text"
+              required
+              value={form.name}
+              onChange={(event) => update("name", event.target.value)}
+              placeholder="Kwame Mensah"
               autoComplete="name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="John Doe"
-              className="mt-1.5 w-full min-w-0 px-4 py-3 rounded-xl border border-fog-200 bg-fog text-charcoal text-sm placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-electric focus:border-transparent"
+              className={fieldClass}
             />
-          </label>
+          </div>
 
-          <label className="block text-sm font-medium text-charcoal">
-            Email Address
+          <div>
+            <label className={labelClass}>Email Address</label>
             <input
               type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              required
+              value={form.email}
+              onChange={(event) => update("email", event.target.value)}
               placeholder="you@example.com"
-              className="mt-1.5 w-full min-w-0 px-4 py-3 rounded-xl border border-fog-200 bg-fog text-charcoal text-sm placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-electric focus:border-transparent"
+              autoComplete="email"
+              className={fieldClass}
             />
-          </label>
+          </div>
 
-          <label className="block text-sm font-medium text-charcoal">
-            Phone Number{" "}
-            <span className="text-charcoal/30 font-normal">(optional)</span>
+          <div>
+            <label className={labelClass}>Phone Number</label>
             <input
               type="tel"
+              value={form.phone}
+              onChange={(event) => update("phone", event.target.value)}
+              placeholder="+233 24 000 0000"
               autoComplete="tel"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              placeholder="+233 200 000 000"
-              className="mt-1.5 w-full min-w-0 px-4 py-3 rounded-xl border border-fog-200 bg-fog text-charcoal text-sm placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-electric focus:border-transparent"
+              className={fieldClass}
             />
-          </label>
+          </div>
 
-          <label className="block text-sm font-medium text-charcoal">
-            Password
-            <span className="relative mt-1.5 block">
+          <div>
+            <label className={labelClass}>Password</label>
+            <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
+                required
+                value={form.password}
+                onChange={(event) => update("password", event.target.value)}
+                placeholder="At least 8 characters"
                 autoComplete="new-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Min. 8 characters"
-                className="w-full min-w-0 px-4 py-3 pr-12 rounded-xl border border-fog-200 bg-fog text-charcoal text-sm placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-electric focus:border-transparent"
+                className={`${fieldClass} pr-12`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((visible) => !visible)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-charcoal/40 hover:text-charcoal/70"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
-            </span>
-          </label>
-
-          <label className="block text-sm font-medium text-charcoal">
-            Confirm Password
-            <input
-              type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              placeholder="Repeat password"
-              className="mt-1.5 w-full min-w-0 px-4 py-3 rounded-xl border border-fog-200 bg-fog text-charcoal text-sm placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-electric focus:border-transparent"
-            />
-          </label>
-
-          {(password || confirmPassword) && (
-            <div className="space-y-1 text-xs">
-              <p className={passwordStrong ? "text-green-600" : "text-charcoal/40"}>
-                <Check className="inline w-3.5 h-3.5 mr-1" />
-                At least 8 characters with a letter and number
-              </p>
-              <p className={passwordsMatch ? "text-green-600" : "text-charcoal/40"}>
-                <Check className="inline w-3.5 h-3.5 mr-1" />
-                Passwords match
-              </p>
             </div>
-          )}
+            <p className="text-[10px] text-[var(--text-muted)] mt-1 font-display">
+              Must include at least one letter and one number.
+            </p>
+          </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-electric text-white font-semibold rounded-2xl hover:bg-electric/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-[44px] bg-electric text-white text-sm font-bold font-display transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
           >
+            {loading ? <span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" /> : <UserPlus className="h-4 w-4" />}
             {loading ? "Creating account..." : "Create Account"}
           </button>
         </form>
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-fog-200" />
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="px-2 bg-white text-charcoal/40">or</span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={async () => {
-            setLoading(true);
-            setError("");
-            const { error: oauthError } = await authClient.signIn.social({
-              provider: "google",
-              callbackURL: "/account",
-            });
-            if (oauthError) {
-              setError(oauthError.message || "Unable to start Google sign in");
-              setLoading(false);
-            }
-          }}
-          disabled={loading}
-          className="w-full py-4 bg-white border-2 border-fog-200 text-charcoal font-semibold rounded-2xl hover:border-electric hover:text-electric transition-all disabled:opacity-60"
-        >
-          Continue with Google
-        </button>
       </div>
 
-      <p className="text-center text-sm text-charcoal/50 mt-6">
+      <p className="text-center mt-5 text-sm text-[var(--text-muted)] font-display">
         Already have an account?{" "}
-        <Link href="/login" className="text-electric font-semibold hover:underline">
+        <Link href="/login" className="font-semibold text-electric hover:opacity-75">
           Sign in
+        </Link>
+      </p>
+      <p className="text-center mt-2 text-sm text-[var(--text-muted)] font-display">
+        <Link href="/" className="hover:text-[var(--text-secondary)] transition-colors">
+          Back to store
         </Link>
       </p>
     </div>

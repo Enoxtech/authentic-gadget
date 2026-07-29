@@ -1696,6 +1696,54 @@ body::before {
   80% { transform: translateX(4px); }
 }
 
+.checkout-page {
+  --checkout-bg: var(--background);
+  --checkout-text: var(--foreground);
+  --checkout-muted: var(--muted-foreground);
+  --checkout-placeholder: color-mix(in oklch, var(--muted-foreground) 72%, transparent);
+  background:
+    radial-gradient(circle at 12% 8%, color-mix(in oklch, var(--gold) 11%, transparent), transparent 30%),
+    radial-gradient(circle at 88% 12%, color-mix(in oklch, var(--electric) 8%, transparent), transparent 32%),
+    var(--checkout-bg);
+  color: var(--checkout-text);
+}
+
+[data-theme="dark"] .checkout-page {
+  --checkout-bg: #040820;
+  --checkout-text: #ffffff;
+  --checkout-muted: rgba(255, 255, 255, 0.58);
+  --checkout-placeholder: rgba(255, 255, 255, 0.42);
+}
+
+.checkout-page input::placeholder {
+  color: var(--checkout-placeholder);
+  opacity: 1;
+}
+
+[data-theme="light"] .checkout-page [style*="rgba(255,255,255,0.03)"],
+[data-theme="light"] .checkout-page [style*="rgba(255,255,255,0.04)"],
+[data-theme="light"] .checkout-page [style*="rgba(255,255,255,0.05)"],
+[data-theme="light"] .checkout-page [style*="rgba(255,255,255,0.06)"],
+[data-theme="light"] .checkout-page [style*="rgba(255,255,255,0.08)"],
+[data-theme="light"] .checkout-page [style*="rgba(255, 255, 255, 0.03)"],
+[data-theme="light"] .checkout-page [style*="rgba(255, 255, 255, 0.04)"],
+[data-theme="light"] .checkout-page [style*="rgba(255, 255, 255, 0.05)"],
+[data-theme="light"] .checkout-page [style*="rgba(255, 255, 255, 0.06)"],
+[data-theme="light"] .checkout-page [style*="rgba(255, 255, 255, 0.08)"] {
+  background: var(--surface-glass-strong) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .checkout-page .checkout-topbar,
+[data-theme="light"] .checkout-page .checkout-topbar .text-white,
+[data-theme="light"] .checkout-page .checkout-topbar span {
+  color: #fff !important;
+}
+
+[data-theme="light"] .checkout-page .checkout-topbar {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
 .field-shake {
   animation: fieldShake 0.4s ease-in-out;
 }

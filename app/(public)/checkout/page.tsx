@@ -276,7 +276,7 @@ export default function CheckoutPage() {
     const isBankTransfer = paymentMethod === "bank_transfer";
     const finalTotal = confirmedTotal || discountedTotal;
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#040820" }}>
+      <div className="checkout-page min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md px-4">
           <div className="mb-6">
             <div
@@ -369,10 +369,10 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#040820" }}>
+    <div className="checkout-page min-h-screen">
       {/* Header */}
       <div
-        className="border-b border-white/10"
+        className="checkout-topbar border-b border-white/10"
         style={{ background: "rgba(4,8,32,0.8)", backdropFilter: "blur(20px)" }}
       >
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -440,7 +440,7 @@ export default function CheckoutPage() {
                           onChange={e => setFormData(f => ({ ...f, name: e.target.value }))}
                           className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none"
                           style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-                          placeholder="Enoch Abbas"
+                          placeholder="Kwame Mensah"
                         />
                       </div>
                       <div>
@@ -450,7 +450,7 @@ export default function CheckoutPage() {
                           onChange={e => setFormData(f => ({ ...f, email: e.target.value }))}
                           className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none"
                           style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-                          placeholder="enoch@example.com"
+                          placeholder="kwame@example.com"
                         />
                       </div>
                     </div>
@@ -463,7 +463,7 @@ export default function CheckoutPage() {
                         onChange={e => setFormData(f => ({ ...f, phone: e.target.value }))}
                         className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none"
                         style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-                        placeholder="+234 800 000 0000"
+                        placeholder="+233 24 000 0000"
                       />
                     </div>
                     <div>
@@ -473,7 +473,7 @@ export default function CheckoutPage() {
                         onChange={e => setFormData(f => ({ ...f, address: e.target.value }))}
                         className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none"
                         style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-                        placeholder="123 Street Name, Victoria Island"
+                        placeholder="15 Ringway Road, Osu"
                       />
                     </div>
                     <div className="grid sm:grid-cols-2 gap-4">
@@ -488,7 +488,7 @@ export default function CheckoutPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-xs text-white/50 mb-1.5 block">State</label>
+                        <label className="text-xs text-white/50 mb-1.5 block">Region</label>
                         <input
                           value={formData.state}
                           onChange={e => setFormData(f => ({ ...f, state: e.target.value }))}
@@ -722,7 +722,7 @@ export default function CheckoutPage() {
                     )}
                     <div className="flex justify-between text-sm">
                       <span style={{ color: "rgba(255,255,255,0.5)" }}>Delivery{selectedArea ? ` (${selectedArea.name})` : ""}</span>
-                      <span style={{ color: deliveryFee === 0 ? "#22c55e" : "white" }}>
+                      <span style={{ color: deliveryFee === 0 ? "#22c55e" : "var(--checkout-text)" }}>
                         {deliveryFee === 0 ? "Free" : formatPrice(deliveryFee)}
                       </span>
                     </div>
@@ -857,7 +857,7 @@ export default function CheckoutPage() {
                 )}
                 <div className="flex justify-between text-sm">
                   <span style={{ color: "rgba(255,255,255,0.5)" }}>Delivery</span>
-                  <span style={{ color: deliveryFee === 0 ? "#22c55e" : "white" }}>
+                  <span style={{ color: deliveryFee === 0 ? "#22c55e" : "var(--checkout-text)" }}>
                     {deliveryFee === 0 ? "Free" : formatPrice(deliveryFee)}
                   </span>
                 </div>
