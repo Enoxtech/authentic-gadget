@@ -79,7 +79,7 @@ export default function OffersPage() {
           {[
             { icon: ShieldCheck, title: "Authenticity checked", text: "Products are reviewed before dispatch." },
             { icon: Truck, title: "Delivery first", text: "Order status can be tracked after checkout." },
-            { icon: Zap, title: "Secure payments", text: "Paystack and Flutterwave use stored order totals." },
+            { icon: Zap, title: "Secure payments", text: "Hubtel, card, and manual payments use stored order totals." },
           ].map(({ icon: Icon, title, text }) => (
             <div key={title} className="flex gap-3">
               <Icon className="mt-1 h-5 w-5 shrink-0 text-gold" />

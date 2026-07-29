@@ -628,6 +628,7 @@ body::before {
   overflow: hidden;
   background: var(--gradient-hero);
   border-bottom: 1px solid var(--site-border);
+  color: #fff;
 }
 .hero-slide {
   position: absolute;
@@ -697,6 +698,7 @@ body::before {
 .hero-copy-panel {
   position: relative;
   max-width: 34rem;
+  width: min(34rem, calc(100vw - 6rem));
 }
 .hero-headline {
   --hero-accent: var(--accent);
@@ -1127,7 +1129,7 @@ body::before {
   .orb { display: none; }
 
   .hero-slider {
-    height: clamp(220px, 58vw, 360px);
+    height: clamp(260px, 68vw, 390px);
     min-height: 0;
   }
 
@@ -1142,22 +1144,58 @@ body::before {
 
   .hero-slide-content {
     align-items: flex-end;
-    padding-bottom: 56px;
+    padding-bottom: 52px;
+  }
+
+  .hero-copy-panel {
+    width: min(24rem, calc(100vw - 5.5rem));
+    max-width: calc(100vw - 5.5rem);
+  }
+
+  .hero-headline {
+    font-size: clamp(1.35rem, 7vw, 2rem) !important;
+    line-height: 1.05;
+  }
+
+  .hero-slide-content p {
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+    max-width: 19rem;
   }
 
   .hero-badge {
     max-width: 100%;
-    margin-bottom: 12px;
-    font-size: 11px;
+    margin-bottom: 10px;
+    font-size: 10px;
+    padding: 5px 10px;
   }
 
   .hero-slide-price {
     margin: 8px 0 0;
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .hero-discount-tag {
     margin-left: 0;
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .hero-copy-panel .flex.flex-col.sm\:flex-row {
+    flex-direction: row;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .hero-copy-panel .flex.flex-col.sm\:flex-row a {
+    min-height: 42px;
+    padding: 0 18px !important;
+    border-radius: 999px !important;
+  }
+
+  .hero-copy-panel .flex.flex-col.sm\:flex-row a:nth-child(2) {
+    display: none;
   }
 
   .hero-slider-dots {
@@ -1458,51 +1496,44 @@ body::before {
 }
 
 [data-theme="light"] .hero-slide-overlay {
-  background:
-    radial-gradient(circle at 18% 46%, color-mix(in oklch, var(--gold) 20%, transparent) 0%, transparent 38%),
-    linear-gradient(90deg, oklch(97% 0.025 84 / 0.94) 0%, oklch(97% 0.025 84 / 0.80) 32%, oklch(97% 0.025 84 / 0.40) 58%, oklch(97% 0.025 84 / 0.10) 100%),
-    linear-gradient(180deg, oklch(97% 0.025 84 / 0.06) 0%, oklch(97% 0.025 84 / 0.30) 100%);
+  background: linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.34) 52%, rgba(0,0,0,0.12) 100%);
 }
 
 [data-theme="light"] .hero-slide-bg {
-  filter: saturate(1.05) contrast(1.04) brightness(1.02);
+  filter: saturate(1.08) contrast(1.05);
 }
 
 [data-theme="light"] .hero-copy-panel {
-  max-width: 38rem;
-  padding: clamp(1.25rem, 2.5vw, 2rem);
-  border-radius: 2rem;
-  background:
-    linear-gradient(145deg, oklch(99% 0.012 84 / 0.88), oklch(94% 0.03 84 / 0.72)),
-    radial-gradient(circle at 0% 0%, color-mix(in oklch, var(--gold) 16%, transparent), transparent 45%);
-  border: 1px solid oklch(80% 0.04 84 / 0.6);
-  box-shadow: 0 24px 64px oklch(60% 0.04 84 / 0.16);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 [data-theme="light"] .hero-headline {
-  background: linear-gradient(135deg, oklch(22% 0.03 265) 0%, color-mix(in oklch, var(--hero-accent) 75%, oklch(22% 0.03 265)) 58%, var(--hero-accent) 100%);
+  background: linear-gradient(135deg, #fff 0%, var(--hero-accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: none;
+  text-shadow: 0 18px 60px rgba(0,0,0,0.45);
 }
 
 [data-theme="light"] .hero-slide-content .text-white\/70 {
-  color: oklch(34% 0.03 265 / 0.84);
+  color: rgba(255,255,255,0.78);
 }
 
 [data-theme="light"] .hero-copy-panel .text-white {
-  color: oklch(22% 0.03 265);
+  color: #fff;
 }
 
 [data-theme="light"] .hero-slider {
-  color: oklch(22% 0.03 265);
+  color: #fff;
 }
 
 [data-theme="light"] .hero-slide-price {
-  color: oklch(20% 0.06 84);
+  color: #fff;
 }
 
 [data-theme="light"] .hero-slider-arrow,
@@ -1518,7 +1549,7 @@ body::before {
 }
 
 [data-theme="light"] .hero-slider-dot {
-  background: oklch(20% 0.04 265 / 0.24);
+  background: rgba(255,255,255,0.42);
 }
 
 [data-theme="light"] .hero-slider-dot.active {

@@ -20,6 +20,10 @@ export interface SettingsRow {
   paystack_secret_key_enc: string | null;
   flutterwave_public_key: string | null;
   flutterwave_secret_key_enc: string | null;
+  hubtel_client_id: string | null;
+  hubtel_client_secret_enc: string | null;
+  hubtel_request_money_base_url: string | null;
+  hubtel_webhook_secret_enc: string | null;
   gmail_user: string | null;
   gmail_app_password_enc: string | null;
   admin_email: string | null;
@@ -69,6 +73,10 @@ export function toAdminView(row: SettingsRow) {
     paystackSecretKeySet: Boolean(row.paystack_secret_key_enc),
     flutterwavePublicKey: row.flutterwave_public_key || "",
     flutterwaveSecretKeySet: Boolean(row.flutterwave_secret_key_enc),
+    hubtelClientId: row.hubtel_client_id || "",
+    hubtelClientSecretSet: Boolean(row.hubtel_client_secret_enc),
+    hubtelRequestMoneyBaseUrl: row.hubtel_request_money_base_url || "",
+    hubtelWebhookSecretSet: Boolean(row.hubtel_webhook_secret_enc),
     gmailUser: row.gmail_user || "",
     gmailAppPasswordSet: Boolean(row.gmail_app_password_enc),
     adminEmail: row.admin_email || "",
@@ -119,6 +127,8 @@ const PLAIN_FIELDS: Record<string, string> = {
   whatsappTemplateLanguage: "whatsapp_template_language",
   paystackPublicKey: "paystack_public_key",
   flutterwavePublicKey: "flutterwave_public_key",
+  hubtelClientId: "hubtel_client_id",
+  hubtelRequestMoneyBaseUrl: "hubtel_request_money_base_url",
   gmailUser: "gmail_user",
   adminEmail: "admin_email",
   resendFromEmail: "resend_from_email",
@@ -133,6 +143,8 @@ const SECRET_FIELDS: Record<string, string> = {
   whatsappAccessToken: "whatsapp_access_token_enc",
   paystackSecretKey: "paystack_secret_key_enc",
   flutterwaveSecretKey: "flutterwave_secret_key_enc",
+  hubtelClientSecret: "hubtel_client_secret_enc",
+  hubtelWebhookSecret: "hubtel_webhook_secret_enc",
   gmailAppPassword: "gmail_app_password_enc",
   resendApiKey: "resend_api_key_enc",
 };

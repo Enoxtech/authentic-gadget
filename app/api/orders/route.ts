@@ -66,6 +66,15 @@ function normalizePaymentMethod(value: string) {
   return "";
 }
 
+async function getCheckoutSettings() {
+  try {
+    return await getSettings();
+  } catch (error) {
+    console.error("Order settings lookup failed:", error);
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const limit = rateLimit(request, "order-create", { max: 10, windowMs: 60_000 });
@@ -178,11 +187,17 @@ export async function POST(request: NextRequest) {
     }
     if (appliedCoupon?.type === "shipping") shipping = 0;
 
-    const settings = await getSettings();
-    const vatPercent = settings ? Number(settings.vat_percent) : 0;
+    const settings = await getCheckoutSettings();
+    const vatPercent = settings ? Number(settings.vat_percent) : Number(process.env.VAT_PERCENT || 0);
+    const envBankTransferEnabled =
+      process.env.BANK_TRANSFER_ENABLED === "true" &&
+      Boolean(process.env.BANK_NAME && process.env.BANK_ACCOUNT_NUMBER);
     if (
       paymentMethod === "bank_transfer" &&
-      (!settings?.bank_transfer_enabled || !settings.bank_name || !settings.bank_account_number)
+      !(
+        (settings?.bank_transfer_enabled && settings.bank_name && settings.bank_account_number) ||
+        envBankTransferEnabled
+      )
     ) {
       return NextResponse.json({ error: "Bank transfer is not available" }, { status: 400 });
     }

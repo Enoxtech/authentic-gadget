@@ -21,8 +21,9 @@ function OrderSuccessContent() {
 
   const PROVIDER_LABELS: Record<string, string> = {
     mtn: "MTN MoMo",
-    vodafone: "Vodafone Cash",
+    vodafone: "Telecel Cash",
     airteltigo: "AirtelTigo Money",
+    hubtel: "Hubtel MoMo",
     card: "Card Payment",
   };
   const methodLabel = isMomo
@@ -88,8 +89,8 @@ function OrderSuccessContent() {
 
         {isMomo && (
           <p className="text-sm text-charcoal/50 mb-4 bg-amber-50 rounded-xl p-3">
-            💡 A <strong>{PROVIDER_LABELS[provider]}</strong> payment request has been sent to your phone.
-            Please approve it to confirm your order. Your order will be processed once payment is confirmed.
+            Continue with <strong>{PROVIDER_LABELS[provider] || "Hubtel MoMo"}</strong> to complete your mobile money payment.
+            Your order will be processed once payment is confirmed.
           </p>
         )}
 

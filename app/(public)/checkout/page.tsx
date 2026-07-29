@@ -31,7 +31,7 @@ const STEPS = [
 ];
 
 const PAYMENT_METHODS = [
-  { id: "momo", label: "Mobile Money (MoMo)", icon: Smartphone, desc: "MTN · Vodafone · AirtelTigo" },
+  { id: "momo", label: "Mobile Money (MoMo)", icon: Smartphone, desc: "Hubtel · MTN · Telecel · AirtelTigo" },
   { id: "cod", label: "Pay on Delivery", icon: Truck, desc: "Pay when your order arrives" },
 ];
 
@@ -205,12 +205,11 @@ export default function CheckoutPage() {
           throw new Error(orderData.error || "Order creation failed");
         }
 
-        const momoRes = await fetch("/api/flutterwave/momo", {
+        const momoRes = await fetch("/api/hubtel/momo", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             orderId: orderData.orderId,
-            provider: momoProvider,
           }),
         });
         const momoData = (await momoRes.json()) as { error?: string; redirectUrl?: string | null };
@@ -223,9 +222,9 @@ export default function CheckoutPage() {
         }
 
         clearCart();
-        // Redirect to order success page — Flutterwave will have sent a USSD prompt
-        // Customer confirms on their phone, Flutterwave webhook updates payment status
-        router.push(`/order-success?order=${orderData.orderId}&total=${orderData.total}&method=momo&provider=${momoProvider}`);
+        // Hubtel should return a hosted payment URL. If it does not, keep a safe fallback
+        // to the pending order page so the customer can track the order.
+        router.push(`/order-success?order=${orderData.orderId}&total=${orderData.total}&method=momo&provider=hubtel`);
       } catch (error: unknown) {
         setError(error instanceof Error ? error.message : "Payment initiation failed. Please try again.");
       } finally {
@@ -417,12 +416,12 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
+      <div className="max-w-5xl mx-auto w-full px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden">
+        <div className="grid min-w-0 lg:grid-cols-3 gap-5 lg:gap-8">
           {/* Left: Form */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 min-w-0">
             <div
-              className={`rounded-[28px] p-6 transition-all duration-300 ${
+              className={`rounded-[28px] p-4 sm:p-6 transition-all duration-300 ${
                 isAnimating ? "opacity-50 scale-[0.99]" : "opacity-100 scale-100"
               }`}
               style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
@@ -485,7 +484,7 @@ export default function CheckoutPage() {
                           onChange={e => setFormData(f => ({ ...f, city: e.target.value }))}
                           className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none"
                           style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-                          placeholder="Lagos"
+                          placeholder="Accra"
                         />
                       </div>
                       <div>
@@ -495,7 +494,7 @@ export default function CheckoutPage() {
                           onChange={e => setFormData(f => ({ ...f, state: e.target.value }))}
                           className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none"
                           style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-                          placeholder="Lagos"
+                          placeholder="Greater Accra"
                         />
                       </div>
                     </div>
@@ -632,7 +631,7 @@ export default function CheckoutPage() {
                     <div className="text-left">
                       <p className="text-sm font-semibold text-white">Estimated Delivery</p>
                       <p className="text-xs text-white/60">
-                        2-5 business days (Lagos) · 3-7 days (other states)
+                        2-5 business days in Accra · 3-7 days across Ghana
                       </p>
                     </div>
                   </div>
@@ -641,7 +640,7 @@ export default function CheckoutPage() {
                     {items.map(item => (
                       <div
                         key={item.id}
-                        className="flex items-center gap-4 p-3 rounded-xl"
+                        className="flex items-center gap-3 sm:gap-4 p-3 rounded-xl min-w-0"
                         style={{
                           background: "rgba(255,255,255,0.04)",
                           border: "1px solid rgba(255,255,255,0.08)",
@@ -662,7 +661,7 @@ export default function CheckoutPage() {
                           <p className="text-sm font-medium text-white truncate">{item.name}</p>
                           <p className="text-xs text-white/40">Qty: {item.quantity}</p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             className="w-6 h-6 rounded-md flex items-center justify-center text-white/50 hover:text-white transition-colors"
@@ -680,7 +679,7 @@ export default function CheckoutPage() {
                           >
                             +
                           </button>
-                          <p className="text-sm font-bold text-white ml-2">
+                          <p className="hidden sm:block text-sm font-bold text-white ml-2 whitespace-nowrap">
                             {formatPrice(item.price * item.quantity)}
                           </p>
                         </div>
@@ -737,11 +736,11 @@ export default function CheckoutPage() {
             </div>
 
             {/* Navigation buttons */}
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
               {step > 0 ? (
                 <button
                   onClick={handleBack}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl text-white font-medium"
+                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-medium"
                   style={{ background: "rgba(255,255,255,0.08)" }}
                 >
                   <ArrowLeft className="w-4 h-4" /> Back
@@ -749,7 +748,7 @@ export default function CheckoutPage() {
               ) : (
                 <Link
                   href="/products"
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl text-white/50 font-medium"
+                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white/50 font-medium"
                 >
                   ← Continue Shopping
                 </Link>
@@ -764,7 +763,7 @@ export default function CheckoutPage() {
                 <button
                   onClick={handleNext}
                   disabled={step === 0 && !isStep0Valid}
-                  className="flex items-center gap-2 px-8 py-3 rounded-xl text-white font-bold transition-all"
+                  className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-xl text-white font-bold transition-all w-full sm:w-auto"
                   style={{
                     background: "linear-gradient(135deg, #D4A843, #19AFFF)",
                     opacity: step === 0 && !isStep0Valid ? 0.5 : 1,
@@ -777,7 +776,7 @@ export default function CheckoutPage() {
                 <button
                   onClick={handlePlaceOrder}
                   disabled={isProcessing}
-                  className="flex items-center gap-2 px-8 py-3 rounded-xl text-white font-bold transition-all disabled:opacity-60"
+                  className="flex items-center justify-center gap-2 px-5 sm:px-8 py-3 rounded-xl text-white font-bold transition-all disabled:opacity-60 w-full sm:w-auto text-sm sm:text-base whitespace-normal sm:whitespace-nowrap"
                   style={{
                     background: paymentMethod === "cod"
                       ? "linear-gradient(135deg, #D4A843, #19AFFF)"
@@ -803,7 +802,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Right: Sticky Order Summary */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 min-w-0">
             <div
               className="sticky top-24 rounded-[28px] overflow-hidden"
               style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}

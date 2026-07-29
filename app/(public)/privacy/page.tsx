@@ -12,7 +12,7 @@ export default function PrivacyPage() {
             confirm payments, deliver products, and provide customer support.
           </p>
           <p>
-            Payment details are handled by Paystack or Flutterwave. Authentic Gadget
+            Payment details are handled by supported payment providers such as Hubtel, Paystack, or Flutterwave. Authentic Gadget
             stores order references, customer contact details, delivery information,
             and payment status so orders can be fulfilled and tracked.
           </p>

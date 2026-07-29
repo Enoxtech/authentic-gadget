@@ -22,6 +22,10 @@ interface SettingsView {
   paystackSecretKeySet: boolean;
   flutterwavePublicKey: string;
   flutterwaveSecretKeySet: boolean;
+  hubtelClientId: string;
+  hubtelClientSecretSet: boolean;
+  hubtelRequestMoneyBaseUrl: string;
+  hubtelWebhookSecretSet: boolean;
   gmailUser: string;
   gmailAppPasswordSet: boolean;
   adminEmail: string;
@@ -72,7 +76,16 @@ export default function AdminSettingsPage() {
     whatsappPhoneNumberId: "", whatsappAccessToken: "", whatsappBusinessAccountId: "",
     whatsappOrderTemplateName: "", whatsappTemplateLanguage: "en_US",
   });
-  const [payment, setPayment] = useState({ paystackPublicKey: "", paystackSecretKey: "", flutterwavePublicKey: "", flutterwaveSecretKey: "" });
+  const [payment, setPayment] = useState({
+    paystackPublicKey: "",
+    paystackSecretKey: "",
+    flutterwavePublicKey: "",
+    flutterwaveSecretKey: "",
+    hubtelClientId: "",
+    hubtelClientSecret: "",
+    hubtelRequestMoneyBaseUrl: "",
+    hubtelWebhookSecret: "",
+  });
   const [bankTransfer, setBankTransfer] = useState({
     bankTransferEnabled: false,
     bankName: "",
@@ -118,7 +131,16 @@ export default function AdminSettingsPage() {
               whatsappBusinessAccountId: data.whatsappBusinessAccountId,
               whatsappOrderTemplateName: data.whatsappOrderTemplateName, whatsappTemplateLanguage: data.whatsappTemplateLanguage,
             });
-            setPayment({ paystackPublicKey: data.paystackPublicKey, paystackSecretKey: "", flutterwavePublicKey: data.flutterwavePublicKey, flutterwaveSecretKey: "" });
+            setPayment({
+              paystackPublicKey: data.paystackPublicKey,
+              paystackSecretKey: "",
+              flutterwavePublicKey: data.flutterwavePublicKey,
+              flutterwaveSecretKey: "",
+              hubtelClientId: data.hubtelClientId,
+              hubtelClientSecret: "",
+              hubtelRequestMoneyBaseUrl: data.hubtelRequestMoneyBaseUrl,
+              hubtelWebhookSecret: "",
+            });
             setBankTransfer({
               bankTransferEnabled: data.bankTransferEnabled,
               bankName: data.bankName,
@@ -319,13 +341,44 @@ export default function AdminSettingsPage() {
         <div className={sectionHeader}>
           <CreditCard className="h-4 w-4 text-amber-600" />
           <h2 className="font-bold text-charcoal text-sm">Payment Gateway</h2>
-          <StatusPill active={Boolean(settings?.paystackSecretKeySet || settings?.flutterwaveSecretKeySet)} />
+          <StatusPill active={Boolean(settings?.hubtelClientSecretSet || settings?.paystackSecretKeySet || settings?.flutterwaveSecretKeySet)} />
         </div>
         <div className="p-5 space-y-5">
           <p className="text-xs text-charcoal/50">
-            Add your Paystack and/or Flutterwave API keys to accept card and mobile money payments. Secret keys are never
+            Add Hubtel for Ghana mobile money, plus Paystack or Flutterwave if you still need them. Secret keys are never
             shown again once saved — only whether one is set. Leave blank to keep using the server&apos;s environment-variable keys.
           </p>
+
+          <div className="space-y-3 pb-4 border-b border-fog">
+            <p className="text-xs font-bold text-charcoal/70">Hubtel MoMo</p>
+            <p className="text-[10px] text-charcoal/40 leading-relaxed">
+              Hubtel handles MTN, Telecel/Vodafone Cash, and AirtelTigo mobile money from one checkout flow.
+            </p>
+            <div>
+              <label className={labelCls}>Client ID</label>
+              <input value={payment.hubtelClientId} onChange={(e) => setPayment((p) => ({ ...p, hubtelClientId: e.target.value }))}
+                placeholder="Hubtel API Client ID" className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>
+                Client Secret {settings?.hubtelClientSecretSet && <span className="text-green-600">(currently set)</span>}
+              </label>
+              <input type="password" value={payment.hubtelClientSecret} onChange={(e) => setPayment((p) => ({ ...p, hubtelClientSecret: e.target.value }))}
+                placeholder={settings?.hubtelClientSecretSet ? "••••••••••••••••" : "Hubtel API Client Secret"} className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Request Money Base URL</label>
+              <input value={payment.hubtelRequestMoneyBaseUrl} onChange={(e) => setPayment((p) => ({ ...p, hubtelRequestMoneyBaseUrl: e.target.value }))}
+                placeholder="https://devp-reqsendmoney-230622-api.hubtel.com/v1" className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>
+                Webhook Secret {settings?.hubtelWebhookSecretSet && <span className="text-green-600">(currently set)</span>}
+              </label>
+              <input type="password" value={payment.hubtelWebhookSecret} onChange={(e) => setPayment((p) => ({ ...p, hubtelWebhookSecret: e.target.value }))}
+                placeholder={settings?.hubtelWebhookSecretSet ? "••••••••••••••••" : "Create a long random secret"} className={inputCls} />
+            </div>
+          </div>
 
           <div className="space-y-3">
             <p className="text-xs font-bold text-charcoal/70">Paystack</p>
@@ -362,7 +415,7 @@ export default function AdminSettingsPage() {
           <SaveButton
             onClick={async () => {
               await save(payment, () => flash(setPaymentSaved));
-              setPayment((p) => ({ ...p, paystackSecretKey: "", flutterwaveSecretKey: "" }));
+              setPayment((p) => ({ ...p, paystackSecretKey: "", flutterwaveSecretKey: "", hubtelClientSecret: "", hubtelWebhookSecret: "" }));
             }}
             saved={paymentSaved} label="Save Payment Keys" savedLabel="Payment Keys Saved!"
           />
