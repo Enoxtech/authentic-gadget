@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import ThemeLogo from "@/components/ui/ThemeLogo";
 
 const SPLASH_FLAG = "splash-shown-v1";
 
@@ -39,7 +39,7 @@ export default function SplashScreen() {
       style={{ background: "#040820" }}
     >
       <div className="flex h-24 w-24 items-center justify-center rounded-3xl animate-bounce-logo" style={{ background: "#0B1E3D" }}>
-        <Image src="/icons/icon-192.png" alt="" width={72} height={72} className="h-[72px] w-[72px] rounded-2xl" />
+        <ThemeLogo className="h-[72px] w-[72px]" priority />
       </div>
       <p className="mt-5 font-display text-sm font-semibold tracking-widest text-white/70 uppercase">
         Authentic Gadget

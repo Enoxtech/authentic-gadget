@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Search, User, Menu, X, Heart } from "lucide-react";
 import CartBadge from "@/components/ui/CartBadge";
 import SearchBarWrapper from "@/components/ui/SearchBarWrapper";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import ThemeLogo from "@/components/ui/ThemeLogo";
 import { useCart } from "@/context/CartContext";
 import { authClient, useSession } from "@/lib/auth-client";
 
@@ -89,14 +89,7 @@ export default function Navbar() {
           <div className="w-full min-w-0 max-w-7xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2 sm:gap-3 overflow-hidden">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 shrink-0 group">
-              <Image
-                src="/logo-mark.png"
-                alt="Authentic Gadget"
-                width={36}
-                height={36}
-                className="h-8 w-8 object-contain logo-adaptive group-hover:scale-105 transition-transform duration-200"
-                priority
-              />
+              <ThemeLogo className="h-8 w-8 group-hover:scale-105 transition-transform duration-200" priority />
               <span className="hidden sm:block font-display text-base font-bold tracking-tight text-fog">
                 Authentic Gadget
               </span>
@@ -219,13 +212,7 @@ export default function Navbar() {
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
               <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-2">
-                <Image
-                  src="/logo-mark.png"
-                  alt="Authentic Gadget"
-                  width={32}
-                  height={32}
-                  className="h-8 w-8 object-contain logo-adaptive"
-                />
+                <ThemeLogo className="h-8 w-8" />
                 <span className="font-display text-sm font-bold tracking-tight text-fog">Authentic Gadget</span>
               </Link>
               <button

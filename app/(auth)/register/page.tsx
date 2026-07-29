@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Eye, EyeOff, MailCheck, UserPlus } from "lucide-react";
+import ThemeLogo from "@/components/ui/ThemeLogo";
 import { authClient } from "@/lib/auth-client";
 
 export default function RegisterPage() {
@@ -58,8 +58,8 @@ export default function RegisterPage() {
     return (
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="h-16 w-16 rounded-[22px] bg-[var(--surface-raised)] border border-[var(--border-color)] flex items-center justify-center mx-auto mb-3">
-            <Image src="/logo-mark.png" alt="Authentic Gadget" width={38} height={38} className="object-contain" />
+        <div className="h-16 w-16 rounded-[22px] bg-[var(--surface-raised)] border border-[var(--border-color)] flex items-center justify-center mx-auto mb-3">
+            <ThemeLogo className="h-[38px] w-[38px]" priority />
           </div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)] font-display">Check your email</h1>
           <p className="text-sm text-[var(--text-muted)] font-display mt-1">
@@ -87,7 +87,7 @@ export default function RegisterPage() {
     <div className="w-full max-w-sm">
       <div className="text-center mb-8">
         <div className="h-16 w-16 rounded-[22px] bg-[var(--surface-raised)] border border-[var(--border-color)] flex items-center justify-center mx-auto mb-3">
-          <Image src="/logo-mark.png" alt="Authentic Gadget" width={38} height={38} className="object-contain" />
+          <ThemeLogo className="h-[38px] w-[38px]" priority />
         </div>
         <h1 className="text-2xl font-bold text-[var(--text-primary)] font-display">Create an Account</h1>
         <p className="text-sm text-[var(--text-muted)] font-display mt-1">Track orders and check out faster</p>

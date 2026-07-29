@@ -1,10 +1,10 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, LogIn } from "lucide-react";
+import ThemeLogo from "@/components/ui/ThemeLogo";
 import { authClient } from "@/lib/auth-client";
 
 function LoginForm() {
@@ -45,7 +45,7 @@ function LoginForm() {
     <div className="w-full max-w-sm">
       <div className="text-center mb-8">
         <div className="h-16 w-16 rounded-[22px] bg-[var(--surface-raised)] border border-[var(--border-color)] flex items-center justify-center mx-auto mb-3">
-          <Image src="/logo-mark.png" alt="Authentic Gadget" width={38} height={38} className="object-contain" />
+          <ThemeLogo className="h-[38px] w-[38px]" priority />
         </div>
         <h1 className="text-2xl font-bold text-[var(--text-primary)] font-display">My Account</h1>
         <p className="text-sm text-[var(--text-muted)] font-display mt-1">Sign in to view your orders and profile</p>
