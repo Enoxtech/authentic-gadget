@@ -278,8 +278,23 @@ export async function POST(request: NextRequest) {
       orderId,
       customerName,
       customerEmail,
+      customerPhone,
+      shippingAddress,
+      shippingCity,
+      shippingRegion,
+      orderNote,
+      paymentMethod,
+      subtotal,
+      shipping,
+      tax,
+      discount,
       total,
       itemCount: orderItems.length,
+      items: orderItems.map((item) => ({
+        name: item.product_name,
+        quantity: item.quantity,
+        price: item.price,
+      })),
     }).catch(() => {});
 
     return NextResponse.json(
