@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, SlidersHorizontal, X, ShoppingCart, Eye } from "lucide-react";
-import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import { useSearchParams } from "next/navigation";
+import { ChevronDown, Eye, Heart, ShoppingCart, SlidersHorizontal, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { useWishlist } from "@/context/WishlistContext";
 import { useQuickView } from "@/context/QuickViewContext";
-import { formatPrice } from "@/lib/utils";
+import { useWishlist } from "@/context/WishlistContext";
+import { cn, formatPrice } from "@/lib/utils";
 
 interface Product {
   id: string;
@@ -22,24 +22,52 @@ interface Product {
   category: string | null;
   badge: string | null;
   brand: string | null;
+  stock?: number | null;
+  created_at?: string | null;
 }
 
-const SORT_OPTIONS = [
-  { value: "featured", label: "Featured" },
-  { value: "price-asc", label: "Price: Low to High" },
-  { value: "price-desc", label: "Price: High to Low" },
-  { value: "rating", label: "Top Rated" },
-];
+type SortOption = "latest" | "price-asc" | "price-desc" | "popular";
+
+const FALLBACK_IMAGE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%230B1E3D'/%3E%3Ctext x='300' y='320' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='140' fill='%23D4A843' text-anchor='middle'%3EAG%3C/text%3E%3C/svg%3E";
 
 function CheckCircle({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
     </svg>
   );
 }
 
-const FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'%3E%3Crect width='600' height='600' fill='%230B1E3D'/%3E%3Ctext x='300' y='320' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='140' fill='%23D4A843' text-anchor='middle'%3EAG%3C/text%3E%3C/svg%3E";
+function categorySlug(value: string | null | undefined) {
+  return (value || "")
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function ProductGridSkeleton() {
+  return (
+    <div className="products-grid">
+      {Array.from({ length: 10 }).map((_, index) => (
+        <div key={index} className="rounded-[32px] overflow-hidden border border-[var(--border-color)] bg-[var(--surface-glass)]">
+          <div className="aspect-square skeleton" />
+          <div className="p-3 space-y-2">
+            <div className="h-2 w-1/3 rounded-full skeleton" />
+            <div className="h-3 w-4/5 rounded-full skeleton" />
+            <div className="h-3 w-3/5 rounded-full skeleton" />
+            <div className="flex justify-between items-center mt-2">
+              <div className="h-4 w-1/3 rounded-full skeleton" />
+              <div className="h-7 w-7 rounded-full skeleton" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
@@ -51,90 +79,90 @@ function ProductCard({ product }: { product: Product }) {
   const discount = product.compare_at_price
     ? Math.round((1 - product.price / product.compare_at_price) * 100)
     : 0;
-  const primaryImage = imgSrc;
   const wishlist = isWishlisted(product.id);
+  const inStock = product.stock === undefined || product.stock === null || product.stock > 0;
 
-  // Some image hosts can hang indefinitely (neither load nor error) — force the
-  // CSP-safe fallback if the photo hasn't rendered within a few seconds.
   useEffect(() => {
     if (imgLoaded || imgSrc === FALLBACK_IMAGE) return;
     const timer = setTimeout(() => setImgSrc(FALLBACK_IMAGE), 6000);
     return () => clearTimeout(timer);
   }, [imgLoaded, imgSrc]);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  function handleAddToCart(event: React.MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!inStock) return;
     addItem({
       id: product.id,
       name: product.name,
       price: product.price,
-      image: primaryImage,
+      image: imgSrc,
       slug: product.slug,
     });
     setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
-  };
+    setTimeout(() => setAdded(false), 1400);
+  }
 
   return (
     <Link
       href={`/products/${product.slug}`}
       className="group flex flex-col rounded-[32px] border border-[var(--border-color)] bg-[var(--surface-glass)] backdrop-blur-[12px] card-premium overflow-hidden"
     >
-      {/* Image */}
       <div className="relative aspect-square overflow-hidden rounded-t-[28px] bg-[var(--surface-raised)]">
         <Image
-          src={primaryImage}
+          src={imgSrc}
           alt={product.name}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1280px) 25vw, 16vw"
-          className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+          className={cn("object-contain p-2 group-hover:scale-105 transition-transform duration-300", !inStock && "opacity-55")}
           onLoad={() => setImgLoaded(true)}
           onError={() => setImgSrc(FALLBACK_IMAGE)}
           unoptimized
         />
 
-        {/* Badges */}
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
-          {product.badge && (
-            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-              product.badge === "Best Seller"
-                ? "bg-gold text-[#030618]"
-                : product.badge === "New"
-                ? "bg-electric text-white"
-                : "bg-red-500 text-white"
-            }`}>
+          {!inStock && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-white">Out of Stock</span>}
+          {inStock && product.badge && (
+            <span
+              className={cn(
+                "text-[9px] font-bold px-2 py-0.5 rounded-full",
+                product.badge === "Best Seller"
+                  ? "bg-gold text-[#030618]"
+                  : product.badge === "New"
+                  ? "bg-electric text-white"
+                  : "bg-red-500 text-white"
+              )}
+            >
               {product.badge}
             </span>
           )}
-          {discount > 0 && !product.badge && (
+          {inStock && discount > 0 && !product.badge && (
             <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white">
               -{discount}%
             </span>
           )}
         </div>
 
-        {/* Wishlist */}
         <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
             toggleWishlist({ ...product, images: product.images || [] });
           }}
-          className={`absolute top-2.5 right-2.5 h-8 w-8 flex items-center justify-center rounded-full bg-[var(--surface-glass-strong)] backdrop-blur-md border border-[var(--border-color)] transition-all duration-200 hover:scale-110 active:scale-95 ${
+          className={cn(
+            "absolute top-2.5 right-2.5 h-8 w-8 flex items-center justify-center rounded-full bg-[var(--surface-glass-strong)] backdrop-blur-md border border-[var(--border-color)] transition-all duration-200 hover:scale-110 active:scale-95",
             wishlist ? "text-red-500" : "text-[var(--text-muted)] hover:text-red-500"
-          }`}
+          )}
           aria-label={wishlist ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <Heart className={`h-3.5 w-3.5 ${wishlist ? "fill-current" : ""}`} />
+          <Heart className={cn("h-3.5 w-3.5", wishlist && "fill-current")} />
         </button>
 
-        {/* Quick view pill — appears on hover */}
         <button
           type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
             openQuickView({
               id: product.id,
               name: product.name,
@@ -153,12 +181,11 @@ function ProductCard({ product }: { product: Product }) {
         </button>
       </div>
 
-      {/* Info */}
       <div className="p-3 flex flex-col gap-1 flex-1">
-        <p className="text-[9px] font-semibold text-[var(--text-muted)] uppercase tracking-widest truncate">
-          {product.brand || ""}
+        <p className="text-[9px] font-semibold text-[var(--text-muted)] uppercase tracking-widest font-label truncate">
+          {product.brand || product.category || "Authentic Gadget"}
         </p>
-        <p className="text-xs font-semibold text-[var(--text-primary)] line-clamp-2 leading-snug flex-1">
+        <p className="text-xs font-semibold text-[var(--text-primary)] line-clamp-2 leading-snug flex-1 font-display">
           {product.name}
         </p>
 
@@ -176,10 +203,16 @@ function ProductCard({ product }: { product: Product }) {
 
           <button
             onClick={handleAddToCart}
-            className={`h-7 w-7 flex items-center justify-center rounded-full shrink-0 transition-all duration-200 ${
-              added ? "bg-green-600 text-white scale-95" : "bg-electric text-white hover:scale-110 hover:shadow-md active:scale-90"
-            }`}
-            aria-label="Add to cart"
+            disabled={!inStock}
+            className={cn(
+              "h-7 w-7 flex items-center justify-center rounded-full shrink-0 transition-all duration-200",
+              inStock
+                ? added
+                  ? "bg-green-600 text-white scale-95"
+                  : "bg-electric text-white hover:scale-110 hover:shadow-md active:scale-90"
+                : "bg-[var(--surface)] text-[var(--text-muted)] cursor-not-allowed opacity-50"
+            )}
+            aria-label={inStock ? "Add to cart" : "Out of stock"}
           >
             {added ? <CheckCircle className="h-3 w-3" /> : <ShoppingCart className="h-3.5 w-3.5" />}
           </button>
@@ -189,49 +222,32 @@ function ProductCard({ product }: { product: Product }) {
   );
 }
 
-export default function ProductsPage() {
+function ProductsContent() {
+  const searchParams = useSearchParams();
+  const initialCategory = searchParams.get("category") || "";
+  const searchQuery = searchParams.get("q") || "";
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showSkeletons, setShowSkeletons] = useState(true);
   const [error, setError] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [sort, setSort] = useState("featured");
-  const [showFilter, setShowFilter] = useState(false);
-  const [activeColor, setActiveColor] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>("latest");
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [onSaleOnly, setOnSaleOnly] = useState(false);
 
-  const handleColorFilter = (color: string) => {
-    setActiveColor(prev => prev === color ? null : color);
-  };
-
-  const colorCategoryMap: Record<string, string[]> = {
-    "#000000": ["black", "dark"],
-    "#ffffff": ["white", "silver"],
-    "#7c3aed": ["violet", "purple"],
-    "#06b6d4": ["cyan", "teal"],
-    "#ef4444": ["red"],
-    "#22c55e": ["green"],
-    "#3b82f6": ["blue"],
-    "#ec4899": ["pink"],
-  };
-
-  // Show skeleton loaders for 1.5s on mount
   useEffect(() => {
-    const timer = setTimeout(() => setShowSkeletons(false), 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Extract unique categories from products
-  const categories = ["All", ...Array.from(new Set(products.map((p) => p.category).filter(Boolean)))] as string[];
+    setSelectedCategory(initialCategory);
+  }, [initialCategory]);
 
   useEffect(() => {
     async function fetchProducts() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch("/api/products");
-        if (!res.ok) throw new Error("Failed to fetch products");
-        const data = await res.json();
-        setProducts(data as Product[]);
+        const response = await fetch("/api/products");
+        if (!response.ok) throw new Error("Failed to fetch products");
+        const data = (await response.json()) as Product[];
+        setProducts(data);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Failed to load products");
       } finally {
@@ -241,217 +257,274 @@ export default function ProductsPage() {
     fetchProducts();
   }, []);
 
-  const handleFilter = (category: string) => {
-    setSelectedCategory(category);
-  };
-
-  const filtered = products.filter((p) => {
-    if (selectedCategory !== "All" && p.category !== selectedCategory) return false;
-    if (activeColor) {
-      // Simple color-to-tag matching for visual search
-      const colorTags = colorCategoryMap[activeColor] || [];
-      const productTags = [p.brand, p.category].filter(Boolean).map(t => t!.toLowerCase());
-      const matches = colorTags.some(t => productTags.some(pt => pt.includes(t)));
-      if (!matches) return false;
+  const categories = useMemo(() => {
+    const bySlug = new Map<string, string>();
+    for (const product of products) {
+      if (!product.category) continue;
+      bySlug.set(categorySlug(product.category), product.category);
     }
-    return true;
-  });
-  const sorted = [...filtered].sort((a, b) => {
-    if (sort === "price-asc") return a.price - b.price;
-    if (sort === "price-desc") return b.price - a.price;
-    if (sort === "rating") return b.rating - a.rating;
-    return 0;
-  });
+    return Array.from(bySlug, ([slug, name]) => ({ slug, name }));
+  }, [products]);
+
+  const filtered = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    const category = categorySlug(selectedCategory);
+    const result = products.filter((product) => {
+      if (query) {
+        const haystack = [product.name, product.brand, product.category].filter(Boolean).join(" ").toLowerCase();
+        if (!haystack.includes(query)) return false;
+      }
+      if (category && categorySlug(product.category) !== category) return false;
+      if (inStockOnly && product.stock !== undefined && product.stock !== null && product.stock <= 0) return false;
+      if (onSaleOnly && !product.compare_at_price) return false;
+      return true;
+    });
+
+    result.sort((left, right) => {
+      if (sortBy === "price-asc") return left.price - right.price;
+      if (sortBy === "price-desc") return right.price - left.price;
+      if (sortBy === "popular") return (right.reviews_count || right.rating || 0) - (left.reviews_count || left.rating || 0);
+      return new Date(right.created_at || 0).getTime() - new Date(left.created_at || 0).getTime();
+    });
+
+    return result;
+  }, [inStockOnly, onSaleOnly, products, searchQuery, selectedCategory, sortBy]);
+
+  const hasFilters = Boolean(selectedCategory || inStockOnly || onSaleOnly);
+  const currentTitle = searchQuery
+    ? `Results for "${searchQuery}"`
+    : selectedCategory
+    ? categories.find((category) => category.slug === categorySlug(selectedCategory))?.name || "Products"
+    : "All Products";
+
+  function clearFilters() {
+    setSelectedCategory("");
+    setInStockOnly(false);
+    setOnSaleOnly(false);
+  }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)]">
-      {/* Header */}
-      <div className="bg-[var(--surface)] border-b border-white/[0.06]">
-        <div className="max-w-7xl mx-auto px-4 pt-6 pb-8">
-          <Breadcrumbs crumbs={[{ label: "Home", href: "/" }, { label: "Products" }]} />
-          <div className="flex items-end justify-between mt-4">
-            <div>
-              <h1 className="text-2xl font-bold text-fog">All Products</h1>
-              <p className="text-fog-muted text-sm mt-1">{loading ? "Loading..." : `${sorted.length} authentic products`}</p>
-            </div>
-            <div className="hidden sm:flex items-center gap-2">
-              <span className="text-sm text-fog-muted">Sort:</span>
+    <div className="min-h-screen bg-[var(--bg)] px-4 py-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] font-display truncate">
+              {currentTitle}
+            </h1>
+            <p className="text-sm text-[var(--text-muted)] font-display">
+              {loading ? "Loading..." : `${filtered.length} authentic products`}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="relative hidden sm:block">
               <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                className="bg-white/[0.06] border border-white/[0.10] text-fog text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-gold/30"
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value as SortOption)}
+                className="appearance-none pl-3 pr-8 py-2 text-sm bg-[var(--surface)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] cursor-pointer"
               >
-                {SORT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value} style={{ background: "#06112B" }}>{o.label}</option>
-                ))}
+                <option value="latest">Latest</option>
+                <option value="price-asc">Price: Low-High</option>
+                <option value="price-desc">Price: High-Low</option>
+                <option value="popular">Most Popular</option>
               </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-muted)] pointer-events-none" />
             </div>
+
+            <button
+              onClick={() => setShowFilters(true)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 text-sm rounded-xl border transition-colors",
+                hasFilters
+                  ? "border-gold bg-gold/10 text-gold"
+                  : "border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
+              )}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              Filters
+              {hasFilters && <span className="w-1.5 h-1.5 rounded-full bg-gold" />}
+            </button>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Error state */}
+        {hasFilters && (
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            {selectedCategory && (
+              <button
+                onClick={() => setSelectedCategory("")}
+                className="flex items-center gap-1 px-3 py-1 bg-gold/10 text-gold text-xs rounded-full font-medium"
+              >
+                {categories.find((category) => category.slug === categorySlug(selectedCategory))?.name || selectedCategory}
+                <X className="h-3 w-3" />
+              </button>
+            )}
+            {inStockOnly && (
+              <button onClick={() => setInStockOnly(false)} className="flex items-center gap-1 px-3 py-1 bg-gold/10 text-gold text-xs rounded-full font-medium">
+                In Stock <X className="h-3 w-3" />
+              </button>
+            )}
+            {onSaleOnly && (
+              <button onClick={() => setOnSaleOnly(false)} className="flex items-center gap-1 px-3 py-1 bg-gold/10 text-gold text-xs rounded-full font-medium">
+                On Sale <X className="h-3 w-3" />
+              </button>
+            )}
+            <button onClick={clearFilters} className="px-3 py-1 text-xs text-[var(--text-muted)] underline">
+              Clear all
+            </button>
+          </div>
+        )}
+
+        {!loading && categories.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-4 -mx-1 px-1">
+            <button
+              onClick={() => setSelectedCategory("")}
+              className={cn(
+                "shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
+                !selectedCategory
+                  ? "bg-gold text-[#030618] font-bold"
+                  : "bg-[var(--surface)] text-[var(--text-secondary)] border border-[var(--border-color)] hover:border-gold/40"
+              )}
+            >
+              All
+            </button>
+            {categories.map((category) => (
+              <button
+                key={category.slug}
+                onClick={() => setSelectedCategory(category.slug === categorySlug(selectedCategory) ? "" : category.slug)}
+                className={cn(
+                  "shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
+                  category.slug === categorySlug(selectedCategory)
+                    ? "bg-gold text-[#030618] font-bold"
+                    : "bg-[var(--surface)] text-[var(--text-secondary)] border border-[var(--border-color)] hover:border-gold/40"
+                )}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         {error && (
           <div className="text-center py-12">
             <p className="text-red-400 mb-4">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="text-gold hover:text-gold-light text-sm font-medium transition-colors"
-            >
+            <button onClick={() => window.location.reload()} className="text-gold hover:text-gold-light text-sm font-medium transition-colors">
               Try again
             </button>
           </div>
         )}
 
-        {/* Category pills */}
-        {!loading && !error && categories.length > 1 && (
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide mb-6 pb-1">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => handleFilter(cat)}
-                className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  selectedCategory === cat
-                    ? "bg-gold text-[#030618] font-bold"
-                    : "bg-[var(--surface)] text-fog-muted border border-white/[0.08] hover:border-gold/30 hover:text-gold"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Mobile filter button */}
-        <button
-          onClick={() => setShowFilter(true)}
-          className="sm:hidden flex items-center gap-2 px-4 py-2.5 bg-[var(--surface)] border border-white/[0.08] rounded-xl text-fog text-sm mb-4"
-        >
-          <SlidersHorizontal className="w-4 h-4" /> Filter & Sort
-        </button>
-
-        {/* Color filter */}
-        <div className="mb-6">
-          <p className="text-xs font-medium mb-3 text-fog-muted">SEARCH BY COLOR</p>
-          <div className="flex items-center gap-2 flex-wrap">
-            {[
-              { color: "#ffffff", label: "White" },
-              { color: "#000000", label: "Black" },
-              { color: "#7c3aed", label: "Violet" },
-              { color: "#06b6d4", label: "Cyan" },
-              { color: "#f59e0b", label: "Amber" },
-              { color: "#ef4444", label: "Red" },
-              { color: "#22c55e", label: "Green" },
-              { color: "#3b82f6", label: "Blue" },
-              { color: "#ec4899", label: "Pink" },
-            ].map(({ color, label }) => (
-              <button
-                key={color}
-                onClick={() => handleColorFilter(color)}
-                className="relative w-8 h-8 rounded-full transition-transform hover:scale-110"
-                style={{
-                  background: color,
-                  border: activeColor === color ? '2px solid #D4A843' : '2px solid transparent',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                }}
-                title={label}
-              >
-                {activeColor === color && (
-                  <span className="absolute inset-0 flex items-center justify-center">
-                    <span className="w-2 h-2 rounded-full" style={{ background: color === '#ffffff' ? '#000' : '#fff' }} />
-                  </span>
-                )}
-              </button>
-            ))}
-            {activeColor && (
-              <button
-                onClick={() => setActiveColor(null)}
-                className="text-xs px-3 py-1 rounded-full transition-colors hover:bg-white/10"
-                style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(240,237,230,0.6)' }}
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Products grid */}
-        {loading || showSkeletons ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="card-dark rounded-2xl overflow-hidden">
-                <div className="skeleton aspect-square" />
-                <div className="p-4 space-y-2">
-                  <div className="skeleton h-3 w-20 rounded" />
-                  <div className="skeleton h-4 w-full rounded" />
-                  <div className="skeleton h-3 w-16 rounded" />
-                  <div className="skeleton h-9 w-full rounded-xl mt-2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className={`products-grid stagger-children`}>
-            {sorted.map((product) => (
+        {loading ? (
+          <ProductGridSkeleton />
+        ) : filtered.length > 0 ? (
+          <div className="products-grid stagger-children">
+            {filtered.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
-        )}
-
-        {sorted.length === 0 && !loading && !error && (
-          <div className="text-center py-20">
-            <div className="text-5xl mb-4">📦</div>
-            <p className="text-fog-muted text-lg mb-4">No products found in this category.</p>
-            <button
-              onClick={() => setSelectedCategory("All")}
-              className="text-gold hover:text-gold-light text-sm font-medium transition-colors"
-            >
-              View all products →
+        ) : !error ? (
+          <div className="text-center py-20 rounded-[28px] border border-[var(--border-color)] bg-[var(--surface-glass)]">
+            <div className="text-5xl mb-4">AG</div>
+            <p className="text-[var(--text-muted)] text-lg mb-4">No products found.</p>
+            <button onClick={clearFilters} className="text-gold hover:text-gold-light text-sm font-medium transition-colors">
+              View all products
             </button>
           </div>
-        )}
+        ) : null}
       </div>
 
-      {/* Mobile filter drawer */}
-      {showFilter && (
-        <div className="sm:hidden fixed inset-0 z-50 flex">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowFilter(false)} />
-          <div className="relative ml-auto w-full bg-[var(--surface)] border-l border-white/[0.08] p-6 pt-20">
-            <button onClick={() => setShowFilter(false)} className="absolute top-4 right-4 p-2 hover:bg-white/[0.08] rounded-xl">
-              <X className="w-5 h-5 text-fog" />
-            </button>
-            <h3 className="text-lg font-bold text-fog mb-4">Sort By</h3>
-            <div className="space-y-2 mb-8">
-              {SORT_OPTIONS.map((o) => (
-                <button
-                  key={o.value}
-                  onClick={() => { setSort(o.value); setShowFilter(false); }}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-sm ${
-                    sort === o.value ? "bg-gold text-[#030618] font-bold" : "text-fog-muted hover:bg-white/[0.05]"
-                  }`}
-                >
-                  {o.label}
-                </button>
-              ))}
+      {showFilters && (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowFilters(false)} />
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--surface)] rounded-t-[28px] p-6 max-h-[82vh] overflow-y-auto border-t border-[var(--border-color)]">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-lg text-[var(--text-primary)]">Filters</h3>
+              <button onClick={() => setShowFilters(false)} className="h-9 w-9 rounded-full border border-[var(--border-color)] flex items-center justify-center">
+                <X className="h-5 w-5 text-[var(--text-secondary)]" />
+              </button>
             </div>
-            <h3 className="text-lg font-bold text-fog mb-4">Categories</h3>
-            <div className="space-y-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => { setSelectedCategory(cat); setShowFilter(false); }}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-sm ${
-                    selectedCategory === cat ? "bg-gold text-[#030618] font-bold" : "text-fog-muted hover:bg-white/[0.05]"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+
+            <div className="space-y-6">
+              <div className="sm:hidden">
+                <p className="font-semibold text-sm text-[var(--text-primary)] mb-3">Sort By</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    ["latest", "Latest"],
+                    ["price-asc", "Low-High"],
+                    ["price-desc", "High-Low"],
+                    ["popular", "Popular"],
+                  ].map(([value, label]) => (
+                    <button
+                      key={value}
+                      onClick={() => setSortBy(value as SortOption)}
+                      className={cn(
+                        "px-3 py-2 rounded-xl text-sm font-medium border transition-colors",
+                        sortBy === value ? "bg-gold text-[#030618] border-gold" : "border-[var(--border-color)] text-[var(--text-secondary)]"
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="font-semibold text-sm text-[var(--text-primary)] mb-3">Category</p>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((category) => (
+                    <button
+                      key={category.slug}
+                      onClick={() => setSelectedCategory(category.slug === categorySlug(selectedCategory) ? "" : category.slug)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-full text-sm font-medium border transition-colors",
+                        category.slug === categorySlug(selectedCategory)
+                          ? "bg-gold text-[#030618] border-gold"
+                          : "border-[var(--border-color)] text-[var(--text-secondary)] hover:border-gold/40"
+                      )}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {[
+                  { label: "In Stock Only", value: inStockOnly, onChange: setInStockOnly },
+                  { label: "On Sale Only", value: onSaleOnly, onChange: setOnSaleOnly },
+                ].map(({ label, value, onChange }) => (
+                  <label key={label} className="flex items-center justify-between cursor-pointer">
+                    <span className="text-sm font-medium text-[var(--text-secondary)]">{label}</span>
+                    <button
+                      type="button"
+                      onClick={() => onChange(!value)}
+                      className={cn("relative w-11 h-6 rounded-full transition-colors", value ? "bg-gold" : "bg-[var(--surface-light)]")}
+                    >
+                      <span className={cn("absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform", value && "translate-x-5")} />
+                    </button>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-8">
+              <button onClick={clearFilters} className="flex-1 py-3 border border-[var(--border-color)] rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-light)]">
+                Clear All
+              </button>
+              <button onClick={() => setShowFilters(false)} className="flex-1 py-3 bg-gold text-[#030618] rounded-xl text-sm font-bold hover:opacity-90">
+                Show {filtered.length} Products
+              </button>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[var(--bg)] px-4 py-4"><ProductGridSkeleton /></div>}>
+      <ProductsContent />
+    </Suspense>
   );
 }
