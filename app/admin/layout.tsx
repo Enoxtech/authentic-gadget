@@ -61,9 +61,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const visibleNavItems = role ? NAV_ITEMS.filter((n) => n.roles.includes(role)) : NAV_ITEMS;
 
   return (
-    <div className="min-h-screen bg-fog lg:flex">
+    <div className="admin-shell min-h-screen lg:flex">
       {/* Sidebar */}
-      <aside className="sticky top-0 z-30 bg-midnight text-white lg:flex lg:min-h-screen lg:w-64 lg:shrink-0 lg:flex-col" style={{ borderRight: "1px solid rgba(201,169,110,0.12)" }}>
+      <aside className="admin-sidebar sticky top-0 z-30 bg-midnight text-white lg:flex lg:min-h-screen lg:w-64 lg:shrink-0 lg:flex-col" style={{ borderRight: "1px solid rgba(201,169,110,0.12)" }}>
         <div className="p-4 border-b border-white/10 lg:p-6">
           <h1 className="text-lg font-bold font-display" style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>
             Authentic Gadget
@@ -111,7 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main content */}
-      <div className="min-w-0 flex-1 overflow-auto">
+      <div className="admin-content min-w-0 flex-1 overflow-auto">
         <ErrorBoundary
           fallback={
             <div style={{
