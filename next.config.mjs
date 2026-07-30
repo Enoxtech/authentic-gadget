@@ -56,6 +56,17 @@ const securityHeaders = [
   },
 ];
 
+const staleClientRecoveryHeaders = [
+  {
+    key: 'Clear-Site-Data',
+    value: '"cache"',
+  },
+  {
+    key: 'Cache-Control',
+    value: 'no-store, max-age=0',
+  },
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   ...(process.env.NEXT_OUTPUT_STANDALONE === 'true' ? { output: 'standalone' } : {}),
@@ -76,6 +87,14 @@ const nextConfig = {
       {
         source: '/:path*',
         headers: securityHeaders,
+      },
+      {
+        source: '/',
+        headers: staleClientRecoveryHeaders,
+      },
+      {
+        source: '/:path((?!api|_next|favicon.ico|manifest.json|icons|banners|.*\\..*).*)',
+        headers: staleClientRecoveryHeaders,
       },
     ];
   },

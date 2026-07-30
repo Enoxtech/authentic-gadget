@@ -1,4 +1,3 @@
-import Script from "next/script";
 import type { Metadata } from "next";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -29,7 +28,6 @@ export const metadata: Metadata = {
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <Script src="https://cdn.socket.io/4.8.1/socket.io.min.js" />
       <ToastProvider>
         <Navbar />
         <main className="pb-16 lg:pb-0">{children}</main>

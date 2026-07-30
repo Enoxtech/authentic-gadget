@@ -268,11 +268,31 @@ function buildCustomerEmailHtml(order: NewOrderInfo, settings?: SettingsRow | nu
             <td style="padding:16px 18px;">
               <p style="margin:0 0 10px;font-size:13px;font-weight:800;color:#1f3d78;">Complete your bank transfer</p>
               <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#2d4d8a;">Transfer ${formatPrice(order.total)} and use your order ID as the reference. Send proof of payment to support so we can verify and process your order.</p>
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr><td style="padding:5px 0;font-size:12px;color:#5670a2;">Bank</td><td style="padding:5px 0;font-size:13px;color:#172033;font-weight:800;text-align:right;">${escapeHtml(bank.bankName)}</td></tr>
-                <tr><td style="padding:5px 0;font-size:12px;color:#5670a2;">Account Name</td><td style="padding:5px 0;font-size:13px;color:#172033;font-weight:800;text-align:right;">${escapeHtml(bank.accountName)}</td></tr>
-                <tr><td style="padding:5px 0;font-size:12px;color:#5670a2;">Account Number</td><td style="padding:5px 0;font-size:14px;color:#172033;font-weight:900;letter-spacing:1px;text-align:right;">${escapeHtml(bank.accountNumber)}</td></tr>
-                ${bank.branch ? `<tr><td style="padding:5px 0;font-size:12px;color:#5670a2;">Branch</td><td style="padding:5px 0;font-size:13px;color:#172033;font-weight:800;text-align:right;">${escapeHtml(bank.branch)}</td></tr>` : ""}
+              <table width="100%" cellpadding="0" cellspacing="0" style="border-spacing:0 8px;border-collapse:separate;">
+                <tr>
+                  <td style="padding:10px 12px;border-radius:12px;background:#ffffff;border:1px solid #dbe8ff;">
+                    <p style="margin:0 0 4px;font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:#5670a2;font-weight:800;">Bank</p>
+                    <p style="margin:0;font-size:15px;color:#172033;font-weight:900;">${escapeHtml(bank.bankName)}</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 12px;border-radius:12px;background:#ffffff;border:1px solid #dbe8ff;">
+                    <p style="margin:0 0 4px;font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:#5670a2;font-weight:800;">Account Name</p>
+                    <p style="margin:0;font-size:15px;color:#172033;font-weight:900;">${escapeHtml(bank.accountName)}</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 12px;border-radius:12px;background:#ffffff;border:1px solid #dbe8ff;">
+                    <p style="margin:0 0 4px;font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:#5670a2;font-weight:800;">Account Number</p>
+                    <p style="margin:0;font-size:17px;color:#172033;font-weight:900;letter-spacing:1px;">${escapeHtml(bank.accountNumber)}</p>
+                  </td>
+                </tr>
+                ${bank.branch ? `<tr>
+                  <td style="padding:10px 12px;border-radius:12px;background:#ffffff;border:1px solid #dbe8ff;">
+                    <p style="margin:0 0 4px;font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:#5670a2;font-weight:800;">Branch</p>
+                    <p style="margin:0;font-size:15px;color:#172033;font-weight:900;">${escapeHtml(bank.branch)}</p>
+                  </td>
+                </tr>` : ""}
               </table>
               ${bank.note ? `<p style="margin:12px 0 0;font-size:12px;line-height:1.5;color:#5670a2;">${escapeHtml(bank.note)}</p>` : ""}
             </td>

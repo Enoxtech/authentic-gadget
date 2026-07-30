@@ -1922,12 +1922,6 @@ body::before {
   background: #eff6ff !important;
 }
 
-[data-theme="light"] .checkout-page .text-blue-950,
-[data-theme="light"] .checkout-page .text-blue-900,
-[data-theme="light"] .checkout-page .text-blue-500 {
-  color: inherit !important;
-}
-
 .field-shake {
   animation: fieldShake 0.4s ease-in-out;
 }

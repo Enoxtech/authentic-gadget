@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, ArrowRight, Check, Landmark, Loader2, MapPin, ShoppingBag, Store, Truck, UserPlus } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Copy, Landmark, Loader2, MapPin, ShoppingBag, Store, Truck, UserPlus } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/utils";
 
@@ -107,8 +107,20 @@ export default function CheckoutPage() {
     formData.phone.trim() &&
     (deliveryMethod === "pickup" || formData.address.trim());
 
+  const bankDetailRows = [
+    { label: "Bank", value: bankTransfer.branch ? `${bankTransfer.bankName} (${bankTransfer.branch})` : bankTransfer.bankName },
+    { label: "Account Name", value: bankTransfer.accountName },
+    { label: "Account Number", value: bankTransfer.accountNumber },
+  ].filter((row) => row.value);
+
   function update(field: keyof typeof formData, value: string) {
     setFormData((current) => ({ ...current, [field]: value }));
+  }
+
+  async function copyBankValue(value: string) {
+    try {
+      await navigator.clipboard?.writeText(value);
+    } catch {}
   }
 
   function handleContinue() {
@@ -197,7 +209,22 @@ export default function CheckoutPage() {
           {isBankTransfer && (
             <div className="mt-5 rounded-2xl bg-blue-50 p-4 text-left text-sm text-blue-900">
               <p className="font-bold">Complete your transfer</p>
-              <p className="mt-1">Transfer {formatPrice(confirmedTotal)} to {bankTransfer.bankName}, {bankTransfer.accountName}, {bankTransfer.accountNumber}.</p>
+              <p className="mt-1 text-xs leading-relaxed text-blue-700">
+                Transfer exactly <span className="font-bold text-blue-950">{formatPrice(confirmedTotal)}</span> and use your order ID as the payment reference.
+              </p>
+              <div className="mt-4 space-y-2">
+                {bankDetailRows.map((row) => (
+                  <div key={row.label} className="flex items-center justify-between gap-3 rounded-xl border border-blue-100 bg-white px-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-500">{row.label}</p>
+                      <p className="break-words text-sm font-extrabold text-blue-950">{row.value}</p>
+                    </div>
+                    <button type="button" onClick={() => copyBankValue(row.value)} className="shrink-0 rounded-full bg-blue-100 px-3 py-1.5 text-xs font-bold text-blue-900">
+                      Copy
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
           <Link href="/products" className="checkout-gradient mt-6 inline-flex rounded-full px-5 py-3 text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)" }}>
@@ -334,10 +361,19 @@ export default function CheckoutPage() {
                 {paymentMethod === "bank_transfer" && (
                   <div className="rounded-xl bg-blue-50 p-4 text-sm">
                     <p className="mb-2 font-bold text-blue-950">Bank Transfer Details</p>
-                    <div className="space-y-1 text-blue-900">
-                      <p><span className="text-blue-500">Bank:</span> {bankTransfer.bankName}{bankTransfer.branch ? ` (${bankTransfer.branch})` : ""}</p>
-                      <p><span className="text-blue-500">Account Name:</span> {bankTransfer.accountName}</p>
-                      <p><span className="text-blue-500">Account Number:</span> <span className="font-bold tracking-wider">{bankTransfer.accountNumber}</span></p>
+                    <div className="space-y-2">
+                      {bankDetailRows.map((row) => (
+                        <div key={row.label} className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-blue-950">
+                          <span>
+                            <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-blue-500">{row.label}</span>
+                            <span className="block break-words text-sm font-extrabold">{row.value}</span>
+                          </span>
+                          <button type="button" onClick={() => copyBankValue(row.value)} className="inline-flex shrink-0 items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1.5 text-xs font-bold text-blue-900">
+                            <Copy className="h-3.5 w-3.5" />
+                            Copy
+                          </button>
+                        </div>
+                      ))}
                     </div>
                     <p className="mt-2 text-xs text-blue-500">{bankTransfer.note}</p>
                   </div>
