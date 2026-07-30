@@ -80,6 +80,12 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} />
       </head>
       <body className="font-sans antialiased">
+        <div id="pwa-pre-splash" className="pwa-pre-splash" aria-hidden="true">
+          <div className="pwa-pre-splash-logo">
+            <img src="/logo-white.png" alt="" />
+          </div>
+          <p>Authentic Gadget</p>
+        </div>
         <div className="bg-ambient" aria-hidden="true">
           <div className="bg-blob bg-blob-1" />
           <div className="bg-blob bg-blob-2" />

@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
-import { Check, ArrowRight, ArrowLeft, ShoppingBag, Loader2, Smartphone, Truck, Landmark } from "lucide-react";
+import { Check, ArrowRight, ArrowLeft, ShoppingBag, Loader2, Truck, Landmark, Copy, X } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 
 interface DeliveryArea {
@@ -24,6 +23,15 @@ interface BankTransferSettings {
   note: string;
 }
 
+const DEFAULT_BANK_TRANSFER_SETTINGS: BankTransferSettings = {
+  enabled: true,
+  bankName: "GT Bank",
+  accountName: "Mavis Osei",
+  accountNumber: "1210001009041",
+  branch: "",
+  note: "Use your order ID as the transfer reference, then contact support with your payment receipt for verification.",
+};
+
 const STEPS = [
   { id: "info", label: "Information", icon: "📋" },
   { id: "payment", label: "Payment", icon: "💳" },
@@ -31,23 +39,15 @@ const STEPS = [
 ];
 
 const PAYMENT_METHODS = [
-  { id: "momo", label: "Mobile Money (MoMo)", icon: Smartphone, desc: "Hubtel · MTN · Telecel · AirtelTigo" },
+  { id: "bank_transfer", label: "Bank Transfer", icon: Landmark, desc: "Transfer to GT Bank and verify after payment" },
   { id: "cod", label: "Pay on Delivery", icon: Truck, desc: "Pay when your order arrives" },
-];
-
-const MOMO_PROVIDERS = [
-  { id: "mtn", label: "MTN MoMo", color: "#FFCC00" },
-  { id: "vodafone", label: "Vodafone Cash", color: "#E60000" },
-  { id: "airteltigo", label: "AirtelTigo Money", color: "#8B5CF6" },
 ];
 
 export default function CheckoutPage() {
   const { items, total, discount, updateQuantity, clearCart } = useCart();
-  const router = useRouter();
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", address: "", city: "", state: "" });
-  const [paymentMethod, setPaymentMethod] = useState("momo");
-  const [momoProvider, setMomoProvider] = useState("mtn");
+  const [paymentMethod, setPaymentMethod] = useState("bank_transfer");
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -57,7 +57,9 @@ export default function CheckoutPage() {
   const [deliveryAreas, setDeliveryAreas] = useState<DeliveryArea[]>([]);
   const [deliveryAreaId, setDeliveryAreaId] = useState("");
   const [vatPercent, setVatPercent] = useState(0);
-  const [bankTransfer, setBankTransfer] = useState<BankTransferSettings | null>(null);
+  const [bankTransfer, setBankTransfer] = useState<BankTransferSettings | null>(DEFAULT_BANK_TRANSFER_SETTINGS);
+  const [showTransferPopup, setShowTransferPopup] = useState(false);
+  const [copiedField, setCopiedField] = useState("");
 
   useEffect(() => {
     fetch("/api/delivery-areas")
@@ -85,16 +87,36 @@ export default function CheckoutPage() {
   const taxAmount = vatPercent > 0 ? Math.round(subtotalAfterDiscount * vatPercent) / 100 : 0;
   const discountedTotal = subtotalAfterDiscount + taxAmount + deliveryFee;
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
-  const paymentMethods = bankTransfer
-    ? [
-        ...PAYMENT_METHODS,
-        { id: "bank_transfer", label: "Manual Bank Transfer", icon: Landmark, desc: "Transfer to our bank account and verify after payment" },
-      ]
-    : PAYMENT_METHODS;
+  const paymentMethods = PAYMENT_METHODS.filter((method) => method.id !== "bank_transfer" || bankTransfer);
+
+  const selectPaymentMethod = (id: string) => {
+    setPaymentMethod(id);
+    setError("");
+    if (id === "bank_transfer" && bankTransfer) setShowTransferPopup(true);
+  };
+
+  const copyToClipboard = async (label: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedField(label);
+      setTimeout(() => setCopiedField(""), 1400);
+    } catch {
+      setCopiedField("");
+    }
+  };
 
   const handleNext = () => {
     setIsAnimating(true);
-    setTimeout(() => { setStep(s => s + 1); setIsAnimating(false); }, 300);
+    setTimeout(() => {
+      setStep((s) => {
+        const next = s + 1;
+        if (next === 1 && paymentMethod === "bank_transfer" && bankTransfer) {
+          setShowTransferPopup(true);
+        }
+        return next;
+      });
+      setIsAnimating(false);
+    }, 300);
   };
 
   const handleBack = () => {
@@ -175,58 +197,6 @@ export default function CheckoutPage() {
         setOrderPlaced(true);
       } catch (error: unknown) {
         setError(error instanceof Error ? error.message : "Failed to place order. Please try again.");
-      } finally {
-        setIsProcessing(false);
-      }
-      return;
-    }
-
-    if (paymentMethod === "momo") {
-      if (!formData.phone) {
-        setError("Please enter your phone number for MoMo payment.");
-        setIsProcessing(false);
-        return;
-      }
-      try {
-        const orderRes = await fetch("/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...orderPayload,
-            payment_method: `momo_${momoProvider}`,
-          }),
-        });
-        const orderData = (await orderRes.json()) as {
-          error?: string;
-          orderId?: string;
-          total?: number;
-        };
-        if (!orderRes.ok || !orderData.orderId || !orderData.total) {
-          throw new Error(orderData.error || "Order creation failed");
-        }
-
-        const momoRes = await fetch("/api/hubtel/momo", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            orderId: orderData.orderId,
-          }),
-        });
-        const momoData = (await momoRes.json()) as { error?: string; redirectUrl?: string | null };
-        if (!momoRes.ok) throw new Error(momoData.error || "MoMo payment initiation failed");
-
-        setOrderId(orderData.orderId);
-        if (momoData.redirectUrl) {
-          window.location.href = momoData.redirectUrl;
-          return;
-        }
-
-        clearCart();
-        // Hubtel should return a hosted payment URL. If it does not, keep a safe fallback
-        // to the pending order page so the customer can track the order.
-        router.push(`/order-success?order=${orderData.orderId}&total=${orderData.total}&method=momo&provider=hubtel`);
-      } catch (error: unknown) {
-        setError(error instanceof Error ? error.message : "Payment initiation failed. Please try again.");
       } finally {
         setIsProcessing(false);
       }
@@ -370,6 +340,86 @@ export default function CheckoutPage() {
 
   return (
     <div className="checkout-page min-h-screen">
+      {showTransferPopup && bankTransfer && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 px-4 py-6 animate-fade-in">
+          <div
+            className="w-full max-w-md overflow-hidden rounded-[28px] shadow-2xl"
+            style={{
+              background: "linear-gradient(145deg, #081630, #040820)",
+              border: "1px solid rgba(212,168,67,0.28)",
+            }}
+          >
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em]" style={{ color: "#D4A843" }}>
+                  Manual Transfer
+                </p>
+                <h3 className="mt-1 text-lg font-bold text-white">Bank Transfer Details</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTransferPopup(false)}
+                className="flex h-10 w-10 items-center justify-center rounded-full text-white/70 transition hover:bg-white/10 hover:text-white"
+                aria-label="Close transfer details"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 px-5 py-5">
+              {[
+                ["Bank", bankTransfer.bankName],
+                ["Account Name", bankTransfer.accountName || "Authentic Gadget"],
+                ["Account Number", bankTransfer.accountNumber],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  className="flex items-center justify-between gap-3 rounded-2xl p-3"
+                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
+                >
+                  <div className="min-w-0">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-white/45">{label}</p>
+                    <p className="mt-1 truncate text-sm font-bold text-white">{value}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(label, value)}
+                    className="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold text-white"
+                    style={{ background: "rgba(212,168,67,0.18)", border: "1px solid rgba(212,168,67,0.30)" }}
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                    {copiedField === label ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              ))}
+
+              <div
+                className="rounded-2xl p-4 text-sm leading-relaxed"
+                style={{
+                  background: "rgba(25,175,255,0.10)",
+                  border: "1px solid rgba(25,175,255,0.22)",
+                  color: "rgba(255,255,255,0.78)",
+                }}
+              >
+                Place your order first, then transfer the exact total and use your order ID as the payment reference.
+                Send your receipt to support for verification.
+              </div>
+            </div>
+
+            <div className="px-5 pb-5">
+              <button
+                type="button"
+                onClick={() => setShowTransferPopup(false)}
+                className="w-full rounded-full px-5 py-3 text-sm font-bold text-white"
+                style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)" }}
+              >
+                I understand
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div
         className="checkout-topbar border-b border-white/10"
@@ -536,7 +586,7 @@ export default function CheckoutPage() {
                     {paymentMethods.map(({ id, label, icon: Icon, desc }) => (
                       <button
                         key={id}
-                        onClick={() => { setPaymentMethod(id); setError(""); }}
+                        onClick={() => selectPaymentMethod(id)}
                         className="w-full flex items-center gap-4 p-4 rounded-xl transition-all text-left"
                         style={{
                           background:
@@ -572,29 +622,6 @@ export default function CheckoutPage() {
                         )}
                       </button>
                     ))}
-
-                    {/* MoMo sub-step: Provider selection */}
-                    {paymentMethod === "momo" && (
-                      <div className="mt-3 pl-4 border-l-2 border-gold/30 space-y-2">
-                        <p className="text-xs text-white/40 mb-2">Select your network:</p>
-                        <div className="grid grid-cols-3 gap-2">
-                          {MOMO_PROVIDERS.map(p => (
-                            <button
-                              key={p.id}
-                              onClick={() => setMomoProvider(p.id)}
-                              className="py-2.5 px-3 rounded-xl text-xs font-semibold transition-all"
-                              style={{
-                                background: momoProvider === p.id ? `${p.color}22` : "rgba(255,255,255,0.04)",
-                                border: momoProvider === p.id ? `2px solid ${p.color}` : "1px solid rgba(255,255,255,0.08)",
-                                color: momoProvider === p.id ? p.color : "rgba(255,255,255,0.6)",
-                              }}
-                            >
-                              {p.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
 
                     {paymentMethod === "bank_transfer" && bankTransfer && (
                       <div
@@ -794,7 +821,7 @@ export default function CheckoutPage() {
                   ) : paymentMethod === "bank_transfer" ? (
                     <>Confirm Bank Transfer → {discountedTotal > 0 ? formatPrice(discountedTotal) : ""}</>
                   ) : (
-                    <>{paymentMethod === "momo" ? "Pay with MoMo →" : "Pay Now →"} {discountedTotal > 0 ? formatPrice(discountedTotal) : ""}</>
+                    <>Pay Now - {discountedTotal > 0 ? formatPrice(discountedTotal) : ""}</>
                   )}
                 </button>
               )}

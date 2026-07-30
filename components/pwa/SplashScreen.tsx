@@ -5,6 +5,10 @@ import ThemeLogo from "@/components/ui/ThemeLogo";
 
 const SPLASH_FLAG = "splash-shown-v1";
 
+function removePreSplash() {
+  document.getElementById("pwa-pre-splash")?.remove();
+}
+
 function isStandalone() {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
@@ -17,10 +21,17 @@ export default function SplashScreen() {
 
   useEffect(() => {
     const id = setTimeout(() => {
-      if (!isStandalone()) return;
-      if (sessionStorage.getItem(SPLASH_FLAG)) return;
+      if (!isStandalone()) {
+        removePreSplash();
+        return;
+      }
+      if (sessionStorage.getItem(SPLASH_FLAG)) {
+        removePreSplash();
+        return;
+      }
       sessionStorage.setItem(SPLASH_FLAG, "1");
       setShow(true);
+      requestAnimationFrame(removePreSplash);
     }, 0);
     return () => clearTimeout(id);
   }, []);

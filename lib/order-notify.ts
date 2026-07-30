@@ -1,5 +1,6 @@
 import { formatPrice } from "@/lib/utils";
 import { escapeHtml, getEmailSettings, isEmail, ORDERS_FROM, sendMail } from "@/lib/email";
+import { DEFAULT_BANK_TRANSFER, type SettingsRow } from "@/lib/settings";
 
 interface OrderEmailItem {
   name: string;
@@ -43,6 +44,23 @@ function paymentLabel(method?: string) {
     hubtel: "Hubtel MoMo",
   };
   return labels[method || ""] || (method ? method.replace(/_/g, " ") : "Not selected");
+}
+
+function bankDetails(settings?: SettingsRow | null) {
+  return {
+    bankName: settings?.bank_name || DEFAULT_BANK_TRANSFER.bankName,
+    accountName: settings?.bank_account_name || DEFAULT_BANK_TRANSFER.accountName,
+    accountNumber: settings?.bank_account_number || DEFAULT_BANK_TRANSFER.accountNumber,
+    branch: settings?.bank_branch || DEFAULT_BANK_TRANSFER.branch,
+    note: settings?.bank_transfer_note || DEFAULT_BANK_TRANSFER.note,
+  };
+}
+
+function supportWhatsappUrl(order: NewOrderInfo) {
+  const phone = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "").replace(/\D/g, "");
+  if (!phone) return "";
+  const message = `Hi! I have a question about my Authentic Gadget order ${order.orderId}.`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
 
 function safeItems(order: NewOrderInfo) {
@@ -185,10 +203,12 @@ function buildAdminEmailHtml(order: NewOrderInfo) {
   );
 }
 
-function buildCustomerEmailHtml(order: NewOrderInfo) {
+function buildCustomerEmailHtml(order: NewOrderInfo, settings?: SettingsRow | null) {
   const orderId = escapeHtml(order.orderId);
   const address = addressLine(order);
   const trackUrl = `${appUrl()}/track-order`;
+  const bank = bankDetails(settings);
+  const whatsappUrl = supportWhatsappUrl(order);
 
   return emailShell(
     `Order confirmed ${orderId}`,
@@ -242,12 +262,27 @@ function buildCustomerEmailHtml(order: NewOrderInfo) {
     </tr>
     ${order.paymentMethod === "bank_transfer" ? `<tr>
       <td style="padding:24px 34px 0;">
-        <p style="margin:0;padding:14px 16px;border-radius:14px;background:#eef4ff;border:1px solid #cfe0fb;font-size:13px;color:#2d4d8a;">Complete the bank transfer and send your proof of payment to support with your order ID.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-radius:18px;background:#eef4ff;border:1px solid #cfe0fb;overflow:hidden;">
+          <tr>
+            <td style="padding:16px 18px;">
+              <p style="margin:0 0 10px;font-size:13px;font-weight:800;color:#1f3d78;">Complete your bank transfer</p>
+              <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#2d4d8a;">Transfer ${formatPrice(order.total)} and use your order ID as the reference. Send proof of payment to support so we can verify and process your order.</p>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr><td style="padding:5px 0;font-size:12px;color:#5670a2;">Bank</td><td style="padding:5px 0;font-size:13px;color:#172033;font-weight:800;text-align:right;">${escapeHtml(bank.bankName)}</td></tr>
+                <tr><td style="padding:5px 0;font-size:12px;color:#5670a2;">Account Name</td><td style="padding:5px 0;font-size:13px;color:#172033;font-weight:800;text-align:right;">${escapeHtml(bank.accountName)}</td></tr>
+                <tr><td style="padding:5px 0;font-size:12px;color:#5670a2;">Account Number</td><td style="padding:5px 0;font-size:14px;color:#172033;font-weight:900;letter-spacing:1px;text-align:right;">${escapeHtml(bank.accountNumber)}</td></tr>
+                ${bank.branch ? `<tr><td style="padding:5px 0;font-size:12px;color:#5670a2;">Branch</td><td style="padding:5px 0;font-size:13px;color:#172033;font-weight:800;text-align:right;">${escapeHtml(bank.branch)}</td></tr>` : ""}
+              </table>
+              ${bank.note ? `<p style="margin:12px 0 0;font-size:12px;line-height:1.5;color:#5670a2;">${escapeHtml(bank.note)}</p>` : ""}
+            </td>
+          </tr>
+        </table>
       </td>
     </tr>` : ""}
     <tr>
       <td style="padding:30px 34px;text-align:center;">
         <a href="${trackUrl}" style="display:inline-block;padding:14px 32px;border-radius:999px;background:#071836;color:#ffffff;font-size:14px;font-weight:800;text-decoration:none;">Track Your Order</a>
+        ${whatsappUrl ? `<a href="${whatsappUrl}" style="display:inline-block;margin-left:8px;margin-top:10px;padding:14px 24px;border-radius:999px;background:#0f8f4d;color:#ffffff;font-size:14px;font-weight:800;text-decoration:none;">Chat With Support</a>` : ""}
       </td>
     </tr>
     <tr>
@@ -282,7 +317,7 @@ export async function notifyAdminOfNewOrder(order: NewOrderInfo): Promise<void> 
         sendMail(
           order.customerEmail,
           `Your Authentic Gadget order ${order.orderId}`,
-          buildCustomerEmailHtml(order),
+          buildCustomerEmailHtml(order, settings),
           ORDERS_FROM,
           settings
         )

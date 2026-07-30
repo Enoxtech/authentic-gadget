@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase-server";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
-import { getSettings } from "@/lib/settings";
+import { DEFAULT_BANK_TRANSFER, getSettings } from "@/lib/settings";
 import { notifyAdminOfNewOrder } from "@/lib/order-notify";
 
 interface SubmittedItem {
@@ -55,12 +55,7 @@ function createOrderId() {
 
 function normalizePaymentMethod(value: string) {
   const method = value || "cod";
-  if (
-    method === "cod" ||
-    method === "card" ||
-    method === "bank_transfer" ||
-    /^momo_(mtn|vodafone|airteltigo)$/.test(method)
-  ) {
+  if (method === "cod" || method === "bank_transfer") {
     return method;
   }
   return "";
@@ -192,11 +187,15 @@ export async function POST(request: NextRequest) {
     const envBankTransferEnabled =
       process.env.BANK_TRANSFER_ENABLED === "true" &&
       Boolean(process.env.BANK_NAME && process.env.BANK_ACCOUNT_NUMBER);
+    const defaultBankTransferEnabled =
+      DEFAULT_BANK_TRANSFER.enabled &&
+      Boolean(DEFAULT_BANK_TRANSFER.bankName && DEFAULT_BANK_TRANSFER.accountNumber);
     if (
       paymentMethod === "bank_transfer" &&
       !(
         (settings?.bank_transfer_enabled && settings.bank_name && settings.bank_account_number) ||
-        envBankTransferEnabled
+        envBankTransferEnabled ||
+        defaultBankTransferEnabled
       )
     ) {
       return NextResponse.json({ error: "Bank transfer is not available" }, { status: 400 });

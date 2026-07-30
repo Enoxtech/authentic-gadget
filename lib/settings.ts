@@ -38,6 +38,15 @@ export interface SettingsRow {
   updated_at: string;
 }
 
+export const DEFAULT_BANK_TRANSFER = {
+  enabled: true,
+  bankName: "GT Bank",
+  accountName: "Mavis Osei",
+  accountNumber: "1210001009041",
+  branch: "",
+  note: "Use your order ID as the transfer reference, then contact support with your payment receipt for verification.",
+};
+
 export async function getSettings(): Promise<SettingsRow | null> {
   const supabase = getSupabaseAdminClient();
   const { data } = await supabase.from("settings").select("*").eq("id", "default").maybeSingle();
@@ -82,12 +91,12 @@ export function toAdminView(row: SettingsRow) {
     adminEmail: row.admin_email || "",
     resendApiKeySet: Boolean(row.resend_api_key_enc),
     resendFromEmail: row.resend_from_email || "",
-    bankTransferEnabled: Boolean(row.bank_transfer_enabled),
-    bankName: row.bank_name || "",
-    bankAccountName: row.bank_account_name || "",
-    bankAccountNumber: row.bank_account_number || "",
-    bankBranch: row.bank_branch || "",
-    bankTransferNote: row.bank_transfer_note || "",
+    bankTransferEnabled: Boolean(row.bank_transfer_enabled) || DEFAULT_BANK_TRANSFER.enabled,
+    bankName: row.bank_name || DEFAULT_BANK_TRANSFER.bankName,
+    bankAccountName: row.bank_account_name || DEFAULT_BANK_TRANSFER.accountName,
+    bankAccountNumber: row.bank_account_number || DEFAULT_BANK_TRANSFER.accountNumber,
+    bankBranch: row.bank_branch || DEFAULT_BANK_TRANSFER.branch,
+    bankTransferNote: row.bank_transfer_note || DEFAULT_BANK_TRANSFER.note,
   };
 }
 
@@ -103,12 +112,12 @@ export function toPublicView(row: SettingsRow) {
     businessHoursSunday: row.business_hours_sunday,
     vatPercent: Number(row.vat_percent),
     bankTransfer: {
-      enabled: Boolean(row.bank_transfer_enabled),
-      bankName: row.bank_name || "",
-      accountName: row.bank_account_name || "",
-      accountNumber: row.bank_account_number || "",
-      branch: row.bank_branch || "",
-      note: row.bank_transfer_note || "",
+      enabled: Boolean(row.bank_transfer_enabled) || DEFAULT_BANK_TRANSFER.enabled,
+      bankName: row.bank_name || DEFAULT_BANK_TRANSFER.bankName,
+      accountName: row.bank_account_name || DEFAULT_BANK_TRANSFER.accountName,
+      accountNumber: row.bank_account_number || DEFAULT_BANK_TRANSFER.accountNumber,
+      branch: row.bank_branch || DEFAULT_BANK_TRANSFER.branch,
+      note: row.bank_transfer_note || DEFAULT_BANK_TRANSFER.note,
     },
   };
 }

@@ -2206,6 +2206,51 @@ body::before {
 }
 
 /* ── PWA splash screen ──────────────────────────────────────────── */
+.pwa-pre-splash {
+  display: none;
+}
+
+@media (display-mode: standalone) {
+  .pwa-pre-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 199;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 50% 32%, rgba(212, 168, 67, 0.15), transparent 30%),
+      #040820;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .pwa-pre-splash-logo {
+    display: flex;
+    height: 96px;
+    width: 96px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 28px;
+    background: #0b1e3d;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+  }
+
+  .pwa-pre-splash-logo img {
+    height: 72px;
+    width: 72px;
+    object-fit: contain;
+  }
+
+  .pwa-pre-splash p {
+    margin-top: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+}
+
 @keyframes ag-bounce-logo {
   0%, 100% { transform: translateY(0) scale(1); }
   30%      { transform: translateY(-18px) scale(1.08); }

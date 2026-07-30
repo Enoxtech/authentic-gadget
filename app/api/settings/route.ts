@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSettings, toPublicView } from "@/lib/settings";
+import { DEFAULT_BANK_TRANSFER, getSettings, toPublicView } from "@/lib/settings";
 
 export async function GET() {
   try {
@@ -19,12 +19,12 @@ export async function GET() {
     businessHoursSunday: "Closed",
     vatPercent: Number(process.env.VAT_PERCENT || 0),
     bankTransfer: {
-      enabled: process.env.BANK_TRANSFER_ENABLED === "true",
-      bankName: process.env.BANK_NAME || "",
-      accountName: process.env.BANK_ACCOUNT_NAME || "",
-      accountNumber: process.env.BANK_ACCOUNT_NUMBER || "",
-      branch: process.env.BANK_BRANCH || "",
-      note: process.env.BANK_TRANSFER_NOTE || "",
+      enabled: process.env.BANK_TRANSFER_ENABLED === "true" || DEFAULT_BANK_TRANSFER.enabled,
+      bankName: process.env.BANK_NAME || DEFAULT_BANK_TRANSFER.bankName,
+      accountName: process.env.BANK_ACCOUNT_NAME || DEFAULT_BANK_TRANSFER.accountName,
+      accountNumber: process.env.BANK_ACCOUNT_NUMBER || DEFAULT_BANK_TRANSFER.accountNumber,
+      branch: process.env.BANK_BRANCH || DEFAULT_BANK_TRANSFER.branch,
+      note: process.env.BANK_TRANSFER_NOTE || DEFAULT_BANK_TRANSFER.note,
     },
   });
 }
