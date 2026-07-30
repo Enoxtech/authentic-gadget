@@ -1797,6 +1797,13 @@ body::before {
   --checkout-text: var(--foreground);
   --checkout-muted: var(--muted-foreground);
   --checkout-placeholder: color-mix(in oklch, var(--muted-foreground) 72%, transparent);
+  --checkout-panel-bg: color-mix(in oklch, var(--surface-glass-strong) 92%, white 8%);
+  --checkout-panel-border: var(--border-color);
+  --checkout-field-bg: color-mix(in oklch, white 76%, var(--gold) 8%);
+  --checkout-field-text: #081126;
+  --checkout-toggle-bg: color-mix(in oklch, white 76%, var(--gold) 10%);
+  --checkout-toggle-active-bg: #ffffff;
+  --checkout-toggle-active-text: #071836;
   background:
     radial-gradient(circle at 12% 8%, color-mix(in oklch, var(--gold) 11%, transparent), transparent 30%),
     radial-gradient(circle at 88% 12%, color-mix(in oklch, var(--electric) 8%, transparent), transparent 32%),
@@ -1809,11 +1816,81 @@ body::before {
   --checkout-text: #ffffff;
   --checkout-muted: rgba(255, 255, 255, 0.58);
   --checkout-placeholder: rgba(255, 255, 255, 0.42);
+  --checkout-panel-bg: rgba(255, 255, 255, 0.055);
+  --checkout-panel-border: rgba(255, 255, 255, 0.12);
+  --checkout-field-bg: rgba(255, 255, 255, 0.08);
+  --checkout-field-text: #ffffff;
+  --checkout-toggle-bg: rgba(255, 255, 255, 0.06);
+  --checkout-toggle-active-bg: #ffffff;
+  --checkout-toggle-active-text: #071836;
+}
+
+.checkout-page input,
+.checkout-page textarea,
+.checkout-page select {
+  background: var(--checkout-field-bg) !important;
+  border-color: var(--checkout-panel-border) !important;
+  color: var(--checkout-field-text) !important;
 }
 
 .checkout-page input::placeholder {
   color: var(--checkout-placeholder);
   opacity: 1;
+}
+
+.checkout-page textarea::placeholder {
+  color: var(--checkout-placeholder);
+  opacity: 1;
+}
+
+.checkout-page label,
+.checkout-page .text-white,
+.checkout-page .text-white\/72,
+.checkout-page .text-white\/70,
+.checkout-page .text-white\/65,
+.checkout-page .text-white\/60,
+.checkout-page .text-white\/55,
+.checkout-page .text-white\/50,
+.checkout-page .text-white\/45,
+.checkout-page .text-white\/42,
+.checkout-page .text-white\/40 {
+  color: var(--checkout-text) !important;
+}
+
+.checkout-page .text-white\/60,
+.checkout-page .text-white\/55,
+.checkout-page .text-white\/50,
+.checkout-page .text-white\/45,
+.checkout-page .text-white\/42,
+.checkout-page .text-white\/40 {
+  color: var(--checkout-muted) !important;
+}
+
+.checkout-page .bg-white\/10,
+.checkout-page .bg-white\/\[0\.10\],
+.checkout-page .bg-white\/\[0\.04\] {
+  background: var(--checkout-toggle-bg) !important;
+}
+
+.checkout-page .border-white\/10,
+.checkout-page .border-white\/12 {
+  border-color: var(--checkout-panel-border) !important;
+}
+
+.checkout-page .checkout-toggle-active {
+  background: var(--checkout-toggle-active-bg) !important;
+  color: var(--checkout-toggle-active-text) !important;
+  box-shadow: 0 16px 40px rgba(4, 8, 32, 0.12);
+}
+
+.checkout-page .checkout-toggle-active svg {
+  color: currentColor !important;
+}
+
+.checkout-page .checkout-gradient,
+.checkout-page .checkout-gradient.text-white,
+.checkout-page .checkout-gradient svg {
+  color: #ffffff !important;
 }
 
 [data-theme="light"] .checkout-page [style*="rgba(255,255,255,0.03)"],
@@ -1826,18 +1903,29 @@ body::before {
 [data-theme="light"] .checkout-page [style*="rgba(255, 255, 255, 0.05)"],
 [data-theme="light"] .checkout-page [style*="rgba(255, 255, 255, 0.06)"],
 [data-theme="light"] .checkout-page [style*="rgba(255, 255, 255, 0.08)"] {
-  background: var(--surface-glass-strong) !important;
-  border-color: var(--border-color) !important;
+  background: var(--checkout-panel-bg) !important;
+  border-color: var(--checkout-panel-border) !important;
 }
 
 [data-theme="light"] .checkout-page .checkout-topbar,
 [data-theme="light"] .checkout-page .checkout-topbar .text-white,
+[data-theme="light"] .checkout-page .checkout-topbar .text-white\/50,
 [data-theme="light"] .checkout-page .checkout-topbar span {
   color: #fff !important;
 }
 
 [data-theme="light"] .checkout-page .checkout-topbar {
   border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="light"] .checkout-page .bg-blue-50 {
+  background: #eff6ff !important;
+}
+
+[data-theme="light"] .checkout-page .text-blue-950,
+[data-theme="light"] .checkout-page .text-blue-900,
+[data-theme="light"] .checkout-page .text-blue-500 {
+  color: inherit !important;
 }
 
 .field-shake {

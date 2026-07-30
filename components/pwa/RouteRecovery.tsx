@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 
-const RECOVERY_FLAG = "ag-route-recovery-reloaded-v1";
-const CACHE_CLEAN_FLAG = "ag-cache-clean-v2";
+const RECOVERY_FLAG = "ag-route-recovery-reloaded-v2";
+const CACHE_CLEAN_FLAG = "ag-cache-clean-v3";
 
 function isChunkLoadFailure(message: string) {
   const lower = message.toLowerCase();
@@ -11,7 +11,10 @@ function isChunkLoadFailure(message: string) {
     lower.includes("chunkloaderror") ||
     lower.includes("loading chunk") ||
     lower.includes("failed to fetch dynamically imported module") ||
-    lower.includes("unable to preload css")
+    lower.includes("importing a module script failed") ||
+    lower.includes("unable to preload css") ||
+    lower.includes("failed to fetch rsc payload") ||
+    lower.includes("failed to load static props")
   );
 }
 

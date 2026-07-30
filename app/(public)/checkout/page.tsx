@@ -174,7 +174,7 @@ export default function CheckoutPage() {
       <div className="checkout-page min-h-screen flex items-center justify-center px-4 text-center">
         <div>
           <p className="text-white/60">Your cart is empty.</p>
-          <Link href="/products" className="mt-4 inline-flex rounded-full px-5 py-3 text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)" }}>
+          <Link href="/products" className="checkout-gradient mt-4 inline-flex rounded-full px-5 py-3 text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)" }}>
             Shop Now
           </Link>
         </div>
@@ -200,7 +200,7 @@ export default function CheckoutPage() {
               <p className="mt-1">Transfer {formatPrice(confirmedTotal)} to {bankTransfer.bankName}, {bankTransfer.accountName}, {bankTransfer.accountNumber}.</p>
             </div>
           )}
-          <Link href="/products" className="mt-6 inline-flex rounded-full px-5 py-3 text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)" }}>
+          <Link href="/products" className="checkout-gradient mt-6 inline-flex rounded-full px-5 py-3 text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)" }}>
             Continue Shopping
           </Link>
         </div>
@@ -276,7 +276,7 @@ export default function CheckoutPage() {
                       { id: "ship" as const, label: "Ship", icon: Truck },
                       { id: "pickup" as const, label: "Pickup", icon: Store },
                     ].map(({ id, label, icon: Icon }) => (
-                      <button key={id} type="button" onClick={() => setDeliveryMethod(id)} className={`flex items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-bold transition ${deliveryMethod === id ? "bg-white text-[#071836]" : "text-white/45"}`}>
+                      <button key={id} type="button" onClick={() => setDeliveryMethod(id)} className={`flex items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-bold transition ${deliveryMethod === id ? "checkout-toggle-active" : "text-white/45"}`}>
                         <Icon className="h-4 w-4" />
                         {label}
                       </button>
@@ -361,11 +361,11 @@ export default function CheckoutPage() {
             )}
 
             {step === "details" ? (
-              <button type="button" onClick={handleContinue} className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white sm:w-auto" style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)" }}>
+              <button type="button" onClick={handleContinue} className="checkout-gradient flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white sm:w-auto" style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)" }}>
                 Continue to Payment <ArrowRight className="h-4 w-4" />
               </button>
             ) : (
-              <button type="button" onClick={handlePlaceOrder} disabled={isProcessing} className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white disabled:opacity-60 sm:w-auto" style={{ background: paymentMethod === "cod" ? "linear-gradient(135deg, #D4A843, #19AFFF)" : "linear-gradient(135deg, #22c55e, #4ade80)" }}>
+              <button type="button" onClick={handlePlaceOrder} disabled={isProcessing} className="checkout-gradient flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white disabled:opacity-60 sm:w-auto" style={{ background: paymentMethod === "cod" ? "linear-gradient(135deg, #D4A843, #19AFFF)" : "linear-gradient(135deg, #22c55e, #4ade80)" }}>
                 {isProcessing ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</> : paymentMethod === "bank_transfer" ? `Confirm Transfer - ${formatPrice(finalTotal)}` : `Confirm Order - ${formatPrice(finalTotal)}`}
               </button>
             )}
