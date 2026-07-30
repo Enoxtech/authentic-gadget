@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { QuickViewProvider } from "@/context/QuickViewContext";
 import { RecentlyViewedProvider } from "@/context/RecentlyViewedContext";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
+import RouteRecovery from "@/components/pwa/RouteRecovery";
 import SplashScreen from "@/components/pwa/SplashScreen";
 import QuickViewModal from "@/components/ui/QuickViewModal";
 import "./globals.css";
@@ -97,6 +98,7 @@ export default function RootLayout({
               <QuickViewProvider>
                 <RecentlyViewedProvider>
                   <SplashScreen />
+                  <RouteRecovery />
                   {children}
                   <InstallPrompt />
                   <QuickViewModal />

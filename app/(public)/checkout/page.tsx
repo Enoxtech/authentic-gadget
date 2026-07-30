@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { ArrowLeft, ArrowRight, Check, Landmark, Loader2, MapPin, ShoppingBag, Store, Truck, UserPlus } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { Check, ArrowRight, ArrowLeft, ShoppingBag, Loader2, Truck, Landmark, Copy, X } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
+
+type DeliveryMethod = "ship" | "pickup";
+type PaymentMethod = "bank_transfer" | "cod";
 
 interface DeliveryArea {
   id: string;
@@ -23,6 +26,14 @@ interface BankTransferSettings {
   note: string;
 }
 
+const PICKUP_LOCATION = {
+  label: "Authentic Gadget Pickup",
+  address: "Abokobi/Pantang Road, close to Tel Energy Oil",
+  phone: "0534553165",
+  city: "Abokobi / Pantang",
+  region: "Greater Accra",
+};
+
 const DEFAULT_BANK_TRANSFER_SETTINGS: BankTransferSettings = {
   enabled: true,
   bankName: "GT Bank",
@@ -32,36 +43,48 @@ const DEFAULT_BANK_TRANSFER_SETTINGS: BankTransferSettings = {
   note: "Use your order ID as the transfer reference, then contact support with your payment receipt for verification.",
 };
 
-const STEPS = [
-  { id: "info", label: "Information", icon: "📋" },
-  { id: "payment", label: "Payment", icon: "💳" },
-  { id: "review", label: "Review", icon: "✅" },
-];
-
 const PAYMENT_METHODS = [
-  { id: "bank_transfer", label: "Bank Transfer", icon: Landmark, desc: "Transfer to GT Bank and verify after payment" },
-  { id: "cod", label: "Pay on Delivery", icon: Truck, desc: "Pay when your order arrives" },
+  { id: "bank_transfer" as const, label: "Bank Transfer", desc: "Transfer to our account details", icon: Landmark },
+  { id: "cod" as const, label: "Pay on Delivery", desc: "Pay when your order arrives", icon: Truck },
 ];
 
 export default function CheckoutPage() {
-  const { items, total, discount, updateQuantity, clearCart } = useCart();
-  const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState({ name: "", email: "", phone: "", address: "", city: "", state: "" });
-  const [paymentMethod, setPaymentMethod] = useState("bank_transfer");
-  const [orderPlaced, setOrderPlaced] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [orderId, setOrderId] = useState("");
-  const [confirmedTotal, setConfirmedTotal] = useState(0);
-  const [error, setError] = useState("");
+  const { items, total, discount, clearCart } = useCart();
+  const [step, setStep] = useState<"details" | "payment">("details");
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("ship");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("bank_transfer");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "Accra",
+    region: "Greater Accra",
+    notes: "",
+  });
+  const [createAccount, setCreateAccount] = useState(false);
   const [deliveryAreas, setDeliveryAreas] = useState<DeliveryArea[]>([]);
   const [deliveryAreaId, setDeliveryAreaId] = useState("");
   const [vatPercent, setVatPercent] = useState(0);
-  const [bankTransfer, setBankTransfer] = useState<BankTransferSettings | null>(DEFAULT_BANK_TRANSFER_SETTINGS);
-  const [showTransferPopup, setShowTransferPopup] = useState(false);
-  const [copiedField, setCopiedField] = useState("");
+  const [bankTransfer, setBankTransfer] = useState<BankTransferSettings>(DEFAULT_BANK_TRANSFER_SETTINGS);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState("");
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [orderId, setOrderId] = useState("");
+  const [confirmedTotal, setConfirmedTotal] = useState(0);
 
   useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((settings) => {
+        setVatPercent(settings?.vatPercent || 0);
+        const transfer = settings?.bankTransfer as BankTransferSettings | undefined;
+        if (transfer?.enabled && transfer.bankName && transfer.accountNumber) {
+          setBankTransfer(transfer);
+        }
+      })
+      .catch(() => {});
+
     fetch("/api/delivery-areas")
       .then((r) => (r.ok ? r.json() : []))
       .then((areas: DeliveryArea[]) => {
@@ -69,269 +92,116 @@ export default function CheckoutPage() {
         if (areas.length > 0) setDeliveryAreaId((current) => current || areas[0].id);
       })
       .catch(() => setDeliveryAreas([]));
-    fetch("/api/settings")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((s) => {
-        setVatPercent(s?.vatPercent || 0);
-        const transfer = s?.bankTransfer as BankTransferSettings | undefined;
-        if (transfer?.enabled && transfer.bankName && transfer.accountNumber) {
-          setBankTransfer(transfer);
-        }
-      })
-      .catch(() => setVatPercent(0));
   }, []);
 
-  const selectedArea = deliveryAreas.find((a) => a.id === deliveryAreaId) || null;
-  const deliveryFee = discount?.freeShipping ? 0 : selectedArea?.fee || 0;
+  const selectedArea = deliveryAreas.find((area) => area.id === deliveryAreaId) || null;
   const subtotalAfterDiscount = discount ? Math.max(0, total - discount.amount) : total;
+  const deliveryFee = deliveryMethod === "pickup" || discount?.freeShipping ? 0 : selectedArea?.fee || 0;
   const taxAmount = vatPercent > 0 ? Math.round(subtotalAfterDiscount * vatPercent) / 100 : 0;
-  const discountedTotal = subtotalAfterDiscount + taxAmount + deliveryFee;
-  const itemCount = items.reduce((s, i) => s + i.quantity, 0);
-  const paymentMethods = PAYMENT_METHODS.filter((method) => method.id !== "bank_transfer" || bankTransfer);
+  const finalTotal = subtotalAfterDiscount + taxAmount + deliveryFee;
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  const selectPaymentMethod = (id: string) => {
-    setPaymentMethod(id);
+  const detailsValid =
+    formData.name.trim() &&
+    formData.email.trim() &&
+    formData.phone.trim() &&
+    (deliveryMethod === "pickup" || formData.address.trim());
+
+  function update(field: keyof typeof formData, value: string) {
+    setFormData((current) => ({ ...current, [field]: value }));
+  }
+
+  function handleContinue() {
     setError("");
-    if (id === "bank_transfer" && bankTransfer) setShowTransferPopup(true);
-  };
-
-  const copyToClipboard = async (label: string, value: string) => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopiedField(label);
-      setTimeout(() => setCopiedField(""), 1400);
-    } catch {
-      setCopiedField("");
+    if (!detailsValid) {
+      setError("Please complete the required delivery details.");
+      return;
     }
-  };
+    setStep("payment");
+  }
 
-  const handleNext = () => {
-    setIsAnimating(true);
-    setTimeout(() => {
-      setStep((s) => {
-        const next = s + 1;
-        if (next === 1 && paymentMethod === "bank_transfer" && bankTransfer) {
-          setShowTransferPopup(true);
-        }
-        return next;
-      });
-      setIsAnimating(false);
-    }, 300);
-  };
-
-  const handleBack = () => {
-    setIsAnimating(true);
-    setTimeout(() => { setStep(s => s - 1); setIsAnimating(false); }, 300);
-  };
-
-  const generateOrderId = () => `AG_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
-
-  const handlePlaceOrder = async () => {
+  async function handlePlaceOrder() {
     setError("");
     setIsProcessing(true);
-    const newOrderId = generateOrderId();
-    const orderPayload = {
-      id: newOrderId,
-      customer_name: formData.name,
-      customer_email: formData.email,
-      customer_phone: formData.phone,
-      shipping_address: formData.address,
-      shipping_city: formData.city,
-      shipping_region: formData.state,
-      subtotal: total,
-      shipping: deliveryFee,
-      total: discountedTotal,
-      coupon_code: discount?.code || undefined,
-      delivery_area_id: deliveryAreaId || undefined,
-      payment_method: paymentMethod === "cod" ? "cod" : paymentMethod,
-      items: items.map(item => ({
-        product_id: item.id,
-        quantity: item.quantity,
-      })),
-    };
 
-    // ─── Cash on Delivery ───
-    if (paymentMethod === "cod") {
-      try {
-        const res = await fetch("/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(orderPayload),
-        });
-        const data = (await res.json()) as { error?: string; orderId?: string; total?: number };
-        if (!res.ok || !data.orderId || !data.total) {
-          throw new Error(data.error || "Order creation failed");
-        }
-        setOrderId(data.orderId);
-        setConfirmedTotal(data.total);
-        clearCart();
-        setOrderPlaced(true);
-      } catch (error: unknown) {
-        setError(error instanceof Error ? error.message : "Failed to place order. Please try again.");
-      } finally {
-        setIsProcessing(false);
+    const isPickup = deliveryMethod === "pickup";
+    const deliveryAddress = isPickup ? `Pickup: ${PICKUP_LOCATION.address}` : formData.address;
+    const deliveryCity = isPickup ? PICKUP_LOCATION.city : formData.city;
+    const deliveryRegion = isPickup ? PICKUP_LOCATION.region : formData.region;
+    const deliveryNote = isPickup
+      ? `Delivery method: Pickup. Pickup address: ${PICKUP_LOCATION.address}. Call number: ${PICKUP_LOCATION.phone}.`
+      : `Delivery method: Ship.${selectedArea ? ` Delivery area: ${selectedArea.name}.` : ""}`;
+    const orderNote = [deliveryNote, formData.notes.trim()].filter(Boolean).join(" ");
+
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer_name: formData.name,
+          customer_email: formData.email,
+          customer_phone: formData.phone,
+          shipping_address: deliveryAddress,
+          shipping_city: deliveryCity,
+          shipping_region: deliveryRegion,
+          order_note: orderNote,
+          coupon_code: discount?.code || undefined,
+          delivery_area_id: isPickup ? undefined : deliveryAreaId || undefined,
+          payment_method: paymentMethod,
+          items: items.map((item) => ({
+            product_id: item.id,
+            quantity: item.quantity,
+          })),
+        }),
+      });
+      const data = (await response.json()) as { error?: string; orderId?: string; total?: number };
+      if (!response.ok || !data.orderId || typeof data.total !== "number") {
+        throw new Error(data.error || "Order creation failed");
       }
-      return;
+      setOrderId(data.orderId);
+      setConfirmedTotal(data.total);
+      clearCart();
+      setOrderPlaced(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to place order. Please try again.");
+    } finally {
+      setIsProcessing(false);
     }
+  }
 
-    // ─── Mobile Money ───
-    if (paymentMethod === "bank_transfer") {
-      if (!bankTransfer) {
-        setError("Bank transfer is not available right now. Please choose another payment method.");
-        setIsProcessing(false);
-        return;
-      }
-      try {
-        const res = await fetch("/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...orderPayload, payment_method: "bank_transfer" }),
-        });
-        const data = (await res.json()) as { error?: string; orderId?: string; total?: number };
-        if (!res.ok || !data.orderId || !data.total) {
-          throw new Error(data.error || "Order creation failed");
-        }
-        setOrderId(data.orderId);
-        setConfirmedTotal(data.total);
-        clearCart();
-        setOrderPlaced(true);
-      } catch (error: unknown) {
-        setError(error instanceof Error ? error.message : "Failed to place order. Please try again.");
-      } finally {
-        setIsProcessing(false);
-      }
-      return;
-    }
-
-    // ─── Card / Paystack ───
-    if (paymentMethod === "card") {
-      try {
-        const orderRes = await fetch("/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...orderPayload, payment_method: "card" }),
-        });
-        const orderData = (await orderRes.json()) as {
-          error?: string;
-          orderId?: string;
-        };
-        if (!orderRes.ok || !orderData.orderId) {
-          throw new Error(orderData.error || "Order creation failed");
-        }
-
-        const initRes = await fetch("/api/paystack/initialize", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId: orderData.orderId }),
-        });
-        const initData = (await initRes.json()) as {
-          error?: string;
-          authorizationUrl?: string;
-        };
-        if (!initRes.ok || !initData.authorizationUrl) throw new Error(initData.error || "Failed to initialize payment");
-        // Redirect to Paystack payment page
-        window.location.href = initData.authorizationUrl;
-      } catch (error: unknown) {
-        setError(error instanceof Error ? error.message : "Payment failed. Please try again.");
-        setIsProcessing(false);
-      }
-    }
-  };
-
-  const isStep0Valid = formData.name.trim() && formData.email.trim() && formData.address.trim();
-
-  // Order success animation
-  if (orderPlaced) {
-    const isCod = paymentMethod === "cod";
-    const isBankTransfer = paymentMethod === "bank_transfer";
-    const finalTotal = confirmedTotal || discountedTotal;
+  if (items.length === 0 && !orderPlaced) {
     return (
-      <div className="checkout-page min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md px-4">
-          <div className="mb-6">
-            <div
-              className="w-24 h-24 rounded-full mx-auto flex items-center justify-center"
-              style={{ background: isCod ? "linear-gradient(135deg, #D4A843, #19AFFF)" : "linear-gradient(135deg, #22c55e, #4ade80)" }}
-            >
-              {isCod ? <Truck className="w-12 h-12 text-white" /> : <Check className="w-12 h-12 text-white" />}
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold text-white mb-2">
-            {isCod ? "Order Confirmed! 🎉" : "Order Placed! 🎉"}
-          </h1>
-          <p className="text-white/60 mb-2">Thank you, {formData.name || "customer"}!</p>
+      <div className="checkout-page min-h-screen flex items-center justify-center px-4 text-center">
+        <div>
+          <p className="text-white/60">Your cart is empty.</p>
+          <Link href="/products" className="mt-4 inline-flex rounded-full px-5 py-3 text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)" }}>
+            Shop Now
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-          {isCod ? (
-            <p className="text-sm text-white/40 mb-8">
-              Your order <span className="font-mono text-white/60">#{orderId}</span> has been received.
-              Please have <span className="font-bold text-white">{formatPrice(finalTotal)}</span> ready when our delivery agent arrives.
-            </p>
-          ) : isBankTransfer ? (
-            <p className="text-sm text-white/40 mb-8">
-              Your order <span className="font-mono text-white/60">#{orderId}</span> has been received.
-              Transfer <span className="font-bold text-white">{formatPrice(finalTotal)}</span> and use your order ID as the payment reference.
-            </p>
-          ) : (
-            <p className="text-sm text-white/40 mb-8">
-              Your order <span className="font-mono text-white/60">#{orderId}</span> is being processed.
-              You&apos;ll receive a confirmation shortly.
-            </p>
-          )}
-
-          <div
-            className="flex items-center gap-3 p-3 rounded-xl mb-6"
-            style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)" }}
-          >
-            <div className="text-2xl">🚚</div>
-            <div className="text-left">
-              <p className="text-sm font-semibold text-white">Estimated Delivery</p>
-              <p className="text-xs text-white/60">3-5 business days (Ghana) · 5-10 days (other regions)</p>
-            </div>
+  if (orderPlaced) {
+    const isBankTransfer = paymentMethod === "bank_transfer";
+    return (
+      <div className="checkout-page min-h-screen flex items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-[28px] p-6 text-center" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}>
+          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full" style={{ background: "linear-gradient(135deg, #22c55e, #4ade80)" }}>
+            <Check className="h-10 w-10 text-white" />
           </div>
-
-          <div
-            className="p-4 rounded-[28px] mb-8"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
-          >
-            <p className="text-xs text-white/40 mb-2">Order total</p>
-            <p className="text-3xl font-bold" style={{ color: "#D4A843" }}>
-              {formatPrice(finalTotal)}
-            </p>
-            {isCod && (
-              <p className="text-xs mt-1" style={{ color: "rgba(124,58,237,0.8)" }}>
-                Pay on delivery · Do not pay before receiving your order
-              </p>
-            )}
-          </div>
-          {isBankTransfer && bankTransfer && (
-            <div
-              className="p-4 rounded-[24px] mb-8 text-left space-y-2"
-              style={{ background: "rgba(212,168,67,0.10)", border: "1px solid rgba(212,168,67,0.25)" }}
-            >
-              <p className="text-sm font-bold text-white">Bank transfer details</p>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <span className="text-white/40">Bank</span>
-                <span className="text-white font-semibold text-right">{bankTransfer.bankName}</span>
-                <span className="text-white/40">Account Name</span>
-                <span className="text-white font-semibold text-right">{bankTransfer.accountName || "Authentic Gadget"}</span>
-                <span className="text-white/40">Account Number</span>
-                <span className="text-white font-semibold text-right font-mono">{bankTransfer.accountNumber}</span>
-                {bankTransfer.branch && (
-                  <>
-                    <span className="text-white/40">Branch</span>
-                    <span className="text-white font-semibold text-right">{bankTransfer.branch}</span>
-                  </>
-                )}
-              </div>
-              <p className="text-xs text-white/50">{bankTransfer.note || "After payment, contact support with your order ID and transfer receipt for verification."}</p>
+          <h1 className="text-2xl font-bold text-white">Order Placed</h1>
+          <p className="mt-2 text-sm text-white/60">
+            Order <span className="font-mono text-white">#{orderId}</span> is pending in admin until payment is confirmed.
+          </p>
+          {isBankTransfer && (
+            <div className="mt-5 rounded-2xl bg-blue-50 p-4 text-left text-sm text-blue-900">
+              <p className="font-bold">Complete your transfer</p>
+              <p className="mt-1">Transfer {formatPrice(confirmedTotal)} to {bankTransfer.bankName}, {bankTransfer.accountName}, {bankTransfer.accountNumber}.</p>
             </div>
           )}
-          <Link
-            href="/products"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold"
-            style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)" }}
-          >
-            Continue Shopping <ArrowRight className="w-4 h-4" />
+          <Link href="/products" className="mt-6 inline-flex rounded-full px-5 py-3 text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)" }}>
+            Continue Shopping
           </Link>
         </div>
       </div>
@@ -340,563 +210,199 @@ export default function CheckoutPage() {
 
   return (
     <div className="checkout-page min-h-screen">
-      {showTransferPopup && bankTransfer && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 px-4 py-6 animate-fade-in">
-          <div
-            className="w-full max-w-md overflow-hidden rounded-[28px] shadow-2xl"
-            style={{
-              background: "linear-gradient(145deg, #081630, #040820)",
-              border: "1px solid rgba(212,168,67,0.28)",
-            }}
-          >
-            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em]" style={{ color: "#D4A843" }}>
-                  Manual Transfer
-                </p>
-                <h3 className="mt-1 text-lg font-bold text-white">Bank Transfer Details</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowTransferPopup(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full text-white/70 transition hover:bg-white/10 hover:text-white"
-                aria-label="Close transfer details"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 px-5 py-5">
-              {[
-                ["Bank", bankTransfer.bankName],
-                ["Account Name", bankTransfer.accountName || "Authentic Gadget"],
-                ["Account Number", bankTransfer.accountNumber],
-              ].map(([label, value]) => (
-                <div
-                  key={label}
-                  className="flex items-center justify-between gap-3 rounded-2xl p-3"
-                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
-                >
-                  <div className="min-w-0">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-white/45">{label}</p>
-                    <p className="mt-1 truncate text-sm font-bold text-white">{value}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(label, value)}
-                    className="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold text-white"
-                    style={{ background: "rgba(212,168,67,0.18)", border: "1px solid rgba(212,168,67,0.30)" }}
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                    {copiedField === label ? "Copied" : "Copy"}
-                  </button>
-                </div>
-              ))}
-
-              <div
-                className="rounded-2xl p-4 text-sm leading-relaxed"
-                style={{
-                  background: "rgba(25,175,255,0.10)",
-                  border: "1px solid rgba(25,175,255,0.22)",
-                  color: "rgba(255,255,255,0.78)",
-                }}
-              >
-                Place your order first, then transfer the exact total and use your order ID as the payment reference.
-                Send your receipt to support for verification.
-              </div>
-            </div>
-
-            <div className="px-5 pb-5">
-              <button
-                type="button"
-                onClick={() => setShowTransferPopup(false)}
-                className="w-full rounded-full px-5 py-3 text-sm font-bold text-white"
-                style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)" }}
-              >
-                I understand
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Header */}
-      <div
-        className="checkout-topbar border-b border-white/10"
-        style={{ background: "rgba(4,8,32,0.8)", backdropFilter: "blur(20px)" }}
-      >
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div className="checkout-topbar border-b border-white/10" style={{ background: "rgba(4,8,32,0.84)", backdropFilter: "blur(20px)" }}>
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
           <Link href="/" className="flex items-center gap-2">
             <Image src="/logo-mark.png" alt="Authentic Gadget" width={28} height={28} className="h-7 w-7 object-contain" style={{ filter: "brightness(0) invert(1)" }} />
             <span className="text-lg font-bold text-white">Authentic Gadget</span>
           </Link>
-          <div className="flex items-center gap-2 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
-            <ShoppingBag className="w-4 h-4" />
-            <span>Checkout</span>
+          <div className="flex items-center gap-2 text-sm text-white/50">
+            <ShoppingBag className="h-4 w-4" />
+            Checkout
           </div>
         </div>
       </div>
 
-      {/* Progress steps */}
-      <div className="border-b border-white/10 py-4">
-        <div className="max-w-3xl mx-auto px-4">
-          <div className="flex items-center justify-center gap-2">
-            {STEPS.map((s, i) => (
-              <div key={s.id} className="flex items-center">
-                <div
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
-                    i === step
-                      ? "bg-electric text-white"
-                      : i < step
-                      ? "bg-green-600 text-white"
-                      : "bg-white/10 text-white/40"
-                  }`}
-                >
-                  <span>{i < step ? "✓" : s.icon}</span>
-                  <span className="text-sm font-medium hidden sm:inline">{s.label}</span>
+      <main className="mx-auto grid max-w-5xl gap-5 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <section className="min-w-0">
+          <div className="mb-6 flex items-center gap-3">
+            {[
+              ["details", "Delivery Details"],
+              ["payment", "Payment"],
+            ].map(([id, label], index) => (
+              <div key={id} className="flex items-center gap-2">
+                <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${step === id || (id === "details" && step === "payment") ? "bg-[#D4A843] text-[#040820]" : "bg-white/10 text-white/40"}`}>
+                  {index + 1}
                 </div>
-                {i < STEPS.length - 1 && (
-                  <div
-                    className={`w-8 h-0.5 mx-1 ${i < step ? "bg-green-500" : "bg-white/10"}`}
-                  />
-                )}
+                <span className={`text-sm font-semibold ${step === id ? "text-white" : "text-white/40"}`}>{label}</span>
+                {index === 0 && <div className="h-px w-10 bg-white/12" />}
               </div>
             ))}
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-5xl mx-auto w-full px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden">
-        <div className="grid min-w-0 lg:grid-cols-3 gap-5 lg:gap-8">
-          {/* Left: Form */}
-          <div className="lg:col-span-2 min-w-0">
-            <div
-              className={`rounded-[28px] p-4 sm:p-6 transition-all duration-300 ${
-                isAnimating ? "opacity-50 scale-[0.99]" : "opacity-100 scale-100"
-              }`}
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
-            >
-              {/* Step 0: Information */}
-              {step === 0 && (
+          <div className="rounded-[28px] p-4 sm:p-6" style={{ background: "rgba(255,255,255,0.055)", border: "1px solid rgba(255,255,255,0.10)" }}>
+            {step === "details" ? (
+              <div className="space-y-4">
                 <div>
-                  <h2 className="text-xl font-bold text-white mb-1">Contact Information</h2>
-                  <p className="text-sm text-white/40 mb-6">Guest checkout — no account needed</p>
-                  <div className="space-y-4">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs text-white/50 mb-1.5 block">Full Name</label>
-                        <input
-                          value={formData.name}
-                          onChange={e => setFormData(f => ({ ...f, name: e.target.value }))}
-                          className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none"
-                          style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-                          placeholder="Kwame Mensah"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-white/50 mb-1.5 block">Email</label>
-                        <input
-                          value={formData.email}
-                          onChange={e => setFormData(f => ({ ...f, email: e.target.value }))}
-                          className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none"
-                          style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-                          placeholder="kwame@example.com"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-xs text-white/50 mb-1.5 block">
-                        Phone (for delivery updates)
-                      </label>
-                      <input
-                        value={formData.phone}
-                        onChange={e => setFormData(f => ({ ...f, phone: e.target.value }))}
-                        className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none"
-                        style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-                        placeholder="+233 24 000 0000"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-white/50 mb-1.5 block">Delivery Address</label>
-                      <input
-                        value={formData.address}
-                        onChange={e => setFormData(f => ({ ...f, address: e.target.value }))}
-                        className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none"
-                        style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-                        placeholder="15 Ringway Road, Osu"
-                      />
-                    </div>
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs text-white/50 mb-1.5 block">City</label>
-                        <input
-                          value={formData.city}
-                          onChange={e => setFormData(f => ({ ...f, city: e.target.value }))}
-                          className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none"
-                          style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-                          placeholder="Accra"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-white/50 mb-1.5 block">Region</label>
-                        <input
-                          value={formData.state}
-                          onChange={e => setFormData(f => ({ ...f, state: e.target.value }))}
-                          className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none"
-                          style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-                          placeholder="Greater Accra"
-                        />
-                      </div>
-                    </div>
-
-                    {deliveryAreas.length > 0 && (
-                      <div>
-                        <label className="text-xs text-white/50 mb-1.5 block">Delivery Area</label>
-                        <div className="space-y-2">
-                          {deliveryAreas.map((area) => (
-                            <button
-                              key={area.id}
-                              type="button"
-                              onClick={() => setDeliveryAreaId(area.id)}
-                              className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-left transition-all"
-                              style={{
-                                background: deliveryAreaId === area.id ? "rgba(212,168,67,0.12)" : "rgba(255,255,255,0.04)",
-                                border: deliveryAreaId === area.id ? "1px solid #D4A843" : "1px solid rgba(255,255,255,0.08)",
-                              }}
-                            >
-                              <div>
-                                <p className="text-sm font-medium text-white">{area.name}</p>
-                                {area.estimated_days && <p className="text-xs text-white/40">{area.estimated_days}</p>}
-                              </div>
-                              <p className="text-sm font-bold" style={{ color: "#D4A843" }}>{formatPrice(area.fee)}</p>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <label className="mb-1.5 block text-sm font-semibold text-white/72">Full Name *</label>
+                  <input value={formData.name} onChange={(e) => update("name", e.target.value)} placeholder="Kwame Mensah" className="w-full rounded-xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-[#D4A843]" />
                 </div>
-              )}
-
-              {/* Step 1: Payment */}
-              {step === 1 && (
                 <div>
-                  <h2 className="text-xl font-bold text-white mb-6">Payment Method</h2>
-                  <div className="space-y-3">
-                    {paymentMethods.map(({ id, label, icon: Icon, desc }) => (
-                      <button
-                        key={id}
-                        onClick={() => selectPaymentMethod(id)}
-                        className="w-full flex items-center gap-4 p-4 rounded-xl transition-all text-left"
-                        style={{
-                          background:
-                            paymentMethod === id ? "rgba(124,58,237,0.15)" : "rgba(255,255,255,0.04)",
-                          border:
-                            paymentMethod === id
-                              ? "2px solid #D4A843"
-                              : "1px solid rgba(255,255,255,0.08)",
-                        }}
-                      >
-                        <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center"
-                          style={{
-                            background:
-                              paymentMethod === id
-                                ? "linear-gradient(135deg, #D4A843, #19AFFF)"
-                                : "rgba(255,255,255,0.1)",
-                          }}
-                        >
-                          <Icon className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-white">{label}</p>
-                          <p className="text-xs text-white/40">{desc}</p>
-                        </div>
-                        {paymentMethod === id && (
-                          <div
-                            className="w-5 h-5 rounded-full flex items-center justify-center"
-                            style={{ background: "#D4A843" }}
-                          >
-                            <Check className="w-3 h-3 text-white" />
-                          </div>
-                        )}
+                  <label className="mb-1.5 block text-sm font-semibold text-white/72">Phone Number *</label>
+                  <input value={formData.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+233 53 455 3165" className="w-full rounded-xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-[#D4A843]" />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-white/72">Email Address *</label>
+                  <input value={formData.email} onChange={(e) => update("email", e.target.value)} placeholder="you@example.com" type="email" className="w-full rounded-xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-[#D4A843]" />
+                </div>
+
+                <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/60">
+                  <input type="checkbox" checked={createAccount} onChange={(e) => setCreateAccount(e.target.checked)} className="h-4 w-4 accent-[#D4A843]" />
+                  <UserPlus className="h-4 w-4 text-[#D4A843]" />
+                  Create an account to track this order (optional)
+                </label>
+
+                {deliveryMethod === "ship" && (
+                  <div>
+                    <label className="mb-1.5 block text-sm font-semibold text-white/72">Delivery Address *</label>
+                    <textarea value={formData.address} onChange={(e) => update("address", e.target.value)} placeholder="House number, street name, area..." rows={2} className="w-full resize-none rounded-xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-[#D4A843]" />
+                  </div>
+                )}
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-white/72">Delivery</label>
+                  <div className="grid grid-cols-2 gap-2 rounded-xl bg-white/[0.04] p-1">
+                    {[
+                      { id: "ship" as const, label: "Ship", icon: Truck },
+                      { id: "pickup" as const, label: "Pickup", icon: Store },
+                    ].map(({ id, label, icon: Icon }) => (
+                      <button key={id} type="button" onClick={() => setDeliveryMethod(id)} className={`flex items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-bold transition ${deliveryMethod === id ? "bg-white text-[#071836]" : "text-white/45"}`}>
+                        <Icon className="h-4 w-4" />
+                        {label}
                       </button>
                     ))}
-
-                    {paymentMethod === "bank_transfer" && bankTransfer && (
-                      <div
-                        className="mt-3 p-4 rounded-xl space-y-2"
-                        style={{ background: "rgba(212,168,67,0.10)", border: "1px solid rgba(212,168,67,0.25)" }}
-                      >
-                        <p className="text-sm font-semibold text-white">Transfer after placing your order</p>
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <span className="text-white/40">Bank</span>
-                          <span className="text-white text-right font-semibold">{bankTransfer.bankName}</span>
-                          <span className="text-white/40">Account Name</span>
-                          <span className="text-white text-right font-semibold">{bankTransfer.accountName || "Authentic Gadget"}</span>
-                          <span className="text-white/40">Account Number</span>
-                          <span className="text-white text-right font-semibold font-mono">{bankTransfer.accountNumber}</span>
-                        </div>
-                        <p className="text-xs text-white/50">{bankTransfer.note || "Use your order ID as transfer reference and contact support after payment."}</p>
-                      </div>
-                    )}
                   </div>
                 </div>
-              )}
 
-              {/* Step 2: Review */}
-              {step === 2 && (
+                {deliveryMethod === "pickup" ? (
+                  <div className="rounded-xl border-2 border-[#D4A843] bg-[#D4A843]/10 p-4">
+                    <div className="flex items-start gap-3">
+                      <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#D4A843]" />
+                      <div>
+                        <p className="text-sm font-bold text-white">{PICKUP_LOCATION.label}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-white/65">{PICKUP_LOCATION.address}</p>
+                        <p className="mt-1 text-xs font-semibold text-white/70">Call: {PICKUP_LOCATION.phone}</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  deliveryAreas.length > 0 && (
+                    <div>
+                      <label className="mb-1.5 block text-sm font-semibold text-white/72">Delivery Area *</label>
+                      <select value={deliveryAreaId} onChange={(e) => setDeliveryAreaId(e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#111827] px-4 py-3 text-sm text-white outline-none focus:border-[#D4A843]">
+                        {deliveryAreas.map((area) => (
+                          <option key={area.id} value={area.id}>
+                            {area.name} - {formatPrice(area.fee)}{area.estimated_days ? ` - ${area.estimated_days}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )
+                )}
+
                 <div>
-                  <h2 className="text-xl font-bold text-white mb-6">Review Your Order</h2>
-
-                  {/* Delivery info */}
-                  <div
-                    className="flex items-center gap-3 p-3 rounded-xl mb-4"
-                    style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)" }}
-                  >
-                    <div className="text-2xl">🚚</div>
-                    <div className="text-left">
-                      <p className="text-sm font-semibold text-white">Estimated Delivery</p>
-                      <p className="text-xs text-white/60">
-                        2-5 business days in Accra · 3-7 days across Ghana
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    {items.map(item => (
-                      <div
-                        key={item.id}
-                        className="flex items-center gap-3 sm:gap-4 p-3 rounded-xl min-w-0"
-                        style={{
-                          background: "rgba(255,255,255,0.04)",
-                          border: "1px solid rgba(255,255,255,0.08)",
-                        }}
-                      >
-                        <div
-                          className="w-14 h-14 rounded-xl overflow-hidden shrink-0"
-                          style={{ background: "rgba(255,255,255,0.05)" }}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={item.image ?? "/placeholder.png"}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white truncate">{item.name}</p>
-                          <p className="text-xs text-white/40">Qty: {item.quantity}</p>
-                        </div>
-                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                          <button
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="w-6 h-6 rounded-md flex items-center justify-center text-white/50 hover:text-white transition-colors"
-                            style={{ background: "rgba(255,255,255,0.06)" }}
-                          >
-                            −
-                          </button>
-                          <span className="text-sm font-semibold text-white w-4 text-center">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="w-6 h-6 rounded-md flex items-center justify-center text-white/50 hover:text-white transition-colors"
-                            style={{ background: "rgba(255,255,255,0.06)" }}
-                          >
-                            +
-                          </button>
-                          <p className="hidden sm:block text-sm font-bold text-white ml-2 whitespace-nowrap">
-                            {formatPrice(item.price * item.quantity)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {items.length === 0 && (
-                    <div className="text-center py-8">
-                      <p className="text-white/40 mb-4">Your cart is empty</p>
-                      <Link
-                        href="/products"
-                        className="text-sm font-semibold"
-                        style={{ color: "#D4A843" }}
-                      >
-                        Continue Shopping →
-                      </Link>
-                    </div>
-                  )}
-
-                  <div
-                    className="mt-4 p-4 rounded-xl space-y-2"
-                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
-                  >
-                    <div className="flex justify-between text-sm">
-                      <span style={{ color: "rgba(255,255,255,0.5)" }}>Subtotal</span>
-                      <span className="text-white">{formatPrice(total)}</span>
-                    </div>
-                    {discount && (
-                      <div className="flex justify-between text-sm">
-                        <span style={{ color: "#22c55e" }}>Discount ({discount.code})</span>
-                        <span style={{ color: "#22c55e" }}>-{formatPrice(discount.amount)}</span>
-                      </div>
-                    )}
-                    {taxAmount > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span style={{ color: "rgba(255,255,255,0.5)" }}>VAT ({vatPercent}%)</span>
-                        <span className="text-white">{formatPrice(taxAmount)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between text-sm">
-                      <span style={{ color: "rgba(255,255,255,0.5)" }}>Delivery{selectedArea ? ` (${selectedArea.name})` : ""}</span>
-                      <span style={{ color: deliveryFee === 0 ? "#22c55e" : "var(--checkout-text)" }}>
-                        {deliveryFee === 0 ? "Free" : formatPrice(deliveryFee)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-lg font-bold pt-2 border-t border-white/10">
-                      <span className="text-white">Total</span>
-                      <span style={{ color: "#D4A843" }}>{formatPrice(discountedTotal)}</span>
-                    </div>
-                  </div>
+                  <label className="mb-1.5 block text-sm font-semibold text-white/72">Order Notes (optional)</label>
+                  <textarea value={formData.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Any special instructions..." rows={2} className="w-full resize-none rounded-xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-[#D4A843]" />
                 </div>
-              )}
-            </div>
-
-            {/* Navigation buttons */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
-              {step > 0 ? (
-                <button
-                  onClick={handleBack}
-                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-medium"
-                  style={{ background: "rgba(255,255,255,0.08)" }}
-                >
-                  <ArrowLeft className="w-4 h-4" /> Back
-                </button>
-              ) : (
-                <Link
-                  href="/products"
-                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white/50 font-medium"
-                >
-                  ← Continue Shopping
-                </Link>
-              )}
-
-              {error && (
-                <div className="mt-3 px-4 py-3 rounded-xl text-sm text-red-300" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }}>
-                  {error}
-                </div>
-              )}
-              {step < STEPS.length - 1 ? (
-                <button
-                  onClick={handleNext}
-                  disabled={step === 0 && !isStep0Valid}
-                  className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-xl text-white font-bold transition-all w-full sm:w-auto"
-                  style={{
-                    background: "linear-gradient(135deg, #D4A843, #19AFFF)",
-                    opacity: step === 0 && !isStep0Valid ? 0.5 : 1,
-                    cursor: step === 0 && !isStep0Valid ? "not-allowed" : "pointer",
-                  }}
-                >
-                  Continue <ArrowRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <button
-                  onClick={handlePlaceOrder}
-                  disabled={isProcessing}
-                  className="flex items-center justify-center gap-2 px-5 sm:px-8 py-3 rounded-xl text-white font-bold transition-all disabled:opacity-60 w-full sm:w-auto text-sm sm:text-base whitespace-normal sm:whitespace-nowrap"
-                  style={{
-                    background: paymentMethod === "cod"
-                      ? "linear-gradient(135deg, #D4A843, #19AFFF)"
-                      : "linear-gradient(135deg, #22c55e, #4ade80)",
-                    boxShadow: paymentMethod === "cod"
-                      ? "0 8px 32px rgba(124,58,237,0.3)"
-                      : "0 8px 32px rgba(34,197,94,0.4)",
-                    cursor: isProcessing ? "not-allowed" : "pointer",
-                  }}
-                >
-                  {isProcessing ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
-                  ) : paymentMethod === "cod" ? (
-                    <>Confirm Order → {discountedTotal > 0 ? formatPrice(discountedTotal) : ""}</>
-                  ) : paymentMethod === "bank_transfer" ? (
-                    <>Confirm Bank Transfer → {discountedTotal > 0 ? formatPrice(discountedTotal) : ""}</>
-                  ) : (
-                    <>Pay Now - {discountedTotal > 0 ? formatPrice(discountedTotal) : ""}</>
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Right: Sticky Order Summary */}
-          <div className="lg:col-span-1 min-w-0">
-            <div
-              className="sticky top-24 rounded-[28px] overflow-hidden"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
-            >
-              <div className="p-5 border-b border-white/10">
-                <h3 className="font-bold text-white">Order Summary</h3>
-                <p className="text-xs text-white/40 mt-1">{itemCount} items</p>
               </div>
-              <div className="p-5 space-y-3 max-h-64 overflow-y-auto">
-                {items.map(item => (
-                  <div key={item.id} className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-lg overflow-hidden shrink-0"
-                      style={{ background: "rgba(255,255,255,0.05)" }}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={item.image ?? "/placeholder.png"}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-white truncate">{item.name}</p>
-                      <p className="text-xs text-white/40">×{item.quantity}</p>
-                    </div>
-                    <p className="text-xs font-bold text-white">
-                      {formatPrice(item.price * item.quantity)}
-                    </p>
-                  </div>
+            ) : (
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold text-white">Choose Payment Method</h2>
+                {PAYMENT_METHODS.map(({ id, label, desc, icon: Icon }) => (
+                  <button key={id} type="button" onClick={() => { setPaymentMethod(id); setError(""); }} className="flex w-full items-center gap-3 rounded-xl border-2 p-4 text-left transition" style={{ borderColor: paymentMethod === id ? "#D4A843" : "rgba(255,255,255,0.10)", background: paymentMethod === id ? "rgba(212,168,67,0.12)" : "rgba(255,255,255,0.04)" }}>
+                    <Icon className={`h-5 w-5 shrink-0 ${paymentMethod === id ? "text-[#D4A843]" : "text-white/45"}`} />
+                    <span className="flex-1">
+                      <span className="block text-sm font-bold text-white">{label}</span>
+                      <span className="mt-0.5 block text-xs text-white/42">{desc}</span>
+                    </span>
+                    <span className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${paymentMethod === id ? "border-[#D4A843]" : "border-white/25"}`}>
+                      {paymentMethod === id && <span className="h-2.5 w-2.5 rounded-full bg-[#D4A843]" />}
+                    </span>
+                  </button>
                 ))}
-                {items.length === 0 && (
-                  <p className="text-xs text-white/30 text-center py-4">No items in cart</p>
-                )}
-              </div>
-              <div className="p-5 border-t border-white/10 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span style={{ color: "rgba(255,255,255,0.5)" }}>Subtotal</span>
-                  <span className="text-white">{formatPrice(total)}</span>
-                </div>
-                {discount && (
-                  <div className="flex justify-between text-sm">
-                    <span style={{ color: "#22c55e" }}>Discount</span>
-                    <span style={{ color: "#22c55e" }}>-{formatPrice(discount.amount)}</span>
+
+                {paymentMethod === "bank_transfer" && (
+                  <div className="rounded-xl bg-blue-50 p-4 text-sm">
+                    <p className="mb-2 font-bold text-blue-950">Bank Transfer Details</p>
+                    <div className="space-y-1 text-blue-900">
+                      <p><span className="text-blue-500">Bank:</span> {bankTransfer.bankName}{bankTransfer.branch ? ` (${bankTransfer.branch})` : ""}</p>
+                      <p><span className="text-blue-500">Account Name:</span> {bankTransfer.accountName}</p>
+                      <p><span className="text-blue-500">Account Number:</span> <span className="font-bold tracking-wider">{bankTransfer.accountNumber}</span></p>
+                    </div>
+                    <p className="mt-2 text-xs text-blue-500">{bankTransfer.note}</p>
                   </div>
                 )}
-                {taxAmount > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span style={{ color: "rgba(255,255,255,0.5)" }}>VAT ({vatPercent}%)</span>
-                    <span className="text-white">{formatPrice(taxAmount)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm">
-                  <span style={{ color: "rgba(255,255,255,0.5)" }}>Delivery</span>
-                  <span style={{ color: deliveryFee === 0 ? "#22c55e" : "var(--checkout-text)" }}>
-                    {deliveryFee === 0 ? "Free" : formatPrice(deliveryFee)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-lg font-bold pt-2 border-t border-white/10">
-                  <span className="text-white">Total</span>
-                  <span style={{ color: "#D4A843" }}>{formatPrice(discountedTotal)}</span>
-                </div>
               </div>
+            )}
+          </div>
+
+          {error && <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</div>}
+
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {step === "payment" ? (
+              <button type="button" onClick={() => setStep("details")} className="flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white/55">
+                <ArrowLeft className="h-4 w-4" />
+                Back to details
+              </button>
+            ) : (
+              <Link href="/products" className="flex items-center justify-center rounded-xl px-5 py-3 text-sm font-bold text-white/45">
+                Continue Shopping
+              </Link>
+            )}
+
+            {step === "details" ? (
+              <button type="button" onClick={handleContinue} className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white sm:w-auto" style={{ background: "linear-gradient(135deg, #D4A843, #19AFFF)" }}>
+                Continue to Payment <ArrowRight className="h-4 w-4" />
+              </button>
+            ) : (
+              <button type="button" onClick={handlePlaceOrder} disabled={isProcessing} className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white disabled:opacity-60 sm:w-auto" style={{ background: paymentMethod === "cod" ? "linear-gradient(135deg, #D4A843, #19AFFF)" : "linear-gradient(135deg, #22c55e, #4ade80)" }}>
+                {isProcessing ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</> : paymentMethod === "bank_transfer" ? `Confirm Transfer - ${formatPrice(finalTotal)}` : `Confirm Order - ${formatPrice(finalTotal)}`}
+              </button>
+            )}
+          </div>
+        </section>
+
+        <aside className="min-w-0">
+          <div className="sticky top-24 rounded-[28px] p-5" style={{ background: "rgba(255,255,255,0.055)", border: "1px solid rgba(255,255,255,0.10)" }}>
+            <h3 className="font-bold text-white">Order Summary</h3>
+            <p className="mt-1 text-xs text-white/40">{itemCount} items</p>
+            <div className="mt-4 max-h-64 space-y-3 overflow-y-auto">
+              {items.map((item) => (
+                <div key={item.id} className="flex items-center gap-3">
+                  <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-white/5">
+                    <img src={item.image ?? item.images?.[0] ?? "/placeholder.png"} alt={item.name} className="h-full w-full object-cover" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs text-white">{item.name}</p>
+                    <p className="text-xs text-white/40">x{item.quantity}</p>
+                  </div>
+                  <p className="text-xs font-bold text-white">{formatPrice(item.price * item.quantity)}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 space-y-2 border-t border-white/10 pt-4 text-sm">
+              <div className="flex justify-between text-white/55"><span>Subtotal</span><span className="text-white">{formatPrice(total)}</span></div>
+              {discount && <div className="flex justify-between text-green-400"><span>Discount ({discount.code})</span><span>-{formatPrice(discount.amount)}</span></div>}
+              <div className="flex justify-between text-white/55">
+                <span>Delivery ({deliveryMethod === "pickup" ? "Pickup" : selectedArea?.name || "Ship"})</span>
+                <span className={deliveryFee === 0 ? "text-green-400" : "text-white"}>{deliveryFee === 0 ? "Free" : formatPrice(deliveryFee)}</span>
+              </div>
+              {taxAmount > 0 && <div className="flex justify-between text-white/55"><span>VAT ({vatPercent}%)</span><span className="text-white">{formatPrice(taxAmount)}</span></div>}
+              <div className="flex justify-between border-t border-white/10 pt-3 text-lg font-bold text-white"><span>Total</span><span style={{ color: "#D4A843" }}>{formatPrice(finalTotal)}</span></div>
             </div>
           </div>
-        </div>
-      </div>
+        </aside>
+      </main>
     </div>
   );
 }

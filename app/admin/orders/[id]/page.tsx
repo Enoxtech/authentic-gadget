@@ -37,6 +37,7 @@ interface Order {
   shipping_address: string | null;
   shipping_city: string | null;
   shipping_region: string | null;
+  order_note: string | null;
   total: number;
   shipping: number;
   subtotal: number;
@@ -303,6 +304,13 @@ export default function OrderDetailPage() {
               {!order.shipping_address && !order.shipping_city && !order.shipping_region && <p className="text-charcoal/40">No address provided</p>}
             </div>
           </div>
+
+          {order.order_note && (
+            <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
+              <h3 className="font-bold text-charcoal mb-4">Delivery / Pickup Note</h3>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-charcoal/70">{order.order_note}</p>
+            </div>
+          )}
 
           <div className="bg-white rounded-[28px] p-6 card-premium border border-[var(--border-color)]">
             <h3 className="font-bold text-charcoal mb-4">Order Summary</h3>

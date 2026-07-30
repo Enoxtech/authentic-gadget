@@ -237,6 +237,7 @@ function buildCustomerEmailHtml(order: NewOrderInfo, settings?: SettingsRow | nu
         <p style="margin:0 0 14px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a7a5d;font-weight:700;">Delivery Details</p>
         <table width="100%" cellpadding="0" cellspacing="0">
           ${address ? `<tr><td style="padding:6px 0;font-size:13px;color:#8a7a5d;width:36%;">Address</td><td style="padding:6px 0;font-size:14px;color:#172033;">${escapeHtml(address)}</td></tr>` : ""}
+          ${order.orderNote ? `<tr><td style="padding:6px 0;font-size:13px;color:#8a7a5d;width:36%;vertical-align:top;">Delivery Note</td><td style="padding:6px 0;font-size:14px;color:#172033;">${escapeHtml(order.orderNote)}</td></tr>` : ""}
           <tr><td style="padding:6px 0;font-size:13px;color:#8a7a5d;width:36%;">Payment</td><td style="padding:6px 0;"><span style="display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:800;background:#fff8df;color:#977105;border:1px solid #ecd899;">${escapeHtml(paymentLabel(order.paymentMethod))}</span></td></tr>
         </table>
       </td>
