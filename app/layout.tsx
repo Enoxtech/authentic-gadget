@@ -6,7 +6,6 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { QuickViewProvider } from "@/context/QuickViewContext";
 import { RecentlyViewedProvider } from "@/context/RecentlyViewedContext";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
-import RouteRecovery from "@/components/pwa/RouteRecovery";
 import SplashScreen from "@/components/pwa/SplashScreen";
 import QuickViewModal from "@/components/ui/QuickViewModal";
 import "./globals.css";
@@ -22,59 +21,6 @@ const NO_FLASH_THEME_SCRIPT = `
       : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     document.documentElement.dataset.theme = resolved;
     document.documentElement.style.colorScheme = resolved;
-  } catch (e) {}
-})();
-`;
-
-const EARLY_ROUTE_RECOVERY_SCRIPT = `
-(function () {
-  try {
-    var cacheKey = "ag-cache-clean-v3";
-    var reloadKey = "ag-route-recovery-reloaded-v2";
-    var hasCleaned = localStorage.getItem(cacheKey);
-
-    if (!hasCleaned) {
-      localStorage.setItem(cacheKey, "1");
-      if ("serviceWorker" in navigator && navigator.serviceWorker.getRegistrations) {
-        navigator.serviceWorker.getRegistrations()
-          .then(function (registrations) {
-            registrations.forEach(function (registration) { registration.unregister(); });
-          })
-          .catch(function () {});
-      }
-      if ("caches" in window) {
-        caches.keys()
-          .then(function (keys) {
-            keys.forEach(function (key) { caches.delete(key); });
-          })
-          .catch(function () {});
-      }
-    }
-
-    function shouldRecover(message) {
-      var lower = String(message || "").toLowerCase();
-      return lower.indexOf("chunkloaderror") !== -1 ||
-        lower.indexOf("loading chunk") !== -1 ||
-        lower.indexOf("failed to fetch dynamically imported module") !== -1 ||
-        lower.indexOf("importing a module script failed") !== -1 ||
-        lower.indexOf("unable to preload css") !== -1 ||
-        lower.indexOf("failed to fetch rsc payload") !== -1 ||
-        lower.indexOf("failed to load static props") !== -1;
-    }
-
-    function recover(message) {
-      if (!shouldRecover(message) || sessionStorage.getItem(reloadKey)) return;
-      sessionStorage.setItem(reloadKey, "1");
-      window.location.reload();
-    }
-
-    window.addEventListener("error", function (event) {
-      recover((event && event.message ? event.message : "") + " " + (event && event.error && event.error.message ? event.error.message : ""));
-    });
-    window.addEventListener("unhandledrejection", function (event) {
-      var reason = event && event.reason;
-      recover(typeof reason === "string" ? reason : ((reason && reason.message ? reason.message : "") + " " + (reason && reason.name ? reason.name : "")));
-    });
   } catch (e) {}
 })();
 `;
@@ -131,7 +77,6 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: EARLY_ROUTE_RECOVERY_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} />
       </head>
       <body className="font-sans antialiased">
@@ -152,7 +97,6 @@ export default function RootLayout({
               <QuickViewProvider>
                 <RecentlyViewedProvider>
                   <SplashScreen />
-                  <RouteRecovery />
                   {children}
                   <InstallPrompt />
                   <QuickViewModal />
