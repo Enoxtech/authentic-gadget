@@ -56,11 +56,12 @@ const securityHeaders = [
   },
 ];
 
+// NOTE: Do NOT add `Clear-Site-Data: "cache"` here. Sending it on HTML navigations makes the
+// browser wipe the origin's HTTP cache *while the page is still fetching its own JS/CSS chunks*,
+// which aborts those requests and surfaces as "This page couldn't load" (ChunkLoadError) on
+// first load, appearing to work only after a manual refresh.
+// `no-store` alone is enough to keep HTML fresh without destroying the asset cache.
 const staleClientRecoveryHeaders = [
-  {
-    key: 'Clear-Site-Data',
-    value: '"cache"',
-  },
   {
     key: 'Cache-Control',
     value: 'no-store, max-age=0',
