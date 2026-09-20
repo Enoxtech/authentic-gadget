@@ -17,16 +17,26 @@
 
 .sales-form-input {
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(7, 17, 38, 0.14);
   border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.06);
+  background: #fff;
   padding: 0.85rem 1rem;
-  color: #fff;
+  color: #071126;
   font-size: 0.875rem;
   outline: none;
 }
 
-.sales-form-input::placeholder { color: rgba(255, 255, 255, 0.32); }
+.sales-form-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: rgba(7, 17, 38, 0.6);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sales-form-input::placeholder { color: rgba(7, 17, 38, 0.32); }
 .sales-form-input:focus { border-color: var(--sales-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--sales-accent) 22%, transparent); }
 
 @theme {

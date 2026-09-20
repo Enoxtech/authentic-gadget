@@ -81,7 +81,20 @@ export const DEFAULT_SALES_PAGE_CONFIG: SalesPageConfig = {
     { title: "Secure ordering", description: "Bank transfer or payment on delivery." },
   ],
   testimonials: [],
-  faqs: [],
+  faqs: [
+    {
+      question: "Are Authentic Gadget products quality checked?",
+      answer: "Products are checked before dispatch, and our team can confirm specification and availability details before fulfilment.",
+    },
+    {
+      question: "Where do you deliver?",
+      answer: "We deliver across Ghana. Delivery timing and any location-specific details are confirmed with the customer.",
+    },
+    {
+      question: "Which payment options are available?",
+      answer: "Customers can use bank transfer or payment on delivery when those options are enabled for the sales page.",
+    },
+  ],
   form: {
     heading: "Place your order",
     subheading: "Complete the form and our team will confirm your order.",

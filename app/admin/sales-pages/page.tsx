@@ -52,8 +52,9 @@ export default function AdminSalesPagesPage() {
           slug: draft.slug || slugify(draft.name),
           config: {
             ...DEFAULT_SALES_PAGE_CONFIG,
-            headline: selectedProduct?.name || DEFAULT_SALES_PAGE_CONFIG.headline,
-            subheadline: selectedProduct?.name ? `Order ${selectedProduct.name} from Authentic Gadget.` : DEFAULT_SALES_PAGE_CONFIG.subheadline,
+            headline: selectedProduct?.name ? `Get ${selectedProduct.name} with confidence.` : DEFAULT_SALES_PAGE_CONFIG.headline,
+            subheadline: selectedProduct?.name ? `Order ${selectedProduct.name} from a trusted Ghanaian gadget store, with clear payment and delivery options.` : DEFAULT_SALES_PAGE_CONFIG.subheadline,
+            description: selectedProduct?.name ? `Present the strongest reasons to choose ${selectedProduct.name}, then edit this section with the product's specific features and offer details.` : DEFAULT_SALES_PAGE_CONFIG.description,
             heroImageUrl: selectedProduct?.images?.[0] || "",
           },
         }),

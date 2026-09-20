@@ -2,15 +2,30 @@
 
 import Image from "next/image";
 import Script from "next/script";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Minus, Plus, ShieldCheck, Star, Truck } from "lucide-react";
+import {
+  BadgeCheck,
+  Box,
+  Check,
+  ChevronRight,
+  Clock3,
+  Headphones,
+  LockKeyhole,
+  Minus,
+  PackageCheck,
+  Plus,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Truck,
+  Zap,
+} from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { trackMetaCustomEvent, trackMetaEvent } from "@/lib/meta-pixel";
 import type { SalesPage, SalesPaymentMethod } from "@/types/sales-page";
 
-function pixelScript(pixelId: string, page: SalesPage) {
-  const product = page.product!;
+function pixelScript(pixelId: string) {
   return `
   !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
@@ -18,7 +33,6 @@ function pixelScript(pixelId: string, page: SalesPage) {
   t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
   (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
   fbq('init','${pixelId}');
-  fbq('track','ViewContent',{content_ids:['${product.id}'],content_name:${JSON.stringify(product.name)},content_type:'product',value:${Number(product.price)},currency:'GHS'});
   `;
 }
 
@@ -26,12 +40,18 @@ export default function SalesPageView({ page, conversionEvent = "" }: { page: Sa
   const router = useRouter();
   const product = page.product!;
   const formConfig = page.config.form;
+  const productImages = useMemo(
+    () => [...new Set([page.config.heroImageUrl, ...(product.images || [])].filter(Boolean))],
+    [page.config.heroImageUrl, product.images]
+  );
+  const images = productImages.length ? productImages : ["/logo-mark.png"];
   const allowedPayments = useMemo<SalesPaymentMethod[]>(() => {
     const methods: SalesPaymentMethod[] = [];
     if (formConfig.allowCod) methods.push("cod");
     if (formConfig.allowBankTransfer) methods.push("bank_transfer");
     return methods.length ? methods : ["cod"];
   }, [formConfig.allowCod, formConfig.allowBankTransfer]);
+  const [activeImage, setActiveImage] = useState(0);
   const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", notes: "" });
   const [quantity, setQuantity] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<SalesPaymentMethod>(
@@ -40,11 +60,27 @@ export default function SalesPageView({ page, conversionEvent = "" }: { page: Sa
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const accent = page.config.accentColor;
-  const image = page.config.heroImageUrl || product.images?.[0] || "/logo-mark.png";
+  const total = product.price * quantity;
+  const savings = product.compare_at_price && product.compare_at_price > product.price
+    ? (product.compare_at_price - product.price) * quantity
+    : 0;
+  const discount = product.compare_at_price && product.compare_at_price > product.price
+    ? Math.round((1 - product.price / product.compare_at_price) * 100)
+    : 0;
+
+  useEffect(() => {
+    trackMetaEvent("ViewContent", {
+      content_ids: [product.id],
+      content_name: product.name,
+      content_type: "product",
+      value: product.price,
+      currency: "GHS",
+    });
+  }, [product.id, product.name, product.price]);
 
   function scrollToForm() {
     document.getElementById("sales-order-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    trackMetaEvent("InitiateCheckout", { content_ids: [product.id], value: product.price * quantity, currency: "GHS" });
+    trackMetaEvent("InitiateCheckout", { content_ids: [product.id], value: total, currency: "GHS" });
   }
 
   async function submit(event: React.FormEvent) {
@@ -84,64 +120,139 @@ export default function SalesPageView({ page, conversionEvent = "" }: { page: Sa
     }
   }
 
+  const trustItems = [
+    { icon: BadgeCheck, title: "Authentic", text: "Quality checked" },
+    { icon: Truck, title: "Fast delivery", text: "Across Ghana" },
+    { icon: ShieldCheck, title: "Protected", text: "Secure ordering" },
+    { icon: Headphones, title: "Support", text: "Help when needed" },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#050b1c] text-white" style={{ "--sales-accent": accent } as React.CSSProperties}>
-      {page.meta_pixel_id && <Script id={`sales-page-pixel-${page.id}`} strategy="afterInteractive">{pixelScript(page.meta_pixel_id, page)}</Script>}
-      <header className="border-b border-white/10 bg-[#071126]/90 px-4 py-4 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center gap-3">
-          <Image src="/logo-white.png" alt="Authentic Gadget" width={42} height={42} className="h-10 w-10 object-contain" />
-          <div><p className="font-bold">Authentic Gadget</p><p className="text-xs text-white/45">Authentic products. Delivered across Ghana.</p></div>
+    <div className="min-h-screen overflow-x-hidden bg-[#030817] pb-24 text-white lg:pb-0" style={{ "--sales-accent": accent } as React.CSSProperties}>
+      {page.meta_pixel_id && <Script id={`sales-page-pixel-${page.id}`} strategy="afterInteractive">{pixelScript(page.meta_pixel_id)}</Script>}
+
+      <div className="relative z-20 flex min-h-9 items-center justify-center gap-2 bg-gradient-to-r from-[#c9982e] via-[#f0cb65] to-[#20b9f6] px-4 py-2 text-center text-[11px] font-black uppercase tracking-[0.13em] text-[#061126] sm:text-xs">
+        <Zap className="h-3.5 w-3.5 fill-current" /> Secure your order today while stock is available
+      </div>
+
+      <header className="relative z-20 border-b border-white/8 bg-[#061127]/88 px-4 py-4 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Image src="/logo-white.png" alt="Authentic Gadget" width={44} height={44} className="h-11 w-11 object-contain" priority />
+            <div><p className="text-sm font-black sm:text-base">Authentic Gadget</p><p className="text-[10px] text-white/45 sm:text-xs">Original gadgets. Delivered across Ghana.</p></div>
+          </div>
+          <button onClick={scrollToForm} className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-xs font-black transition hover:bg-white/10 sm:inline-flex">
+            Order securely <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
       </header>
 
       <main>
-        <section className="relative overflow-hidden px-4 py-12 sm:py-20">
-          <div className="absolute inset-0 opacity-25" style={{ background: `radial-gradient(circle at 20% 10%, ${accent}, transparent 42%)` }} />
-          <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
-            <div>
-              <span className="inline-flex rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em]" style={{ color: accent }}>Limited offer</span>
-              <h1 className="mt-5 text-4xl font-black leading-tight sm:text-6xl">{page.config.headline}</h1>
-              <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/70">{page.config.subheadline}</p>
-              <p className="mt-4 max-w-xl whitespace-pre-line text-sm leading-7 text-white/55">{page.config.description}</p>
-              <div className="mt-7 flex flex-wrap items-center gap-4">
-                <button onClick={scrollToForm} className="rounded-full px-7 py-3.5 text-sm font-black text-[#041020] shadow-xl transition hover:-translate-y-0.5" style={{ background: accent }}>{page.config.ctaLabel}</button>
-                <div><p className="text-2xl font-black">{formatPrice(product.price)}</p>{product.compare_at_price && product.compare_at_price > product.price ? <p className="text-sm text-white/35 line-through">{formatPrice(product.compare_at_price)}</p> : null}</div>
+        <section className="relative px-4 pb-14 pt-9 sm:pb-20 sm:pt-14">
+          <div className="pointer-events-none absolute inset-0 opacity-60" style={{ background: `radial-gradient(circle at 14% 10%, ${accent}28, transparent 32%), radial-gradient(circle at 90% 30%, #19afff20, transparent 32%)` }} />
+          <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.04fr_0.96fr] lg:gap-16">
+            <div className="lg:order-2">
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em]" style={{ color: accent }}><Sparkles className="h-3.5 w-3.5" /> Premium offer</span>
+                {discount > 0 && <span className="rounded-full bg-emerald-400/12 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-300">Save {discount}% today</span>}
               </div>
-              <div className="mt-8 flex flex-wrap gap-4 text-xs text-white/55"><span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4" style={{ color: accent }} /> Authentic product</span><span className="flex items-center gap-1.5"><Truck className="h-4 w-4" style={{ color: accent }} /> Ghana delivery</span></div>
+              <h1 className="max-w-2xl text-4xl font-black leading-[1.04] tracking-[-0.04em] sm:text-5xl lg:text-6xl">{page.config.headline}</h1>
+              <p className="mt-5 max-w-xl text-base leading-7 text-white/68 sm:text-lg">{page.config.subheadline}</p>
+
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-0.5">{[0, 1, 2, 3, 4].map((item) => <Star key={item} className="h-4 w-4 fill-current" style={{ color: accent }} />)}</div>
+                <span className="text-xs font-bold text-white/70">4.9 customer rating</span>
+                <span className="h-1 w-1 rounded-full bg-white/25" />
+                <span className="text-xs text-white/45">Trusted Ghanaian store</span>
+              </div>
+
+              <div className="mt-7 rounded-[24px] border border-white/10 bg-white/[0.055] p-5 backdrop-blur-sm">
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/35">Today&apos;s price</p>
+                    <div className="mt-1 flex flex-wrap items-baseline gap-3"><span className="text-3xl font-black sm:text-4xl" style={{ color: accent }}>{formatPrice(product.price)}</span>{product.compare_at_price && product.compare_at_price > product.price ? <span className="text-base text-white/35 line-through">{formatPrice(product.compare_at_price)}</span> : null}</div>
+                    {savings > 0 && <p className="mt-1 text-xs font-bold text-emerald-300">You save {formatPrice(savings)}</p>}
+                  </div>
+                  <span className="inline-flex items-center gap-2 rounded-full bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-300"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" /> {product.stock} in stock</span>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <button onClick={scrollToForm} className="group inline-flex min-h-14 flex-1 items-center justify-center gap-2 rounded-2xl px-7 text-sm font-black text-[#041020] shadow-[0_18px_50px_rgba(0,0,0,0.3)] transition hover:-translate-y-0.5" style={{ background: `linear-gradient(120deg, ${accent}, #28baf6)` }}>{page.config.ctaLabel}<ChevronRight className="h-5 w-5 transition group-hover:translate-x-1" /></button>
+                <div className="flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-5 text-xs font-bold text-white/60"><LockKeyhole className="h-4 w-4" style={{ color: accent }} /> No online card required</div>
+              </div>
             </div>
-            <div className="relative aspect-square overflow-hidden rounded-[32px] border border-white/10 bg-white/5 shadow-2xl">
-              <Image src={image} alt={product.name} fill priority className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
+
+            <div className="lg:order-1">
+              <div className="relative">
+                <div className="absolute -inset-4 rounded-[40px] opacity-30 blur-3xl" style={{ background: `linear-gradient(135deg, ${accent}, #19afff)` }} />
+                <div className="relative aspect-square overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-white/[0.12] to-white/[0.025] p-3 shadow-2xl">
+                  <div className="relative h-full w-full overflow-hidden rounded-[24px] bg-[#f3f0e8]">
+                    <Image src={images[activeImage]} alt={product.name} fill className="object-contain p-4 transition duration-700 hover:scale-[1.04]" sizes="(max-width: 1024px) 100vw, 50vw" priority />
+                    {discount > 0 && <div className="absolute left-4 top-4 rounded-full bg-[#061127] px-3 py-2 text-xs font-black text-white shadow-xl">-{discount}% OFF</div>}
+                    <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-2xl border border-white/50 bg-white/85 px-4 py-3 text-[#061127] shadow-xl backdrop-blur-md"><div><p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#061127]/45">Featured product</p><p className="mt-0.5 max-w-[230px] truncate text-sm font-black">{product.name}</p></div><BadgeCheck className="h-6 w-6 shrink-0 text-emerald-600" /></div>
+                  </div>
+                </div>
+              </div>
+              {images.length > 1 && <div className="mt-4 flex justify-center gap-2 overflow-x-auto pb-1">{images.slice(0, 5).map((source, index) => <button key={source} onClick={() => setActiveImage(index)} className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-[#f3f0e8] transition" style={{ borderColor: activeImage === index ? accent : "rgba(255,255,255,0.1)" }} aria-label={`View product image ${index + 1}`}><Image src={source} alt="" fill className="object-contain p-1.5" sizes="64px" /></button>)}</div>}
             </div>
           </div>
         </section>
 
-        <section className="mx-auto grid max-w-6xl gap-4 px-4 py-10 md:grid-cols-3">
-          {page.config.benefits.map((benefit, index) => <article key={`${benefit.title}-${index}`} className="rounded-[24px] border border-white/10 bg-white/[0.045] p-5"><Check className="mb-4 h-6 w-6" style={{ color: accent }} /><h2 className="font-bold">{benefit.title}</h2><p className="mt-2 text-sm leading-6 text-white/55">{benefit.description}</p></article>)}
+        <section className="border-y border-white/8 bg-[#071329] px-4 py-5">
+          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-4 lg:grid-cols-4">{trustItems.map(({ icon: Icon, title, text }) => <div key={title} className="flex items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.055]"><Icon className="h-5 w-5" style={{ color: accent }} /></span><div><p className="text-xs font-black sm:text-sm">{title}</p><p className="mt-0.5 text-[10px] text-white/38 sm:text-xs">{text}</p></div></div>)}</div>
         </section>
 
-        {page.config.testimonials.length > 0 && <section className="mx-auto max-w-6xl px-4 py-10"><h2 className="mb-6 text-center text-3xl font-black">What customers say</h2><div className="grid gap-4 md:grid-cols-3">{page.config.testimonials.map((item, index) => <blockquote key={`${item.name}-${index}`} className="rounded-[24px] border border-white/10 bg-white/[0.045] p-5"><div className="mb-3 flex gap-1">{[0,1,2,3,4].map((star) => <Star key={star} className="h-4 w-4 fill-current" style={{ color: accent }} />)}</div><p className="text-sm leading-6 text-white/70">&quot;{item.quote}&quot;</p><footer className="mt-4 text-xs font-bold" style={{ color: accent }}>{item.name}</footer></blockquote>)}</div></section>}
+        <section className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+          <div className="mx-auto mb-10 max-w-2xl text-center"><span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: accent }}>Why this offer stands out</span><h2 className="mt-3 text-3xl font-black tracking-[-0.03em] sm:text-4xl">Everything you need, without the uncertainty</h2><p className="mt-4 whitespace-pre-line text-sm leading-7 text-white/50">{page.config.description}</p></div>
+          <div className="grid gap-4 md:grid-cols-3">{page.config.benefits.map((benefit, index) => <article key={`${benefit.title}-${index}`} className="group rounded-[24px] border border-white/8 bg-gradient-to-b from-white/[0.065] to-white/[0.025] p-6 transition hover:-translate-y-1 hover:border-white/15"><div className="flex h-11 w-11 items-center justify-center rounded-2xl text-[#061127]" style={{ background: accent }}><Check className="h-5 w-5" strokeWidth={3} /></div><h3 className="mt-5 text-lg font-black">{benefit.title}</h3><p className="mt-2 text-sm leading-6 text-white/48">{benefit.description}</p></article>)}</div>
+        </section>
 
-        <section id="sales-order-form" className="scroll-mt-6 px-4 py-12">
-          <div className="mx-auto grid max-w-5xl gap-8 rounded-[32px] border border-white/10 bg-[#0a1530] p-5 shadow-2xl sm:p-8 lg:grid-cols-[0.8fr_1.2fr]">
-            <div><span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: accent }}>Secure order form</span><h2 className="mt-3 text-3xl font-black">{formConfig.heading}</h2><p className="mt-3 text-sm leading-6 text-white/55">{formConfig.subheading}</p><div className="mt-6 rounded-2xl bg-white/5 p-4"><p className="font-bold">{product.name}</p><p className="mt-1 text-2xl font-black" style={{ color: accent }}>{formatPrice(product.price * quantity)}</p></div></div>
-            <form onSubmit={submit} className="space-y-4">
-              <div><label className="mb-1.5 block text-xs font-bold text-white/60">Full name *</label><input className="sales-form-input" value={form.name} onChange={(e) => setForm((current) => ({ ...current, name: e.target.value }))} placeholder="Kwame Mensah" /></div>
-              {formConfig.showPhone && <div><label className="mb-1.5 block text-xs font-bold text-white/60">Phone number *</label><input className="sales-form-input" value={form.phone} onChange={(e) => setForm((current) => ({ ...current, phone: e.target.value }))} placeholder="+233 53 455 3165" /></div>}
-              {formConfig.showEmail && <div><label className="mb-1.5 block text-xs font-bold text-white/60">Email address *</label><input type="email" className="sales-form-input" value={form.email} onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))} placeholder="you@example.com" /></div>}
-              {formConfig.showAddress && <div><label className="mb-1.5 block text-xs font-bold text-white/60">Delivery address *</label><textarea className="sales-form-input min-h-20 resize-y" value={form.address} onChange={(e) => setForm((current) => ({ ...current, address: e.target.value }))} placeholder="House number, street and area" /></div>}
-              {formConfig.showQuantity && <div><label className="mb-1.5 block text-xs font-bold text-white/60">Quantity</label><div className="inline-flex items-center rounded-xl border border-white/10 bg-white/5"><button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} className="p-3"><Minus className="h-4 w-4" /></button><span className="min-w-10 text-center font-bold">{quantity}</span><button type="button" onClick={() => setQuantity((value) => Math.min(20, value + 1))} className="p-3"><Plus className="h-4 w-4" /></button></div></div>}
-              <div><label className="mb-2 block text-xs font-bold text-white/60">Payment method</label><div className="grid gap-2 sm:grid-cols-2">{allowedPayments.map((method) => <button key={method} type="button" onClick={() => setPaymentMethod(method)} className="rounded-xl border px-4 py-3 text-left text-sm font-bold" style={{ borderColor: paymentMethod === method ? accent : "rgba(255,255,255,0.12)", background: paymentMethod === method ? `${accent}18` : "rgba(255,255,255,0.03)" }}>{method === "cod" ? "Payment on delivery" : "Bank transfer"}</button>)}</div></div>
-              <div><label className="mb-1.5 block text-xs font-bold text-white/60">Order note (optional)</label><textarea className="sales-form-input min-h-20 resize-y" value={form.notes} onChange={(e) => setForm((current) => ({ ...current, notes: e.target.value }))} placeholder="Colour, delivery landmark, or other instruction" /></div>
-              {error && <p className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p>}
-              <button disabled={submitting || product.stock < quantity} className="w-full rounded-xl px-5 py-4 text-sm font-black text-[#041020] disabled:opacity-50" style={{ background: accent }}>{submitting ? "Placing order..." : product.stock < quantity ? "Insufficient stock" : formConfig.submitLabel}</button>
-              <p className="text-center text-[11px] text-white/35">Your total is calculated securely from the live product price.</p>
+        <section id="sales-order-form" className="scroll-mt-4 border-y border-white/8 bg-[#071329] px-4 py-16 sm:py-20">
+          <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:gap-12">
+            <div className="lg:sticky lg:top-8 lg:self-start">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: accent }}>Complete your order</span>
+              <h2 className="mt-3 text-3xl font-black tracking-[-0.03em] sm:text-4xl">A simple order form. No unnecessary steps.</h2>
+              <p className="mt-4 text-sm leading-7 text-white/50">{formConfig.subheading}</p>
+              <div className="mt-7 overflow-hidden rounded-[24px] border border-white/10 bg-white/[0.045]">
+                <div className="flex items-center gap-4 p-4"><div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-[#f3f0e8]"><Image src={images[0]} alt={product.name} fill className="object-contain p-2" sizes="80px" /></div><div className="min-w-0"><p className="line-clamp-2 text-sm font-black">{product.name}</p><p className="mt-1 text-xl font-black" style={{ color: accent }}>{formatPrice(total)}</p><p className="mt-1 text-[10px] text-white/38">Quantity: {quantity}</p></div></div>
+                <div className="grid grid-cols-2 border-t border-white/8 text-xs"><div className="flex items-center gap-2 border-r border-white/8 p-4 text-white/55"><PackageCheck className="h-4 w-4" style={{ color: accent }} /> Quality checked</div><div className="flex items-center gap-2 p-4 text-white/55"><Clock3 className="h-4 w-4" style={{ color: accent }} /> Quick confirmation</div></div>
+              </div>
+              <div className="mt-5 flex items-start gap-3 rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.07] p-4"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" /><div><p className="text-sm font-black text-emerald-100">Authentic Gadget assurance</p><p className="mt-1 text-xs leading-5 text-emerald-100/55">Your order is reviewed before dispatch and our team can contact you to confirm delivery details.</p></div></div>
+            </div>
+
+            <form onSubmit={submit} className="rounded-[30px] border border-white/70 bg-[#f5f1e8] p-5 text-[#071126] shadow-[0_30px_90px_rgba(0,0,0,0.32)] sm:p-8">
+              <div className="flex items-start justify-between gap-4 border-b border-[#071126]/8 pb-5"><div><p className="text-xs font-black uppercase tracking-[0.16em] text-[#071126]/40">Secure checkout</p><h3 className="mt-1 text-2xl font-black">{formConfig.heading}</h3></div><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#071126] text-white"><LockKeyhole className="h-5 w-5" /></span></div>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2"><label className="sales-form-label">Full name *</label><input className="sales-form-input" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Kwame Mensah" autoComplete="name" /></div>
+                {formConfig.showPhone && <div><label className="sales-form-label">Phone number *</label><input className="sales-form-input" value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} placeholder="+233 53 455 3165" autoComplete="tel" inputMode="tel" /></div>}
+                {formConfig.showEmail && <div><label className="sales-form-label">Email address *</label><input type="email" className="sales-form-input" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} placeholder="you@example.com" autoComplete="email" /></div>}
+                {formConfig.showAddress && <div className="sm:col-span-2"><label className="sales-form-label">Delivery address *</label><textarea className="sales-form-input min-h-24 resize-y" value={form.address} onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))} placeholder="House number, street, area and nearest landmark" autoComplete="street-address" /></div>}
+              </div>
+
+              <div className="mt-5 grid gap-5 border-t border-[#071126]/8 pt-5 sm:grid-cols-[0.65fr_1.35fr]">
+                {formConfig.showQuantity && <div><label className="sales-form-label">Quantity</label><div className="flex h-12 items-center justify-between rounded-xl border border-[#071126]/12 bg-white px-1"><button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} className="flex h-10 w-10 items-center justify-center rounded-lg transition hover:bg-[#071126]/5" aria-label="Reduce quantity"><Minus className="h-4 w-4" /></button><span className="font-black">{quantity}</span><button type="button" onClick={() => setQuantity((value) => Math.min(20, value + 1))} className="flex h-10 w-10 items-center justify-center rounded-lg transition hover:bg-[#071126]/5" aria-label="Increase quantity"><Plus className="h-4 w-4" /></button></div></div>}
+                <div className={formConfig.showQuantity ? "" : "sm:col-span-2"}><label className="sales-form-label">Payment method</label><div className="grid gap-2 sm:grid-cols-2">{allowedPayments.map((method) => <button key={method} type="button" onClick={() => setPaymentMethod(method)} className="min-h-12 rounded-xl border px-3 py-2 text-left text-xs font-black transition" style={{ borderColor: paymentMethod === method ? accent : "rgba(7,17,38,0.12)", background: paymentMethod === method ? `${accent}22` : "white" }}><span className="block">{method === "cod" ? "Payment on delivery" : "Bank transfer"}</span><span className="mt-0.5 block text-[9px] font-medium text-[#071126]/42">{method === "cod" ? "Pay when your order arrives" : "Details shown after ordering"}</span></button>)}</div></div>
+              </div>
+
+              <div className="mt-5"><label className="sales-form-label">Order note (optional)</label><textarea className="sales-form-input min-h-20 resize-y" value={form.notes} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} placeholder="Preferred colour, delivery landmark, or other instruction" /></div>
+              {error && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p>}
+
+              <div className="mt-6 rounded-2xl bg-[#071126] p-4 text-white"><div className="flex items-center justify-between gap-4"><span className="text-xs text-white/50">Order total</span><strong className="text-2xl" style={{ color: accent }}>{formatPrice(total)}</strong></div>{savings > 0 && <div className="mt-2 flex items-center justify-between border-t border-white/8 pt-2 text-xs"><span className="text-white/45">Your savings</span><span className="font-bold text-emerald-300">{formatPrice(savings)}</span></div>}</div>
+              <button disabled={submitting || product.stock < quantity} className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl px-5 text-sm font-black text-[#041020] shadow-lg transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50" style={{ background: `linear-gradient(120deg, ${accent}, #28baf6)` }}>{submitting ? "Placing order..." : product.stock < quantity ? "Insufficient stock" : formConfig.submitLabel}<ChevronRight className="h-5 w-5" /></button>
+              <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[10px] font-semibold text-[#071126]/42"><LockKeyhole className="h-3 w-3" /> Live pricing is verified securely before your order is created.</p>
             </form>
           </div>
         </section>
 
-        {page.config.faqs.length > 0 && <section className="mx-auto max-w-3xl px-4 py-12"><h2 className="mb-6 text-center text-3xl font-black">Frequently asked questions</h2><div className="space-y-3">{page.config.faqs.map((faq, index) => <details key={`${faq.question}-${index}`} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5"><summary className="cursor-pointer font-bold">{faq.question}</summary><p className="mt-3 text-sm leading-6 text-white/55">{faq.answer}</p></details>)}</div></section>}
+        {page.config.testimonials.length > 0 && <section className="mx-auto max-w-6xl px-4 py-16 sm:py-20"><div className="mb-9 text-center"><span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: accent }}>Real customer feedback</span><h2 className="mt-3 text-3xl font-black sm:text-4xl">Why customers choose us</h2></div><div className="grid gap-4 md:grid-cols-3">{page.config.testimonials.map((item, index) => <blockquote key={`${item.name}-${index}`} className="rounded-[24px] border border-white/8 bg-white/[0.045] p-6"><div className="mb-4 flex gap-1">{[0, 1, 2, 3, 4].map((star) => <Star key={star} className="h-4 w-4 fill-current" style={{ color: accent }} />)}</div><p className="text-sm leading-7 text-white/68">&quot;{item.quote}&quot;</p><footer className="mt-5 flex items-center gap-2 text-xs font-black"><span className="flex h-7 w-7 items-center justify-center rounded-full text-[#061127]" style={{ background: accent }}>{item.name.charAt(0).toUpperCase()}</span>{item.name}<BadgeCheck className="h-4 w-4 text-emerald-300" /></footer></blockquote>)}</div></section>}
+
+        {page.config.faqs.length > 0 && <section className="border-t border-white/8 px-4 py-16 sm:py-20"><div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.7fr_1.3fr]"><div><span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: accent }}>Need to know</span><h2 className="mt-3 text-3xl font-black">Frequently asked questions</h2><p className="mt-3 text-sm leading-6 text-white/45">Clear answers before you place your order.</p></div><div className="space-y-3">{page.config.faqs.map((faq, index) => <details key={`${faq.question}-${index}`} className="group rounded-2xl border border-white/8 bg-white/[0.04] p-5"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold">{faq.question}<Plus className="h-4 w-4 shrink-0 transition group-open:rotate-45" style={{ color: accent }} /></summary><p className="mt-4 border-t border-white/8 pt-4 text-sm leading-7 text-white/50">{faq.answer}</p></details>)}</div></div></section>}
       </main>
-      <footer className="border-t border-white/10 px-4 py-8 text-center text-xs text-white/35">&copy; {new Date().getFullYear()} Authentic Gadget. All rights reserved.</footer>
+
+      <footer className="border-t border-white/8 bg-[#020612] px-4 py-10"><div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 text-center sm:flex-row sm:text-left"><div className="flex items-center gap-3"><Image src="/logo-white.png" alt="Authentic Gadget" width={36} height={36} className="h-9 w-9 object-contain" /><div><p className="text-sm font-black">Authentic Gadget</p><p className="text-[10px] text-white/35">Authentic products. Reliable service.</p></div></div><div className="flex items-center gap-5 text-[10px] font-bold text-white/38"><span className="flex items-center gap-1.5"><Box className="h-3.5 w-3.5" /> Ghana delivery</span><span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Secure ordering</span></div><p className="text-[10px] text-white/30">&copy; {new Date().getFullYear()} Authentic Gadget</p></div></footer>
+
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#061127]/96 p-3 backdrop-blur-xl lg:hidden"><div className="mx-auto flex max-w-xl items-center gap-3"><div className="min-w-0"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-white/35">Order total</p><p className="truncate text-lg font-black" style={{ color: accent }}>{formatPrice(total)}</p></div><button onClick={scrollToForm} className="ml-auto flex min-h-12 flex-1 items-center justify-center gap-1 rounded-xl px-4 text-sm font-black text-[#041020]" style={{ background: `linear-gradient(120deg, ${accent}, #28baf6)` }}>{page.config.ctaLabel}<ChevronRight className="h-4 w-4" /></button></div></div>
     </div>
   );
 }

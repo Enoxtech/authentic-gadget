@@ -187,10 +187,10 @@ class PostgresQueryBuilder implements PromiseLike<Result> {
     return this.execute().then(onfulfilled, onrejected);
   }
 
-  private buildWhere(parameters: unknown[]) {
+  private buildWhere(parameters: unknown[], tableAlias = "") {
     if (this.filters.length === 0) return "";
     const clauses = this.filters.map((filter) => {
-      const column = identifier(filter.column);
+      const column = `${tableAlias ? `${identifier(tableAlias)}.` : ""}${identifier(filter.column)}`;
       if (filter.kind === "in") {
         if (filter.value.length === 0) return "FALSE";
         const placeholders = filter.value.map((value) => {
@@ -260,7 +260,7 @@ class PostgresQueryBuilder implements PromiseLike<Result> {
           sql = `SELECT count(*)::int AS count FROM ${table}${this.buildWhere(parameters)}`;
         } else {
           const selection = this.buildSelection();
-          sql = `SELECT ${selection.columns} FROM ${table} t${selection.join}${this.buildWhere(parameters)}`;
+          sql = `SELECT ${selection.columns} FROM ${table} t${selection.join}${this.buildWhere(parameters, "t")}`;
           if (this.orderBy) {
             sql += ` ORDER BY t.${identifier(this.orderBy.column)} ${this.orderBy.ascending ? "ASC" : "DESC"}`;
           }
