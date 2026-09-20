@@ -17,6 +17,7 @@ const TABLES = new Set([
   "orders",
   "products",
   "reviews",
+  "sales_pages",
   "settings",
   "support_messages",
   "wishlists",
@@ -207,25 +208,36 @@ class PostgresQueryBuilder implements PromiseLike<Result> {
   private buildSelection() {
     const parts = splitSelection(this.selection);
     const scalar = parts.filter((part) => !part.includes("("));
-    const relation = parts.find((part) => part.startsWith("products("));
+    const relation = parts.find(
+      (part) => part.startsWith("products(") || part.startsWith("product:products(")
+    );
     const base = scalar.length === 0 || scalar.includes("*")
       ? "t.*"
       : scalar.map((column) => `t.${identifier(column)}`).join(", ");
 
     if (!relation) return { columns: base, join: "" };
-    if (this.table !== "wishlists" && this.table !== "order_items" && this.table !== "reviews") {
+    if (
+      this.table !== "wishlists" &&
+      this.table !== "order_items" &&
+      this.table !== "reviews" &&
+      this.table !== "sales_pages"
+    ) {
       throw new Error(`Unsupported relation selection on ${this.table}`);
     }
 
+    const relationPrefix = relation.startsWith("product:products(")
+      ? "product:products("
+      : "products(";
+    const relationAlias = relationPrefix === "products(" ? "products" : "product";
     const relationColumns = relation
-      .slice("products(".length, -1)
+      .slice(relationPrefix.length, -1)
       .split(",")
       .map((column) => column.trim())
       .filter(Boolean);
     const pairs = relationColumns
       .map((column) => `'${column}', p.${identifier(column)}`)
       .join(", ");
-    const columns = `${base}, CASE WHEN p.id IS NULL THEN NULL ELSE json_build_object(${pairs}) END AS products`;
+    const columns = `${base}, CASE WHEN p.id IS NULL THEN NULL ELSE json_build_object(${pairs}) END AS ${identifier(relationAlias)}`;
     return { columns, join: " LEFT JOIN products p ON p.id = t.product_id" };
   }
 

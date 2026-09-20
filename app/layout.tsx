@@ -8,6 +8,7 @@ import { RecentlyViewedProvider } from "@/context/RecentlyViewedContext";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import SplashScreen from "@/components/pwa/SplashScreen";
 import QuickViewModal from "@/components/ui/QuickViewModal";
+import MetaPixel from "@/components/analytics/MetaPixel";
 import "./globals.css";
 
 const THEME_STORAGE_KEY = "authentic-gadget-theme";
@@ -97,6 +98,7 @@ export default function RootLayout({
               <QuickViewProvider>
                 <RecentlyViewedProvider>
                   <SplashScreen />
+                  <MetaPixel />
                   {children}
                   <InstallPrompt />
                   <QuickViewModal />

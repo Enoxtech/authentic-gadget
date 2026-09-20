@@ -6,7 +6,8 @@ import ThemeLogo from "@/components/ui/ThemeLogo";
 const SPLASH_FLAG = "splash-shown-v1";
 
 function removePreSplash() {
-  document.getElementById("pwa-pre-splash")?.remove();
+  const preSplash = document.getElementById("pwa-pre-splash");
+  if (preSplash) preSplash.style.display = "none";
 }
 
 function isStandalone() {

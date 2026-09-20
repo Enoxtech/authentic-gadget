@@ -12,11 +12,11 @@ const cloudflareImageSource = cloudflareR2PublicUrl ? ` ${cloudflareR2PublicUrl}
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://js.paystack.co https://checkout.paystack.com https://checkout.flutterwave.com`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://connect.facebook.net https://js.paystack.co https://checkout.paystack.com https://checkout.flutterwave.com`,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co${cloudflareImageSource}`,
+  `img-src 'self' data: blob: https://www.facebook.com https://images.unsplash.com https://*.supabase.co${cloudflareImageSource}`,
   "font-src 'self' data:",
-  `connect-src 'self'${backendConnectSource} https://*.supabase.co https://api.paystack.co https://api.flutterwave.com https://checkout.flutterwave.com`,
+  `connect-src 'self'${backendConnectSource} https://www.facebook.com https://connect.facebook.net https://*.supabase.co https://api.paystack.co https://api.flutterwave.com https://checkout.flutterwave.com`,
   "frame-src https://checkout.paystack.com https://checkout.flutterwave.com",
   "object-src 'none'",
   "base-uri 'self'",

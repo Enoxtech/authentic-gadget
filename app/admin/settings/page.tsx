@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Store, Phone, Clock, MessageCircle, CreditCard, Mail, Percent, Landmark } from "lucide-react";
+import { Save, Store, Phone, Clock, MessageCircle, CreditCard, Mail, Percent, Landmark, BarChart3 } from "lucide-react";
 
 interface SettingsView {
   storeName: string;
@@ -37,6 +37,9 @@ interface SettingsView {
   bankAccountNumber: string;
   bankBranch: string;
   bankTransferNote: string;
+  metaPixelId: string;
+  metaConversionEvent: string;
+  metaCapiTokenSet: boolean;
 }
 
 const inputCls = "w-full rounded-xl px-3.5 py-2.5 text-sm bg-fog text-charcoal border-0 focus:outline-none focus:ring-2 focus:ring-electric/30 placeholder:text-charcoal/30";
@@ -95,6 +98,7 @@ export default function AdminSettingsPage() {
     bankTransferNote: "",
   });
   const [email, setEmail] = useState({ gmailUser: "", gmailAppPassword: "", adminEmail: "", resendApiKey: "", resendFromEmail: "" });
+  const [pixel, setPixel] = useState({ metaPixelId: "", metaConversionEvent: "", metaCapiToken: "" });
 
   const [storeInfoSaved, setStoreInfoSaved] = useState(false);
   const [hoursSaved, setHoursSaved] = useState(false);
@@ -103,6 +107,7 @@ export default function AdminSettingsPage() {
   const [paymentSaved, setPaymentSaved] = useState(false);
   const [bankTransferSaved, setBankTransferSaved] = useState(false);
   const [emailSaved, setEmailSaved] = useState(false);
+  const [pixelSaved, setPixelSaved] = useState(false);
 
   useEffect(() => {
     if (!document.cookie.includes("admin_session_client")) {
@@ -150,6 +155,7 @@ export default function AdminSettingsPage() {
               bankTransferNote: data.bankTransferNote,
             });
             setEmail({ gmailUser: data.gmailUser, gmailAppPassword: "", adminEmail: data.adminEmail, resendApiKey: "", resendFromEmail: data.resendFromEmail });
+            setPixel({ metaPixelId: data.metaPixelId, metaConversionEvent: data.metaConversionEvent, metaCapiToken: "" });
           });
       });
   }, [router]);
@@ -468,6 +474,60 @@ export default function AdminSettingsPage() {
             />
           </div>
           <SaveButton onClick={() => save(bankTransfer, () => flash(setBankTransferSaved))} saved={bankTransferSaved} label="Save Bank Transfer" savedLabel="Bank Transfer Saved!" />
+        </div>
+      </div>
+
+      {/* Email Notifications */}
+      <div className={sectionCard}>
+        <div className={sectionHeader}>
+          <BarChart3 className="h-4 w-4 text-blue-500" />
+          <h2 className="font-bold text-charcoal text-sm">Meta Ads Pixel</h2>
+          <StatusPill active={Boolean(settings?.metaPixelId)} activeLabel="Pixel Active" inactiveLabel="Optional" />
+        </div>
+        <div className="p-5 space-y-4">
+          <p className="text-xs text-charcoal/50">
+            Tracks PageView across the store and Purchase events from sales-page orders. A sales page can optionally use its own Pixel ID.
+          </p>
+          <div>
+            <label className={labelCls}>Store-wide Pixel ID</label>
+            <input
+              inputMode="numeric"
+              value={pixel.metaPixelId}
+              onChange={(e) => setPixel((p) => ({ ...p, metaPixelId: e.target.value.replace(/\D/g, "") }))}
+              className={inputCls}
+              placeholder="123456789012345"
+            />
+          </div>
+          <div>
+            <label className={labelCls}>Custom Conversion Event (optional)</label>
+            <input
+              value={pixel.metaConversionEvent}
+              onChange={(e) => setPixel((p) => ({ ...p, metaConversionEvent: e.target.value }))}
+              className={inputCls}
+              placeholder="AuthenticGadgetPurchase"
+            />
+          </div>
+          <div>
+            <label className={labelCls}>
+              Conversions API Token {settings?.metaCapiTokenSet && <span className="text-green-600">(currently set)</span>}
+            </label>
+            <input
+              type="password"
+              value={pixel.metaCapiToken}
+              onChange={(e) => setPixel((p) => ({ ...p, metaCapiToken: e.target.value }))}
+              className={inputCls}
+              placeholder={settings?.metaCapiTokenSet ? "••••••••••••••••" : "Optional server-side token"}
+            />
+          </div>
+          <SaveButton
+            onClick={async () => {
+              await save(pixel, () => flash(setPixelSaved));
+              setPixel((p) => ({ ...p, metaCapiToken: "" }));
+            }}
+            saved={pixelSaved}
+            label="Save Meta Pixel"
+            savedLabel="Meta Pixel Saved!"
+          />
         </div>
       </div>
 

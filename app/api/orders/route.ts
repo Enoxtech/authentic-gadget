@@ -90,8 +90,9 @@ export async function POST(request: NextRequest) {
     const orderNote = readString(body.order_note);
     const paymentMethod = normalizePaymentMethod(readString(body.payment_method));
     const items = readItems(body.items);
+    const salesPageId = readString(body.sales_page_id);
 
-    if (!customerName || !customerEmail || !shippingAddress || !items || !paymentMethod) {
+    if (!customerName || (!customerEmail && !salesPageId) || !shippingAddress || !items || !paymentMethod) {
       return NextResponse.json(
         { error: "Name, email, delivery address, payment method, and valid items are required" },
         { status: 400 }
@@ -117,6 +118,21 @@ export async function POST(request: NextRequest) {
         { error: "One or more products are unavailable" },
         { status: 400 }
       );
+    }
+
+    if (salesPageId) {
+      const { data: salesPage, error: salesPageError } = await supabase
+        .from("sales_pages")
+        .select("id, product_id, is_published")
+        .eq("id", salesPageId)
+        .maybeSingle();
+      if (
+        salesPageError ||
+        !salesPage?.is_published ||
+        !productIds.includes(salesPage.product_id)
+      ) {
+        return NextResponse.json({ error: "This sales page is no longer available" }, { status: 400 });
+      }
     }
 
     const productsById = new Map(
@@ -239,6 +255,8 @@ export async function POST(request: NextRequest) {
       payment_method: paymentMethod,
       payment_status: "pending",
       order_status: "pending",
+      source: salesPageId ? "sales_page" : "storefront",
+      sales_page_id: salesPageId || null,
     });
 
     if (orderError) {

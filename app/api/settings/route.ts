@@ -26,5 +26,7 @@ export async function GET() {
       branch: process.env.BANK_BRANCH || DEFAULT_BANK_TRANSFER.branch,
       note: process.env.BANK_TRANSFER_NOTE || DEFAULT_BANK_TRANSFER.note,
     },
+    metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID || "",
+    metaConversionEvent: "",
   });
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Package, ShoppingCart, Users, BarChart3, Settings, LogOut, LayoutDashboard, Megaphone, Star, Image as ImageIcon, Tag, Truck, ShieldCheck, ScrollText } from "lucide-react";
+import { Package, ShoppingCart, Users, BarChart3, Settings, LogOut, LayoutDashboard, Megaphone, Star, Image as ImageIcon, Tag, Truck, ShieldCheck, ScrollText, PanelsTopLeft } from "lucide-react";
 import Link from "next/link";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { id: "overview", label: "Overview", icon: LayoutDashboard, href: "/admin/dashboard", roles: ["super_admin"] as AdminRole[] },
   { id: "orders", label: "Orders", icon: ShoppingCart, href: "/admin/orders", roles: ALL_ROLES },
   { id: "products", label: "Products", icon: Package, href: "/admin/products", roles: ALL_ROLES },
+  { id: "sales-pages", label: "Sales Pages", icon: PanelsTopLeft, href: "/admin/sales-pages", roles: ["super_admin", "product_manager"] as AdminRole[] },
   { id: "categories", label: "Categories", icon: Tag, href: "/admin/categories", roles: ALL_ROLES },
   { id: "banners", label: "Banners", icon: ImageIcon, href: "/admin/banners", roles: ["super_admin", "product_manager"] as AdminRole[] },
   { id: "coupons", label: "Coupons", icon: Tag, href: "/admin/coupons", roles: ["super_admin", "product_manager"] as AdminRole[] },

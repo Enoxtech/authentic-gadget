@@ -35,6 +35,9 @@ export interface SettingsRow {
   bank_account_number: string | null;
   bank_branch: string | null;
   bank_transfer_note: string | null;
+  meta_pixel_id: string | null;
+  meta_conversion_event: string | null;
+  meta_capi_token_enc: string | null;
   updated_at: string;
 }
 
@@ -97,6 +100,9 @@ export function toAdminView(row: SettingsRow) {
     bankAccountNumber: row.bank_account_number || DEFAULT_BANK_TRANSFER.accountNumber,
     bankBranch: row.bank_branch || DEFAULT_BANK_TRANSFER.branch,
     bankTransferNote: row.bank_transfer_note || DEFAULT_BANK_TRANSFER.note,
+    metaPixelId: row.meta_pixel_id || "",
+    metaConversionEvent: row.meta_conversion_event || "",
+    metaCapiTokenSet: Boolean(row.meta_capi_token_enc),
   };
 }
 
@@ -119,6 +125,8 @@ export function toPublicView(row: SettingsRow) {
       branch: row.bank_branch || DEFAULT_BANK_TRANSFER.branch,
       note: row.bank_transfer_note || DEFAULT_BANK_TRANSFER.note,
     },
+    metaPixelId: row.meta_pixel_id || "",
+    metaConversionEvent: row.meta_conversion_event || "",
   };
 }
 
@@ -146,6 +154,8 @@ const PLAIN_FIELDS: Record<string, string> = {
   bankAccountNumber: "bank_account_number",
   bankBranch: "bank_branch",
   bankTransferNote: "bank_transfer_note",
+  metaPixelId: "meta_pixel_id",
+  metaConversionEvent: "meta_conversion_event",
 };
 
 const SECRET_FIELDS: Record<string, string> = {
@@ -156,6 +166,7 @@ const SECRET_FIELDS: Record<string, string> = {
   hubtelWebhookSecret: "hubtel_webhook_secret_enc",
   gmailAppPassword: "gmail_app_password_enc",
   resendApiKey: "resend_api_key_enc",
+  metaCapiToken: "meta_capi_token_enc",
 };
 
 /** Builds a partial DB update object from an admin-submitted patch body. Empty-string secrets are ignored (keep existing). */
@@ -173,6 +184,10 @@ export function buildSettingsUpdate(body: Record<string, unknown>): Record<strin
 
   if ("bankTransferEnabled" in body) {
     updates.bank_transfer_enabled = Boolean(body.bankTransferEnabled);
+  }
+
+  if (typeof body.metaPixelId === "string" && body.metaPixelId && !/^\d{5,25}$/.test(body.metaPixelId)) {
+    delete updates.meta_pixel_id;
   }
 
   for (const [key, column] of Object.entries(SECRET_FIELDS)) {
