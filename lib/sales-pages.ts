@@ -4,7 +4,10 @@ import type {
   SalesPage,
   SalesPageBenefit,
   SalesPageConfig,
+  SalesPageComparisonRow,
   SalesPageFaq,
+  SalesPageFeatureBlock,
+  SalesPageStep,
   SalesPageTestimonial,
 } from "@/types/sales-page";
 
@@ -22,6 +25,15 @@ function rows<T>(
     .slice(0, max)
     .map((row) => (row && typeof row === "object" ? parser(row as Record<string, unknown>) : null))
     .filter((row): row is T => Boolean(row));
+}
+
+function strings(value: unknown, fallback: string[] = [], max = 20) {
+  if (!Array.isArray(value)) return fallback;
+  const parsed = value
+    .slice(0, max)
+    .map((item) => text(item, "", 180))
+    .filter(Boolean);
+  return parsed.length ? parsed : fallback;
 }
 
 export function normalizeSalesPageConfig(value: unknown): SalesPageConfig {
@@ -50,15 +62,45 @@ export function normalizeSalesPageConfig(value: unknown): SalesPageConfig {
     if (!question || !answer) return null;
     return { question, answer };
   });
+  const featureBlocks = rows<SalesPageFeatureBlock>(source.featureBlocks, (row) => {
+    const title = text(row.title, "", 180);
+    const description = text(row.description, "", 1600);
+    if (!title || !description) return null;
+    return { title, description, imageUrl: text(row.imageUrl, "", 2000) };
+  }, 8);
+  const howItWorks = rows<SalesPageStep>(source.howItWorks, (row) => {
+    const title = text(row.title, "", 160);
+    if (!title) return null;
+    return { title, description: text(row.description, "", 600) };
+  }, 6);
+  const comparisonRows = rows<SalesPageComparisonRow>(source.comparisonRows, (row) => {
+    const label = text(row.label, "", 160);
+    if (!label) return null;
+    return {
+      label,
+      authentic: text(row.authentic, "Yes", 120),
+      alternative: text(row.alternative, "Varies", 120),
+    };
+  }, 10);
 
   return {
     headline: text(source.headline, DEFAULT_SALES_PAGE_CONFIG.headline, 220),
     subheadline: text(source.subheadline, DEFAULT_SALES_PAGE_CONFIG.subheadline, 500),
     description: text(source.description, DEFAULT_SALES_PAGE_CONFIG.description, 4000),
+    urgencyText: text(source.urgencyText, DEFAULT_SALES_PAGE_CONFIG.urgencyText, 220),
+    socialProofText: text(source.socialProofText, DEFAULT_SALES_PAGE_CONFIG.socialProofText, 220),
+    badges: strings(source.badges, DEFAULT_SALES_PAGE_CONFIG.badges, 8),
     heroImageUrl: text(source.heroImageUrl, "", 2000),
     ctaLabel: text(source.ctaLabel, DEFAULT_SALES_PAGE_CONFIG.ctaLabel, 80),
     accentColor: /^#[0-9a-f]{6}$/i.test(accent) ? accent : DEFAULT_SALES_PAGE_CONFIG.accentColor,
     benefits: benefits.length ? benefits : DEFAULT_SALES_PAGE_CONFIG.benefits,
+    featureBlocks,
+    howItWorks: howItWorks.length ? howItWorks : DEFAULT_SALES_PAGE_CONFIG.howItWorks,
+    comparisonTitle: text(source.comparisonTitle, DEFAULT_SALES_PAGE_CONFIG.comparisonTitle, 180),
+    comparisonRows: comparisonRows.length ? comparisonRows : DEFAULT_SALES_PAGE_CONFIG.comparisonRows,
+    includedItems: strings(source.includedItems, [], 20),
+    guaranteeTitle: text(source.guaranteeTitle, DEFAULT_SALES_PAGE_CONFIG.guaranteeTitle, 180),
+    guaranteeText: text(source.guaranteeText, DEFAULT_SALES_PAGE_CONFIG.guaranteeText, 1000),
     testimonials,
     faqs,
     form: {

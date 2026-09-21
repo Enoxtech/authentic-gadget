@@ -35,6 +35,11 @@ export default function EditSalesPage() {
   const [page, setPage] = useState<SalesPage | null>(null);
   const [products, setProducts] = useState<SalesPageProduct[]>([]);
   const [benefits, setBenefits] = useState("");
+  const [badges, setBadges] = useState("");
+  const [featureBlocks, setFeatureBlocks] = useState("");
+  const [steps, setSteps] = useState("");
+  const [comparison, setComparison] = useState("");
+  const [includedItems, setIncludedItems] = useState("");
   const [testimonials, setTestimonials] = useState("");
   const [faqs, setFaqs] = useState("");
   const [saving, setSaving] = useState(false);
@@ -49,6 +54,11 @@ export default function EditSalesPage() {
         setPage(data.page);
         setProducts(data.products || []);
         setBenefits(pairText(data.page.config.benefits, "title", "description"));
+        setBadges((data.page.config.badges || []).join("\n"));
+        setFeatureBlocks((data.page.config.featureBlocks || []).map((row: { title: string; description: string; imageUrl: string }) => `${row.title} | ${row.description} | ${row.imageUrl || ""}`).join("\n"));
+        setSteps(pairText(data.page.config.howItWorks || [], "title", "description"));
+        setComparison((data.page.config.comparisonRows || []).map((row: { label: string; authentic: string; alternative: string }) => `${row.label} | ${row.authentic} | ${row.alternative}`).join("\n"));
+        setIncludedItems((data.page.config.includedItems || []).join("\n"));
         setTestimonials(pairText(data.page.config.testimonials, "name", "quote"));
         setFaqs(pairText(data.page.config.faqs, "question", "answer"));
       })
@@ -73,6 +83,17 @@ export default function EditSalesPage() {
     const config: SalesPageConfig = {
       ...page.config,
       benefits: parsePairs(benefits, "title", "description"),
+      badges: badges.split("\n").map((line) => line.trim()).filter(Boolean),
+      featureBlocks: featureBlocks.split("\n").map((line) => {
+        const [title, description = "", imageUrl = ""] = line.split("|").map((part) => part.trim());
+        return { title, description, imageUrl };
+      }).filter((row) => row.title && row.description),
+      howItWorks: parsePairs(steps, "title", "description"),
+      comparisonRows: comparison.split("\n").map((line) => {
+        const [label, authentic = "Yes", alternative = "Varies"] = line.split("|").map((part) => part.trim());
+        return { label, authentic, alternative };
+      }).filter((row) => row.label),
+      includedItems: includedItems.split("\n").map((line) => line.trim()).filter(Boolean),
       testimonials: parsePairs(testimonials, "name", "quote"),
       faqs: parsePairs(faqs, "question", "answer"),
     };
@@ -135,6 +156,10 @@ export default function EditSalesPage() {
         <div><label className={label}>Headline</label><input className={input} value={page.config.headline} onChange={(e) => updateConfig("headline", e.target.value)} /></div>
         <div><label className={label}>Subheadline</label><textarea className={`${input} min-h-20`} value={page.config.subheadline} onChange={(e) => updateConfig("subheadline", e.target.value)} /></div>
         <div><label className={label}>Offer Description</label><textarea className={`${input} min-h-28`} value={page.config.description} onChange={(e) => updateConfig("description", e.target.value)} /></div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div><label className={label}>Urgency Message</label><input className={input} value={page.config.urgencyText} onChange={(e) => updateConfig("urgencyText", e.target.value)} /></div>
+          <div><label className={label}>Social Proof Line</label><input className={input} value={page.config.socialProofText} onChange={(e) => updateConfig("socialProofText", e.target.value)} /></div>
+        </div>
         <div>
           <label className={label}>Hero Image URL</label>
           <div className="flex flex-col gap-2 sm:flex-row"><input className={input} value={page.config.heroImageUrl} onChange={(e) => updateConfig("heroImageUrl", e.target.value)} /><ImageUploadButton folder="banners" onUploaded={(url) => updateConfig("heroImageUrl", url)} label="Upload hero" /></div>
@@ -144,6 +169,16 @@ export default function EditSalesPage() {
           <div><label className={label}>Accent Colour</label><input className={input} type="color" value={page.config.accentColor} onChange={(e) => updateConfig("accentColor", e.target.value)} /></div>
         </div>
         <div><label className={label}>Benefits (one per line: Title | Description)</label><textarea className={`${input} min-h-32`} value={benefits} onChange={(e) => setBenefits(e.target.value)} /></div>
+        <div><label className={label}>Hero Badges (one per line)</label><textarea className={`${input} min-h-24`} value={badges} onChange={(e) => setBadges(e.target.value)} /></div>
+        <div><label className={label}>Feature Story Blocks (Title | Description | Image URL)</label><textarea className={`${input} min-h-32`} value={featureBlocks} onChange={(e) => setFeatureBlocks(e.target.value)} placeholder="Titanium design | Strong and lightweight | https://..." /></div>
+        <div><label className={label}>How It Works (Title | Description)</label><textarea className={`${input} min-h-28`} value={steps} onChange={(e) => setSteps(e.target.value)} /></div>
+        <div><label className={label}>Comparison Section Title</label><input className={input} value={page.config.comparisonTitle} onChange={(e) => updateConfig("comparisonTitle", e.target.value)} /></div>
+        <div><label className={label}>Comparison Rows (Feature | Authentic Gadget | Alternative)</label><textarea className={`${input} min-h-28`} value={comparison} onChange={(e) => setComparison(e.target.value)} /></div>
+        <div><label className={label}>What&apos;s Included (one item per line)</label><textarea className={`${input} min-h-24`} value={includedItems} onChange={(e) => setIncludedItems(e.target.value)} /></div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div><label className={label}>Guarantee Title</label><input className={input} value={page.config.guaranteeTitle} onChange={(e) => updateConfig("guaranteeTitle", e.target.value)} /></div>
+          <div><label className={label}>Guarantee Message</label><textarea className={`${input} min-h-20`} value={page.config.guaranteeText} onChange={(e) => updateConfig("guaranteeText", e.target.value)} /></div>
+        </div>
         <div><label className={label}>Testimonials (one per line: Name | Quote)</label><textarea className={`${input} min-h-28`} value={testimonials} onChange={(e) => setTestimonials(e.target.value)} /></div>
         <div><label className={label}>FAQs (one per line: Question | Answer)</label><textarea className={`${input} min-h-28`} value={faqs} onChange={(e) => setFaqs(e.target.value)} /></div>
       </section>

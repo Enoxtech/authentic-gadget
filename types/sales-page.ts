@@ -15,6 +15,23 @@ export interface SalesPageFaq {
   answer: string;
 }
 
+export interface SalesPageFeatureBlock {
+  title: string;
+  description: string;
+  imageUrl: string;
+}
+
+export interface SalesPageStep {
+  title: string;
+  description: string;
+}
+
+export interface SalesPageComparisonRow {
+  label: string;
+  authentic: string;
+  alternative: string;
+}
+
 export interface SalesOrderFormConfig {
   heading: string;
   subheading: string;
@@ -32,10 +49,20 @@ export interface SalesPageConfig {
   headline: string;
   subheadline: string;
   description: string;
+  urgencyText: string;
+  socialProofText: string;
+  badges: string[];
   heroImageUrl: string;
   ctaLabel: string;
   accentColor: string;
   benefits: SalesPageBenefit[];
+  featureBlocks: SalesPageFeatureBlock[];
+  howItWorks: SalesPageStep[];
+  comparisonTitle: string;
+  comparisonRows: SalesPageComparisonRow[];
+  includedItems: string[];
+  guaranteeTitle: string;
+  guaranteeText: string;
   testimonials: SalesPageTestimonial[];
   faqs: SalesPageFaq[];
   form: SalesOrderFormConfig;
@@ -72,6 +99,9 @@ export const DEFAULT_SALES_PAGE_CONFIG: SalesPageConfig = {
   headline: "A better way to get the gadget you want",
   subheadline: "Original products, fair prices, and dependable delivery across Ghana.",
   description: "Tell customers why this product is the right choice and what makes the offer special.",
+  urgencyText: "Available now while current stock lasts",
+  socialProofText: "Trusted by customers across Ghana",
+  badges: ["Authentic product", "Quality checked", "Delivery across Ghana"],
   heroImageUrl: "",
   ctaLabel: "Order Now",
   accentColor: "#D4A843",
@@ -80,6 +110,21 @@ export const DEFAULT_SALES_PAGE_CONFIG: SalesPageConfig = {
     { title: "Fast delivery", description: "Reliable delivery across Ghana." },
     { title: "Secure ordering", description: "Bank transfer or payment on delivery." },
   ],
+  featureBlocks: [],
+  howItWorks: [
+    { title: "Choose your option", description: "Select quantity and the payment method that works for you." },
+    { title: "Enter your details", description: "Provide the information our team needs to confirm fulfilment." },
+    { title: "We confirm your order", description: "Receive your reference and the next delivery or payment step." },
+  ],
+  comparisonTitle: "Why order from Authentic Gadget",
+  comparisonRows: [
+    { label: "Product quality checked", authentic: "Yes", alternative: "Varies" },
+    { label: "Ghana-based support", authentic: "Available", alternative: "Limited" },
+    { label: "Clear payment options", authentic: "Included", alternative: "Unclear" },
+  ],
+  includedItems: [],
+  guaranteeTitle: "The Authentic Gadget assurance",
+  guaranteeText: "We review product quality and order details before fulfilment, with support available when you need clarification.",
   testimonials: [],
   faqs: [
     {

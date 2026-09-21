@@ -132,7 +132,7 @@ export default function SalesPageView({ page, conversionEvent = "" }: { page: Sa
       {page.meta_pixel_id && <Script id={`sales-page-pixel-${page.id}`} strategy="afterInteractive">{pixelScript(page.meta_pixel_id)}</Script>}
 
       <div className="relative z-20 flex min-h-9 items-center justify-center gap-2 bg-gradient-to-r from-[#c9982e] via-[#f0cb65] to-[#20b9f6] px-4 py-2 text-center text-[11px] font-black uppercase tracking-[0.13em] text-[#061126] sm:text-xs">
-        <Zap className="h-3.5 w-3.5 fill-current" /> Secure your order today while stock is available
+        <Zap className="h-3.5 w-3.5 fill-current" /> {page.config.urgencyText}
       </div>
 
       <header className="relative z-20 border-b border-white/8 bg-[#061127]/88 px-4 py-4 backdrop-blur-xl">
@@ -159,11 +159,21 @@ export default function SalesPageView({ page, conversionEvent = "" }: { page: Sa
               <h1 className="max-w-2xl text-4xl font-black leading-[1.04] tracking-[-0.04em] sm:text-5xl lg:text-6xl">{page.config.headline}</h1>
               <p className="mt-5 max-w-xl text-base leading-7 text-white/68 sm:text-lg">{page.config.subheadline}</p>
 
+              {page.config.badges.length > 0 && (
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {page.config.badges.map((badge) => (
+                    <span key={badge} className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.045] px-3 py-1.5 text-[10px] font-bold text-white/65">
+                      <Check className="h-3.5 w-3.5" style={{ color: accent }} strokeWidth={3} /> {badge}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-0.5">{[0, 1, 2, 3, 4].map((item) => <Star key={item} className="h-4 w-4 fill-current" style={{ color: accent }} />)}</div>
                 <span className="text-xs font-bold text-white/70">4.9 customer rating</span>
                 <span className="h-1 w-1 rounded-full bg-white/25" />
-                <span className="text-xs text-white/45">Trusted Ghanaian store</span>
+                <span className="text-xs text-white/45">{page.config.socialProofText}</span>
               </div>
 
               <div className="mt-7 rounded-[24px] border border-white/10 bg-white/[0.055] p-5 backdrop-blur-sm">
@@ -208,6 +218,94 @@ export default function SalesPageView({ page, conversionEvent = "" }: { page: Sa
           <div className="grid gap-4 md:grid-cols-3">{page.config.benefits.map((benefit, index) => <article key={`${benefit.title}-${index}`} className="group rounded-[24px] border border-white/8 bg-gradient-to-b from-white/[0.065] to-white/[0.025] p-6 transition hover:-translate-y-1 hover:border-white/15"><div className="flex h-11 w-11 items-center justify-center rounded-2xl text-[#061127]" style={{ background: accent }}><Check className="h-5 w-5" strokeWidth={3} /></div><h3 className="mt-5 text-lg font-black">{benefit.title}</h3><p className="mt-2 text-sm leading-6 text-white/48">{benefit.description}</p></article>)}</div>
         </section>
 
+        {page.config.featureBlocks.length > 0 && (
+          <section className="border-y border-white/8 bg-[#071329] px-4 py-16 sm:py-24">
+            <div className="mx-auto max-w-6xl space-y-8 sm:space-y-12">
+              <div className="mx-auto max-w-2xl text-center">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: accent }}>Built for the way you live</span>
+                <h2 className="mt-3 text-3xl font-black tracking-[-0.03em] sm:text-4xl">More than specifications. A better everyday experience.</h2>
+              </div>
+              {page.config.featureBlocks.map((feature, index) => {
+                const featureImage = feature.imageUrl || images[(index + 1) % images.length];
+                return (
+                  <article key={`${feature.title}-${index}`} className="grid overflow-hidden rounded-[30px] border border-white/8 bg-white/[0.035] lg:grid-cols-2">
+                    <div className={`relative min-h-[280px] bg-[#f3f0e8] sm:min-h-[380px] ${index % 2 ? "lg:order-2" : ""}`}>
+                      <Image src={featureImage} alt={feature.title} fill className="object-contain p-6 sm:p-10" sizes="(max-width: 1024px) 100vw, 50vw" unoptimized />
+                    </div>
+                    <div className="flex items-center p-7 sm:p-10 lg:p-14">
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: accent }}>Feature {String(index + 1).padStart(2, "0")}</span>
+                        <h3 className="mt-3 text-3xl font-black tracking-[-0.03em] sm:text-4xl">{feature.title}</h3>
+                        <p className="mt-5 whitespace-pre-line text-sm leading-7 text-white/55 sm:text-base">{feature.description}</p>
+                        <button onClick={scrollToForm} className="mt-7 inline-flex items-center gap-2 text-sm font-black" style={{ color: accent }}>Order this product <ChevronRight className="h-4 w-4" /></button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        <section className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+          <div className="mb-10 text-center">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: accent }}>Simple from start to finish</span>
+            <h2 className="mt-3 text-3xl font-black tracking-[-0.03em] sm:text-4xl">How to place your order</h2>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {page.config.howItWorks.map((step, index) => (
+              <article key={`${step.title}-${index}`} className="relative overflow-hidden rounded-[24px] border border-white/8 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6">
+                <span className="absolute right-4 top-2 text-6xl font-black text-white/[0.035]">{index + 1}</span>
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl text-sm font-black text-[#061127]" style={{ background: accent }}>{index + 1}</span>
+                <h3 className="mt-5 text-lg font-black">{step.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-white/48">{step.description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="border-y border-white/8 bg-[#071329] px-4 py-16 sm:py-20">
+          <div className="mx-auto max-w-5xl">
+            <div className="mx-auto mb-9 max-w-2xl text-center">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: accent }}>Buy with clarity</span>
+              <h2 className="mt-3 text-3xl font-black tracking-[-0.03em] sm:text-4xl">{page.config.comparisonTitle}</h2>
+            </div>
+            <div className="overflow-hidden rounded-[26px] border border-white/10 bg-[#030817] shadow-2xl">
+              <div className="grid grid-cols-[1.2fr_0.9fr_0.9fr] border-b border-white/8 bg-white/[0.045] text-[10px] font-black uppercase tracking-[0.12em] sm:text-xs">
+                <div className="p-4 sm:p-5">What matters</div>
+                <div className="border-l border-white/8 p-4 sm:p-5" style={{ color: accent }}>Authentic Gadget</div>
+                <div className="border-l border-white/8 p-4 text-white/38 sm:p-5">Typical seller</div>
+              </div>
+              {page.config.comparisonRows.map((row, index) => (
+                <div key={`${row.label}-${index}`} className="grid grid-cols-[1.2fr_0.9fr_0.9fr] border-b border-white/8 text-xs last:border-b-0 sm:text-sm">
+                  <div className="p-4 font-bold sm:p-5">{row.label}</div>
+                  <div className="flex items-center gap-2 border-l border-white/8 bg-emerald-400/[0.055] p-4 font-bold text-emerald-200 sm:p-5"><Check className="hidden h-4 w-4 shrink-0 sm:block" /> {row.authentic}</div>
+                  <div className="border-l border-white/8 p-4 text-white/42 sm:p-5">{row.alternative}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto grid max-w-6xl gap-5 px-4 py-16 sm:py-20 lg:grid-cols-2">
+          {page.config.includedItems.length > 0 && (
+            <article className="rounded-[28px] border border-white/8 bg-white/[0.045] p-7 sm:p-9">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.065]"><Box className="h-6 w-6" style={{ color: accent }} /></span>
+              <h2 className="mt-6 text-2xl font-black sm:text-3xl">What&apos;s included</h2>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {page.config.includedItems.map((item) => <div key={item} className="flex items-start gap-3 rounded-2xl bg-white/[0.035] p-4 text-sm text-white/65"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: accent }} strokeWidth={3} /> {item}</div>)}
+              </div>
+            </article>
+          )}
+          <article className={`relative overflow-hidden rounded-[28px] border p-7 sm:p-9 ${page.config.includedItems.length ? "" : "lg:col-span-2"}`} style={{ borderColor: `${accent}55`, background: `linear-gradient(135deg, ${accent}20, #19afff10)` }}>
+            <div className="absolute -right-10 -top-10 h-44 w-44 rounded-full opacity-20 blur-3xl" style={{ background: accent }} />
+            <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl text-[#061127]" style={{ background: accent }}><ShieldCheck className="h-6 w-6" /></span>
+            <h2 className="relative mt-6 text-2xl font-black sm:text-3xl">{page.config.guaranteeTitle}</h2>
+            <p className="relative mt-4 max-w-xl text-sm leading-7 text-white/58">{page.config.guaranteeText}</p>
+            <button onClick={scrollToForm} className="relative mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 text-sm font-black text-[#041020]" style={{ background: `linear-gradient(120deg, ${accent}, #28baf6)` }}>Order with confidence <ChevronRight className="h-4 w-4" /></button>
+          </article>
+        </section>
+
         <section id="sales-order-form" className="scroll-mt-4 border-y border-white/8 bg-[#071329] px-4 py-16 sm:py-20">
           <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:gap-12">
             <div className="lg:sticky lg:top-8 lg:self-start">
@@ -248,6 +346,18 @@ export default function SalesPageView({ page, conversionEvent = "" }: { page: Sa
         {page.config.testimonials.length > 0 && <section className="mx-auto max-w-6xl px-4 py-16 sm:py-20"><div className="mb-9 text-center"><span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: accent }}>Real customer feedback</span><h2 className="mt-3 text-3xl font-black sm:text-4xl">Why customers choose us</h2></div><div className="grid gap-4 md:grid-cols-3">{page.config.testimonials.map((item, index) => <blockquote key={`${item.name}-${index}`} className="rounded-[24px] border border-white/8 bg-white/[0.045] p-6"><div className="mb-4 flex gap-1">{[0, 1, 2, 3, 4].map((star) => <Star key={star} className="h-4 w-4 fill-current" style={{ color: accent }} />)}</div><p className="text-sm leading-7 text-white/68">&quot;{item.quote}&quot;</p><footer className="mt-5 flex items-center gap-2 text-xs font-black"><span className="flex h-7 w-7 items-center justify-center rounded-full text-[#061127]" style={{ background: accent }}>{item.name.charAt(0).toUpperCase()}</span>{item.name}<BadgeCheck className="h-4 w-4 text-emerald-300" /></footer></blockquote>)}</div></section>}
 
         {page.config.faqs.length > 0 && <section className="border-t border-white/8 px-4 py-16 sm:py-20"><div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.7fr_1.3fr]"><div><span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: accent }}>Need to know</span><h2 className="mt-3 text-3xl font-black">Frequently asked questions</h2><p className="mt-3 text-sm leading-6 text-white/45">Clear answers before you place your order.</p></div><div className="space-y-3">{page.config.faqs.map((faq, index) => <details key={`${faq.question}-${index}`} className="group rounded-2xl border border-white/8 bg-white/[0.04] p-5"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold">{faq.question}<Plus className="h-4 w-4 shrink-0 transition group-open:rotate-45" style={{ color: accent }} /></summary><p className="mt-4 border-t border-white/8 pt-4 text-sm leading-7 text-white/50">{faq.answer}</p></details>)}</div></div></section>}
+
+        <section className="px-4 pb-16 sm:pb-24">
+          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-[#122544] to-[#061127] px-6 py-12 text-center shadow-2xl sm:px-12 sm:py-16">
+            <div className="pointer-events-none absolute inset-0 opacity-50" style={{ background: `radial-gradient(circle at 15% 15%, ${accent}55, transparent 28%), radial-gradient(circle at 90% 100%, #20b9f644, transparent 30%)` }} />
+            <div className="relative mx-auto max-w-3xl">
+              <div className="flex justify-center gap-1">{[0, 1, 2, 3, 4].map((star) => <Star key={star} className="h-4 w-4 fill-current" style={{ color: accent }} />)}</div>
+              <h2 className="mt-5 text-3xl font-black tracking-[-0.04em] sm:text-5xl">Ready to make {product.name} yours?</h2>
+              <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-white/55">{page.config.urgencyText}. Complete the short order form and our team will handle the next step.</p>
+              <button onClick={scrollToForm} className="mt-7 inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl px-8 text-sm font-black text-[#041020] shadow-xl transition hover:-translate-y-0.5" style={{ background: `linear-gradient(120deg, ${accent}, #28baf6)` }}>{page.config.ctaLabel}<ChevronRight className="h-5 w-5" /></button>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-white/8 bg-[#020612] px-4 py-10"><div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 text-center sm:flex-row sm:text-left"><div className="flex items-center gap-3"><Image src="/logo-white.png" alt="Authentic Gadget" width={36} height={36} className="h-9 w-9 object-contain" /><div><p className="text-sm font-black">Authentic Gadget</p><p className="text-[10px] text-white/35">Authentic products. Reliable service.</p></div></div><div className="flex items-center gap-5 text-[10px] font-bold text-white/38"><span className="flex items-center gap-1.5"><Box className="h-3.5 w-3.5" /> Ghana delivery</span><span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Secure ordering</span></div><p className="text-[10px] text-white/30">&copy; {new Date().getFullYear()} Authentic Gadget</p></div></footer>
