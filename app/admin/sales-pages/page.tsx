@@ -97,7 +97,7 @@ export default function AdminSalesPagesPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="admin-sales-pages p-4 sm:p-6 lg:p-8 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-charcoal">Sales Pages</h1>
         <p className="text-sm text-charcoal/50">Create reusable product landing pages with built-in order forms.</p>

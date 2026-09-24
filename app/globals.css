@@ -2475,3 +2475,45 @@ body::before {
 .admin-shell .font-label {
   color: rgba(240, 237, 230, 0.74) !important;
 }
+
+/* Campaign pages are intentionally fixed-dark. Prevent the storefront's
+   light-theme utility remapping from reducing contrast inside them. */
+.sales-page-shell.text-white,
+.sales-thank-you-shell.text-white {
+  color: #f8fafc !important;
+}
+
+.sales-page-shell .text-white,
+.sales-thank-you-shell .text-white {
+  color: #ffffff !important;
+}
+
+.sales-page-shell .text-white\/70,
+.sales-thank-you-shell .text-white\/70 { color: rgba(255, 255, 255, 0.76) !important; }
+.sales-page-shell .text-white\/60,
+.sales-thank-you-shell .text-white\/60 { color: rgba(255, 255, 255, 0.68) !important; }
+.sales-page-shell .text-white\/50,
+.sales-thank-you-shell .text-white\/50 { color: rgba(255, 255, 255, 0.58) !important; }
+.sales-page-shell .text-white\/45,
+.sales-thank-you-shell .text-white\/45 { color: rgba(255, 255, 255, 0.52) !important; }
+.sales-page-shell .text-white\/40,
+.sales-thank-you-shell .text-white\/40 { color: rgba(255, 255, 255, 0.48) !important; }
+.sales-page-shell .text-white\/35,
+.sales-thank-you-shell .text-white\/35 { color: rgba(255, 255, 255, 0.43) !important; }
+.sales-page-shell .text-white\/30,
+.sales-thank-you-shell .text-white\/30 { color: rgba(255, 255, 255, 0.38) !important; }
+
+/* Sales-page management also stays fixed-dark inside the admin shell. */
+.admin-shell .admin-sales-pages,
+.admin-shell .admin-sales-pages h1,
+.admin-shell .admin-sales-pages h2,
+.admin-shell .admin-sales-pages h3,
+.admin-shell .admin-sales-pages .text-white {
+  color: #f8f5ef !important;
+}
+
+.admin-shell .admin-sales-pages .text-white\/75 { color: rgba(248, 245, 239, 0.84) !important; }
+.admin-shell .admin-sales-pages .text-white\/65 { color: rgba(248, 245, 239, 0.76) !important; }
+.admin-shell .admin-sales-pages .text-white\/55 { color: rgba(248, 245, 239, 0.68) !important; }
+.admin-shell .admin-sales-pages .text-white\/50 { color: rgba(248, 245, 239, 0.64) !important; }
+.admin-shell .admin-sales-pages .text-white\/45 { color: rgba(248, 245, 239, 0.60) !important; }

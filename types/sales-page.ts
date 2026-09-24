@@ -32,17 +32,36 @@ export interface SalesPageComparisonRow {
   alternative: string;
 }
 
+export interface SalesOrderPackage {
+  label: string;
+  quantity: number;
+  badge: string;
+  description: string;
+}
+
 export interface SalesOrderFormConfig {
   heading: string;
   subheading: string;
   submitLabel: string;
   showEmail: boolean;
   showPhone: boolean;
+  showWhatsApp: boolean;
   showAddress: boolean;
+  showRegion: boolean;
+  showCity: boolean;
   showQuantity: boolean;
+  showNotes: boolean;
   allowCod: boolean;
   allowBankTransfer: boolean;
   defaultPaymentMethod: SalesPaymentMethod;
+  namePlaceholder: string;
+  emailPlaceholder: string;
+  phonePlaceholder: string;
+  whatsappPlaceholder: string;
+  addressPlaceholder: string;
+  cityPlaceholder: string;
+  assuranceText: string;
+  packages: SalesOrderPackage[];
 }
 
 export interface SalesPageConfig {
@@ -146,11 +165,27 @@ export const DEFAULT_SALES_PAGE_CONFIG: SalesPageConfig = {
     submitLabel: "Place Order",
     showEmail: true,
     showPhone: true,
+    showWhatsApp: true,
     showAddress: true,
+    showRegion: true,
+    showCity: true,
     showQuantity: true,
+    showNotes: true,
     allowCod: true,
     allowBankTransfer: true,
     defaultPaymentMethod: "cod",
+    namePlaceholder: "Kwame Mensah",
+    emailPlaceholder: "you@example.com",
+    phonePlaceholder: "+233 53 455 3165",
+    whatsappPlaceholder: "Leave blank if same as phone",
+    addressPlaceholder: "House number, street, area and nearest landmark",
+    cityPlaceholder: "Accra",
+    assuranceText: "Secure and private. Your order details are used only for fulfilment.",
+    packages: [
+      { label: "1 Unit", quantity: 1, badge: "Single", description: "One product" },
+      { label: "2 Units", quantity: 2, badge: "Popular", description: "Order two together" },
+      { label: "3 Units", quantity: 3, badge: "Multi-buy", description: "Order three together" },
+    ],
   },
   thankYouHeadline: "Thank you for your order!",
   thankYouMessage: "Your order has been received. Our team will contact you shortly to confirm delivery.",

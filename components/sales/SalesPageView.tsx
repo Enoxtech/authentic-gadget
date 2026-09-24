@@ -10,15 +10,20 @@ import {
   Check,
   ChevronRight,
   Clock3,
+  CreditCard,
   Headphones,
   LockKeyhole,
+  MapPin,
+  MessageCircle,
   Minus,
   PackageCheck,
   Plus,
   ShieldCheck,
+  ShoppingBag,
   Sparkles,
   Star,
   Truck,
+  UserRound,
   Zap,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
@@ -36,6 +41,11 @@ function pixelScript(pixelId: string) {
   `;
 }
 
+const GHANA_REGIONS = [
+  "Ahafo", "Ashanti", "Bono", "Bono East", "Central", "Eastern", "Greater Accra", "North East",
+  "Northern", "Oti", "Savannah", "Upper East", "Upper West", "Volta", "Western", "Western North",
+];
+
 export default function SalesPageView({ page, conversionEvent = "" }: { page: SalesPage; conversionEvent?: string }) {
   const router = useRouter();
   const product = page.product!;
@@ -52,8 +62,8 @@ export default function SalesPageView({ page, conversionEvent = "" }: { page: Sa
     return methods.length ? methods : ["cod"];
   }, [formConfig.allowCod, formConfig.allowBankTransfer]);
   const [activeImage, setActiveImage] = useState(0);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", notes: "" });
-  const [quantity, setQuantity] = useState(1);
+  const [form, setForm] = useState({ name: "", email: "", phone: "", whatsapp: "", address: "", city: "", region: "", notes: "" });
+  const [quantity, setQuantity] = useState(() => formConfig.packages[0]?.quantity || 1);
   const [paymentMethod, setPaymentMethod] = useState<SalesPaymentMethod>(
     allowedPayments.includes(formConfig.defaultPaymentMethod) ? formConfig.defaultPaymentMethod : allowedPayments[0]
   );
@@ -89,6 +99,8 @@ export default function SalesPageView({ page, conversionEvent = "" }: { page: Sa
     if (!form.name.trim()) return setError("Please enter your full name.");
     if (formConfig.showEmail && !/^\S+@\S+\.\S+$/.test(form.email)) return setError("Please enter a valid email address.");
     if (formConfig.showPhone && !form.phone.trim()) return setError("Please enter your phone number.");
+    if (formConfig.showRegion && !form.region.trim()) return setError("Please choose your delivery region.");
+    if (formConfig.showCity && !form.city.trim()) return setError("Please enter your city or town.");
     if (formConfig.showAddress && !form.address.trim()) return setError("Please enter your delivery address.");
     setSubmitting(true);
     try {
@@ -100,9 +112,13 @@ export default function SalesPageView({ page, conversionEvent = "" }: { page: Sa
           customer_email: form.email.trim(),
           customer_phone: form.phone.trim(),
           shipping_address: form.address.trim() || "Delivery details to be confirmed",
-          shipping_city: "Accra",
-          shipping_region: "Greater Accra",
-          order_note: [`Sales page: ${page.name} (${page.slug}).`, form.notes.trim()].filter(Boolean).join(" "),
+          shipping_city: form.city.trim() || "To be confirmed",
+          shipping_region: form.region.trim() || "To be confirmed",
+          order_note: [
+            `Sales page: ${page.name} (${page.slug}).`,
+            form.whatsapp.trim() ? `WhatsApp: ${form.whatsapp.trim()}.` : "",
+            form.notes.trim(),
+          ].filter(Boolean).join(" "),
           payment_method: paymentMethod,
           sales_page_id: page.id,
           items: [{ product_id: product.id, quantity }],
@@ -128,7 +144,7 @@ export default function SalesPageView({ page, conversionEvent = "" }: { page: Sa
   ];
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#030817] pb-24 text-white lg:pb-0" style={{ "--sales-accent": accent } as React.CSSProperties}>
+    <div className="sales-page-shell min-h-screen overflow-x-hidden bg-[#030817] pb-24 text-white lg:pb-0" style={{ "--sales-accent": accent } as React.CSSProperties}>
       {page.meta_pixel_id && <Script id={`sales-page-pixel-${page.id}`} strategy="afterInteractive">{pixelScript(page.meta_pixel_id)}</Script>}
 
       <div className="relative z-20 flex min-h-9 items-center justify-center gap-2 bg-gradient-to-r from-[#c9982e] via-[#f0cb65] to-[#20b9f6] px-4 py-2 text-center text-[11px] font-black uppercase tracking-[0.13em] text-[#061126] sm:text-xs">
@@ -319,26 +335,74 @@ export default function SalesPageView({ page, conversionEvent = "" }: { page: Sa
               <div className="mt-5 flex items-start gap-3 rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.07] p-4"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" /><div><p className="text-sm font-black text-emerald-100">Authentic Gadget assurance</p><p className="mt-1 text-xs leading-5 text-emerald-100/55">Your order is reviewed before dispatch and our team can contact you to confirm delivery details.</p></div></div>
             </div>
 
-            <form onSubmit={submit} className="rounded-[30px] border border-white/70 bg-[#f5f1e8] p-5 text-[#071126] shadow-[0_30px_90px_rgba(0,0,0,0.32)] sm:p-8">
-              <div className="flex items-start justify-between gap-4 border-b border-[#071126]/8 pb-5"><div><p className="text-xs font-black uppercase tracking-[0.16em] text-[#071126]/40">Secure checkout</p><h3 className="mt-1 text-2xl font-black">{formConfig.heading}</h3></div><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#071126] text-white"><LockKeyhole className="h-5 w-5" /></span></div>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2"><label className="sales-form-label">Full name *</label><input className="sales-form-input" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Kwame Mensah" autoComplete="name" /></div>
-                {formConfig.showPhone && <div><label className="sales-form-label">Phone number *</label><input className="sales-form-input" value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} placeholder="+233 53 455 3165" autoComplete="tel" inputMode="tel" /></div>}
-                {formConfig.showEmail && <div><label className="sales-form-label">Email address *</label><input type="email" className="sales-form-input" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} placeholder="you@example.com" autoComplete="email" /></div>}
-                {formConfig.showAddress && <div className="sm:col-span-2"><label className="sales-form-label">Delivery address *</label><textarea className="sales-form-input min-h-24 resize-y" value={form.address} onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))} placeholder="House number, street, area and nearest landmark" autoComplete="street-address" /></div>}
+            <form onSubmit={submit} className="overflow-hidden rounded-[30px] border border-white/70 bg-[#f5f1e8] text-[#071126] shadow-[0_30px_90px_rgba(0,0,0,0.32)]">
+              <div className="bg-[#071126] px-5 py-6 text-white sm:px-8">
+                <div className="flex items-start justify-between gap-4">
+                  <div><p className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: accent }}>Complete your order</p><h3 className="mt-1 text-2xl font-black text-white sm:text-3xl">{formConfig.heading}</h3><p className="mt-2 max-w-lg text-xs leading-5 text-white/60">{formConfig.subheading}</p></div>
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/8 text-white"><LockKeyhole className="h-5 w-5" /></span>
+                </div>
+                <div className="mt-5 grid grid-cols-3 gap-2 text-[9px] font-bold uppercase tracking-[0.08em] text-white/55 sm:text-[10px]">
+                  {["Your details", "Delivery", "Confirm"].map((step, index) => <div key={step} className="flex items-center gap-2"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-[#071126]" style={{ background: index === 0 ? accent : "rgba(255,255,255,0.14)", color: index === 0 ? "#071126" : "rgba(255,255,255,0.72)" }}>{index + 1}</span><span className="hidden sm:inline">{step}</span></div>)}
+                </div>
               </div>
 
-              <div className="mt-5 grid gap-5 border-t border-[#071126]/8 pt-5 sm:grid-cols-[0.65fr_1.35fr]">
-                {formConfig.showQuantity && <div><label className="sales-form-label">Quantity</label><div className="flex h-12 items-center justify-between rounded-xl border border-[#071126]/12 bg-white px-1"><button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} className="flex h-10 w-10 items-center justify-center rounded-lg transition hover:bg-[#071126]/5" aria-label="Reduce quantity"><Minus className="h-4 w-4" /></button><span className="font-black">{quantity}</span><button type="button" onClick={() => setQuantity((value) => Math.min(20, value + 1))} className="flex h-10 w-10 items-center justify-center rounded-lg transition hover:bg-[#071126]/5" aria-label="Increase quantity"><Plus className="h-4 w-4" /></button></div></div>}
-                <div className={formConfig.showQuantity ? "" : "sm:col-span-2"}><label className="sales-form-label">Payment method</label><div className="grid gap-2 sm:grid-cols-2">{allowedPayments.map((method) => <button key={method} type="button" onClick={() => setPaymentMethod(method)} className="min-h-12 rounded-xl border px-3 py-2 text-left text-xs font-black transition" style={{ borderColor: paymentMethod === method ? accent : "rgba(7,17,38,0.12)", background: paymentMethod === method ? `${accent}22` : "white" }}><span className="block">{method === "cod" ? "Payment on delivery" : "Bank transfer"}</span><span className="mt-0.5 block text-[9px] font-medium text-[#071126]/42">{method === "cod" ? "Pay when your order arrives" : "Details shown after ordering"}</span></button>)}</div></div>
+              <div className="p-5 sm:p-8">
+                <div className="flex items-start gap-3 rounded-2xl border border-emerald-700/15 bg-emerald-50 p-4 text-emerald-950">
+                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
+                  <p className="text-xs font-semibold leading-5">{formConfig.assuranceText}</p>
+                </div>
+
+                <fieldset className="mt-7">
+                  <legend className="flex items-center gap-3 text-sm font-black uppercase tracking-[0.08em]"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#071126] text-white"><UserRound className="h-4 w-4" /></span> Contact information</legend>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div className="sm:col-span-2"><label className="sales-form-label">Full name *</label><input className="sales-form-input" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder={formConfig.namePlaceholder} autoComplete="name" /></div>
+                    {formConfig.showPhone && <div><label className="sales-form-label">Phone number *</label><input className="sales-form-input" value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} placeholder={formConfig.phonePlaceholder} autoComplete="tel" inputMode="tel" /></div>}
+                    {formConfig.showEmail && <div><label className="sales-form-label">Email address *</label><input type="email" className="sales-form-input" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} placeholder={formConfig.emailPlaceholder} autoComplete="email" /></div>}
+                    {formConfig.showWhatsApp && <div className="sm:col-span-2"><label className="sales-form-label">WhatsApp number (optional)</label><div className="relative"><MessageCircle className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#071126]/35" /><input className="sales-form-input pl-11" value={form.whatsapp} onChange={(event) => setForm((current) => ({ ...current, whatsapp: event.target.value }))} placeholder={formConfig.whatsappPlaceholder} inputMode="tel" /></div></div>}
+                  </div>
+                </fieldset>
+
+                {(formConfig.showRegion || formConfig.showCity || formConfig.showAddress) && <fieldset className="mt-8 border-t border-[#071126]/10 pt-7">
+                  <legend className="flex items-center gap-3 text-sm font-black uppercase tracking-[0.08em]"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#071126] text-white"><MapPin className="h-4 w-4" /></span> Delivery details</legend>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    {formConfig.showRegion && <div><label className="sales-form-label">Region *</label><select className="sales-form-input" value={form.region} onChange={(event) => setForm((current) => ({ ...current, region: event.target.value }))}><option value="">Choose your region</option>{GHANA_REGIONS.map((region) => <option key={region} value={region}>{region}</option>)}</select></div>}
+                    {formConfig.showCity && <div><label className="sales-form-label">City / town *</label><input className="sales-form-input" value={form.city} onChange={(event) => setForm((current) => ({ ...current, city: event.target.value }))} placeholder={formConfig.cityPlaceholder} autoComplete="address-level2" /></div>}
+                    {formConfig.showAddress && <div className="sm:col-span-2"><label className="sales-form-label">Delivery address *</label><textarea className="sales-form-input min-h-24 resize-y" value={form.address} onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))} placeholder={formConfig.addressPlaceholder} autoComplete="street-address" /></div>}
+                  </div>
+                </fieldset>}
+
+                {formConfig.showQuantity && <fieldset className="mt-8 border-t border-[#071126]/10 pt-7">
+                  <legend className="flex items-center gap-3 text-sm font-black uppercase tracking-[0.08em]"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#071126] text-white"><ShoppingBag className="h-4 w-4" /></span> Choose your package</legend>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    {formConfig.packages.map((option) => {
+                      const selected = quantity === option.quantity;
+                      return <button key={`${option.label}-${option.quantity}`} type="button" onClick={() => setQuantity(option.quantity)} className="relative rounded-2xl border-2 bg-white p-4 text-left transition hover:-translate-y-0.5" style={{ borderColor: selected ? accent : "rgba(7,17,38,0.10)", boxShadow: selected ? `0 10px 28px ${accent}24` : "none" }}>
+                        {option.badge && <span className="inline-flex rounded-full px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-[#071126]" style={{ background: selected ? accent : "#eef1f5" }}>{option.badge}</span>}
+                        <span className="mt-3 block text-sm font-black">{option.label}</span>
+                        <span className="mt-1 block text-lg font-black" style={{ color: selected ? "#8b650d" : "#071126" }}>{formatPrice(product.price * option.quantity)}</span>
+                        {option.description && <span className="mt-1 block text-[10px] leading-4 text-[#071126]/45">{option.description}</span>}
+                        <span className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border" style={{ borderColor: selected ? accent : "rgba(7,17,38,0.18)", background: selected ? accent : "white" }}>{selected && <Check className="h-3 w-3" strokeWidth={3} />}</span>
+                      </button>;
+                    })}
+                  </div>
+                  <div className="mt-3 flex items-center justify-end gap-3 text-xs text-[#071126]/55"><span>Custom quantity</span><div className="flex h-10 items-center rounded-xl border border-[#071126]/10 bg-white px-1"><button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#071126]/5" aria-label="Reduce quantity"><Minus className="h-3.5 w-3.5" /></button><span className="w-7 text-center font-black text-[#071126]">{quantity}</span><button type="button" onClick={() => setQuantity((value) => Math.min(20, value + 1))} className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#071126]/5" aria-label="Increase quantity"><Plus className="h-3.5 w-3.5" /></button></div></div>
+                </fieldset>}
+
+                <fieldset className="mt-8 border-t border-[#071126]/10 pt-7">
+                  <legend className="flex items-center gap-3 text-sm font-black uppercase tracking-[0.08em]"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#071126] text-white"><CreditCard className="h-4 w-4" /></span> Payment method</legend>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">{allowedPayments.map((method) => {
+                    const selected = paymentMethod === method;
+                    return <button key={method} type="button" onClick={() => setPaymentMethod(method)} className="relative min-h-20 rounded-2xl border-2 bg-white px-4 py-3 text-left transition" style={{ borderColor: selected ? accent : "rgba(7,17,38,0.10)" }}><span className="block text-sm font-black">{method === "cod" ? "Payment on delivery" : "Bank transfer"}</span><span className="mt-1 block text-[10px] leading-4 text-[#071126]/48">{method === "cod" ? "Pay when your order arrives" : "Transfer details appear after ordering"}</span><span className="absolute right-3 top-3 h-4 w-4 rounded-full border-4 border-white" style={{ background: selected ? accent : "#d8dde5", boxShadow: "0 0 0 1px rgba(7,17,38,0.15)" }} /></button>;
+                  })}</div>
+                </fieldset>
+
+                {formConfig.showNotes && <div className="mt-7"><label className="sales-form-label">Order note (optional)</label><textarea className="sales-form-input min-h-20 resize-y" value={form.notes} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} placeholder="Preferred colour, delivery landmark, or other instruction" /></div>}
+                {error && <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p>}
+
+                <div className="mt-7 rounded-2xl bg-[#071126] p-5 text-white"><div className="flex items-center justify-between gap-4"><div><span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-white/45">Order total</span><span className="mt-1 block text-xs text-white/55">{quantity} {quantity === 1 ? "unit" : "units"}</span></div><strong className="text-2xl sm:text-3xl" style={{ color: accent }}>{formatPrice(total)}</strong></div>{savings > 0 && <div className="mt-3 flex items-center justify-between border-t border-white/8 pt-3 text-xs"><span className="text-white/45">Your savings</span><span className="font-bold text-emerald-300">{formatPrice(savings)}</span></div>}</div>
+                <button disabled={submitting || product.stock < quantity} className="mt-4 flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl px-5 text-base font-black text-[#041020] shadow-lg transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50" style={{ background: `linear-gradient(120deg, ${accent}, #28baf6)` }}>{submitting ? "Placing order..." : product.stock < quantity ? "Insufficient stock" : formConfig.submitLabel}<ChevronRight className="h-5 w-5" /></button>
+                <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[10px] font-semibold text-[#071126]/42"><LockKeyhole className="h-3 w-3" /> Live pricing is verified securely before your order is created.</p>
               </div>
-
-              <div className="mt-5"><label className="sales-form-label">Order note (optional)</label><textarea className="sales-form-input min-h-20 resize-y" value={form.notes} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} placeholder="Preferred colour, delivery landmark, or other instruction" /></div>
-              {error && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p>}
-
-              <div className="mt-6 rounded-2xl bg-[#071126] p-4 text-white"><div className="flex items-center justify-between gap-4"><span className="text-xs text-white/50">Order total</span><strong className="text-2xl" style={{ color: accent }}>{formatPrice(total)}</strong></div>{savings > 0 && <div className="mt-2 flex items-center justify-between border-t border-white/8 pt-2 text-xs"><span className="text-white/45">Your savings</span><span className="font-bold text-emerald-300">{formatPrice(savings)}</span></div>}</div>
-              <button disabled={submitting || product.stock < quantity} className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl px-5 text-sm font-black text-[#041020] shadow-lg transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50" style={{ background: `linear-gradient(120deg, ${accent}, #28baf6)` }}>{submitting ? "Placing order..." : product.stock < quantity ? "Insufficient stock" : formConfig.submitLabel}<ChevronRight className="h-5 w-5" /></button>
-              <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[10px] font-semibold text-[#071126]/42"><LockKeyhole className="h-3 w-3" /> Live pricing is verified securely before your order is created.</p>
             </form>
           </div>
         </section>

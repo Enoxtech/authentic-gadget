@@ -7,6 +7,7 @@ import type {
   SalesPageComparisonRow,
   SalesPageFaq,
   SalesPageFeatureBlock,
+  SalesOrderPackage,
   SalesPageStep,
   SalesPageTestimonial,
 } from "@/types/sales-page";
@@ -82,6 +83,17 @@ export function normalizeSalesPageConfig(value: unknown): SalesPageConfig {
       alternative: text(row.alternative, "Varies", 120),
     };
   }, 10);
+  const packages = rows<SalesOrderPackage>(formSource.packages, (row) => {
+    const label = text(row.label, "", 100);
+    const quantity = Math.max(1, Math.min(20, Math.floor(Number(row.quantity) || 1)));
+    if (!label) return null;
+    return {
+      label,
+      quantity,
+      badge: text(row.badge, "", 60),
+      description: text(row.description, "", 180),
+    };
+  }, 6);
 
   return {
     headline: text(source.headline, DEFAULT_SALES_PAGE_CONFIG.headline, 220),
@@ -109,12 +121,24 @@ export function normalizeSalesPageConfig(value: unknown): SalesPageConfig {
       submitLabel: text(formSource.submitLabel, DEFAULT_SALES_PAGE_CONFIG.form.submitLabel, 80),
       showEmail: formSource.showEmail !== false,
       showPhone: formSource.showPhone !== false,
+      showWhatsApp: formSource.showWhatsApp !== false,
       showAddress: formSource.showAddress !== false,
+      showRegion: formSource.showRegion !== false,
+      showCity: formSource.showCity !== false,
       showQuantity: formSource.showQuantity !== false,
+      showNotes: formSource.showNotes !== false,
       allowCod: allowCod || !allowBankTransfer,
       allowBankTransfer: allowBankTransfer,
       defaultPaymentMethod:
         requestedDefault === "bank_transfer" && allowBankTransfer ? "bank_transfer" : "cod",
+      namePlaceholder: text(formSource.namePlaceholder, DEFAULT_SALES_PAGE_CONFIG.form.namePlaceholder, 100),
+      emailPlaceholder: text(formSource.emailPlaceholder, DEFAULT_SALES_PAGE_CONFIG.form.emailPlaceholder, 120),
+      phonePlaceholder: text(formSource.phonePlaceholder, DEFAULT_SALES_PAGE_CONFIG.form.phonePlaceholder, 80),
+      whatsappPlaceholder: text(formSource.whatsappPlaceholder, DEFAULT_SALES_PAGE_CONFIG.form.whatsappPlaceholder, 100),
+      addressPlaceholder: text(formSource.addressPlaceholder, DEFAULT_SALES_PAGE_CONFIG.form.addressPlaceholder, 180),
+      cityPlaceholder: text(formSource.cityPlaceholder, DEFAULT_SALES_PAGE_CONFIG.form.cityPlaceholder, 80),
+      assuranceText: text(formSource.assuranceText, DEFAULT_SALES_PAGE_CONFIG.form.assuranceText, 240),
+      packages: packages.length ? packages : DEFAULT_SALES_PAGE_CONFIG.form.packages,
     },
     thankYouHeadline: text(source.thankYouHeadline, DEFAULT_SALES_PAGE_CONFIG.thankYouHeadline, 180),
     thankYouMessage: text(source.thankYouMessage, DEFAULT_SALES_PAGE_CONFIG.thankYouMessage, 800),

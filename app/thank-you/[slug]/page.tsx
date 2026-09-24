@@ -28,7 +28,7 @@ export default async function SalesThankYouPage({
   };
 
   return (
-    <main className="min-h-screen bg-[#050b1c] px-4 py-10 text-white sm:py-16">
+    <main className="sales-thank-you-shell min-h-screen bg-[#050b1c] px-4 py-10 text-white sm:py-16">
       <div className="mx-auto max-w-xl">
         <div className="mb-8 flex items-center justify-center gap-3">
           <Image src="/logo-white.png" alt="Authentic Gadget" width={44} height={44} className="h-11 w-11 object-contain" />

@@ -40,6 +40,7 @@ export default function EditSalesPage() {
   const [steps, setSteps] = useState("");
   const [comparison, setComparison] = useState("");
   const [includedItems, setIncludedItems] = useState("");
+  const [packages, setPackages] = useState("");
   const [testimonials, setTestimonials] = useState("");
   const [faqs, setFaqs] = useState("");
   const [saving, setSaving] = useState(false);
@@ -59,6 +60,7 @@ export default function EditSalesPage() {
         setSteps(pairText(data.page.config.howItWorks || [], "title", "description"));
         setComparison((data.page.config.comparisonRows || []).map((row: { label: string; authentic: string; alternative: string }) => `${row.label} | ${row.authentic} | ${row.alternative}`).join("\n"));
         setIncludedItems((data.page.config.includedItems || []).join("\n"));
+        setPackages((data.page.config.form.packages || []).map((row: { label: string; quantity: number; badge: string; description: string }) => `${row.label} | ${row.quantity} | ${row.badge || ""} | ${row.description || ""}`).join("\n"));
         setTestimonials(pairText(data.page.config.testimonials, "name", "quote"));
         setFaqs(pairText(data.page.config.faqs, "question", "answer"));
       })
@@ -82,6 +84,13 @@ export default function EditSalesPage() {
     setMessage("");
     const config: SalesPageConfig = {
       ...page.config,
+      form: {
+        ...page.config.form,
+        packages: packages.split("\n").map((line) => {
+          const [label, quantity = "1", badge = "", description = ""] = line.split("|").map((part) => part.trim());
+          return { label, quantity: Math.max(1, Math.min(20, Number(quantity) || 1)), badge, description };
+        }).filter((row) => row.label),
+      },
       benefits: parsePairs(benefits, "title", "description"),
       badges: badges.split("\n").map((line) => line.trim()).filter(Boolean),
       featureBlocks: featureBlocks.split("\n").map((line) => {
@@ -121,10 +130,10 @@ export default function EditSalesPage() {
     }
   }
 
-  if (!page) return <div className="p-8 text-sm text-white/50">{message || "Loading sales page..."}</div>;
+  if (!page) return <div className="admin-sales-pages p-8 text-sm text-white/50">{message || "Loading sales page..."}</div>;
 
   return (
-    <div className="max-w-4xl space-y-6 p-4 sm:p-6 lg:p-8">
+    <div className="admin-sales-pages max-w-4xl space-y-6 p-4 sm:p-6 lg:p-8">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/admin/sales-pages" className="rounded-xl bg-white/8 p-2.5 text-white"><ArrowLeft className="h-5 w-5" /></Link>
         <div className="min-w-0 flex-1">
@@ -184,19 +193,55 @@ export default function EditSalesPage() {
       </section>
 
       <section className={card}>
-        <h2 className="font-bold text-white">Reusable order form</h2>
-        <p className="text-xs text-white/45">This form is automatically embedded in this sales page and copied when the page is duplicated.</p>
-        <div><label className={label}>Form Heading</label><input className={input} value={page.config.form.heading} onChange={(e) => updateForm("heading", e.target.value)} /></div>
+        <div className="rounded-2xl border border-[#D4A843]/20 bg-[#D4A843]/[0.06] p-4">
+          <h2 className="font-bold text-white">Reusable order form builder</h2>
+          <p className="mt-1 text-xs leading-5 text-white/65">Choose the sections customers see, edit their guidance, and create package cards. These settings are copied when this sales page is duplicated.</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div><label className={label}>Form Heading</label><input className={input} value={page.config.form.heading} onChange={(e) => updateForm("heading", e.target.value)} /></div>
+          <div><label className={label}>Submit Button Label</label><input className={input} value={page.config.form.submitLabel} onChange={(e) => updateForm("submitLabel", e.target.value)} /></div>
+        </div>
         <div><label className={label}>Form Help Text</label><textarea className={`${input} min-h-20`} value={page.config.form.subheading} onChange={(e) => updateForm("subheading", e.target.value)} /></div>
-        <div><label className={label}>Submit Button Label</label><input className={input} value={page.config.form.submitLabel} onChange={(e) => updateForm("submitLabel", e.target.value)} /></div>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div><label className={label}>Privacy / Assurance Message</label><input className={input} value={page.config.form.assuranceText} onChange={(e) => updateForm("assuranceText", e.target.value)} /></div>
+
+        <div>
+          <h3 className="mb-3 text-sm font-bold text-white">Customer fields</h3>
+          <div className="grid gap-2 sm:grid-cols-2">
           {([
-            ["showEmail", "Collect email"], ["showPhone", "Collect phone"], ["showAddress", "Collect delivery address"], ["showQuantity", "Let customer change quantity"], ["allowCod", "Allow payment on delivery"], ["allowBankTransfer", "Allow bank transfer"],
+            ["showEmail", "Collect email"], ["showPhone", "Collect phone"], ["showWhatsApp", "Collect WhatsApp (optional)"], ["showAddress", "Collect delivery address"], ["showRegion", "Collect Ghana region"], ["showCity", "Collect city / town"], ["showQuantity", "Show package / quantity choices"], ["showNotes", "Allow order notes"],
           ] as const).map(([key, text]) => (
             <label key={key} className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3 text-sm text-white/75">{text}<input type="checkbox" checked={page.config.form[key]} onChange={(e) => updateForm(key, e.target.checked)} className="h-4 w-4 accent-[#D4A843]" /></label>
           ))}
+          </div>
         </div>
-        <div><label className={label}>Default Payment Method</label><select className={input} value={page.config.form.defaultPaymentMethod} onChange={(e) => updateForm("defaultPaymentMethod", e.target.value === "bank_transfer" ? "bank_transfer" : "cod")}><option value="cod">Payment on delivery</option><option value="bank_transfer">Bank transfer</option></select></div>
+
+        <div>
+          <h3 className="mb-3 text-sm font-bold text-white">Field placeholders</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div><label className={label}>Full Name</label><input className={input} value={page.config.form.namePlaceholder} onChange={(e) => updateForm("namePlaceholder", e.target.value)} /></div>
+            <div><label className={label}>Phone</label><input className={input} value={page.config.form.phonePlaceholder} onChange={(e) => updateForm("phonePlaceholder", e.target.value)} /></div>
+            <div><label className={label}>Email</label><input className={input} value={page.config.form.emailPlaceholder} onChange={(e) => updateForm("emailPlaceholder", e.target.value)} /></div>
+            <div><label className={label}>WhatsApp</label><input className={input} value={page.config.form.whatsappPlaceholder} onChange={(e) => updateForm("whatsappPlaceholder", e.target.value)} /></div>
+            <div><label className={label}>City / Town</label><input className={input} value={page.config.form.cityPlaceholder} onChange={(e) => updateForm("cityPlaceholder", e.target.value)} /></div>
+            <div><label className={label}>Delivery Address</label><input className={input} value={page.config.form.addressPlaceholder} onChange={(e) => updateForm("addressPlaceholder", e.target.value)} /></div>
+          </div>
+        </div>
+
+        <div>
+          <label className={label}>Package Choices (Label | Quantity | Badge | Description)</label>
+          <textarea className={`${input} min-h-32`} value={packages} onChange={(e) => setPackages(e.target.value)} placeholder={"1 Unit | 1 | Starter | Perfect for one person\n2 Units | 2 | Popular | Order two together"} />
+          <p className="mt-2 text-xs text-white/55">Package prices are always calculated securely from the selected product price and quantity.</p>
+        </div>
+
+        <div>
+          <h3 className="mb-3 text-sm font-bold text-white">Payment options</h3>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {([['allowCod', 'Allow payment on delivery'], ['allowBankTransfer', 'Allow bank transfer']] as const).map(([key, text]) => (
+              <label key={key} className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3 text-sm text-white/75">{text}<input type="checkbox" checked={page.config.form[key]} onChange={(e) => updateForm(key, e.target.checked)} className="h-4 w-4 accent-[#D4A843]" /></label>
+            ))}
+          </div>
+          <div className="mt-4"><label className={label}>Default Payment Method</label><select className={input} value={page.config.form.defaultPaymentMethod} onChange={(e) => updateForm("defaultPaymentMethod", e.target.value === "bank_transfer" ? "bank_transfer" : "cod")}><option value="cod">Payment on delivery</option><option value="bank_transfer">Bank transfer</option></select></div>
+        </div>
       </section>
 
       <section className={card}>
